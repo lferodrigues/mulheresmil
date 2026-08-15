@@ -1,0 +1,22 @@
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#f5a623;--orange-dark:#e89400;--green:#39a845;--green-dark:#258d31;--text:#202124;--muted:#6b6f73;--bg:#f6f8f7}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(circle at 10% 10%,rgba(245,166,35,.13),transparent 30%),radial-gradient(circle at 90% 90%,rgba(57,168,69,.12),transparent 30%),var(--bg)}
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:25px}
+.card{width:min(760px,100%);background:rgba(255,255,255,.97);border-radius:28px;padding:48px;text-align:center;box-shadow:0 22px 65px rgba(0,0,0,.10);border:1px solid rgba(0,0,0,.05)}
+.logo{width:min(100%,610px);max-height:150px;object-fit:contain;display:block;margin:0 auto 25px}
+.line{width:75px;height:5px;border-radius:20px;margin:0 auto 25px;background:linear-gradient(90deg,var(--orange),var(--green))}
+.badge{display:inline-block;padding:8px 18px;border-radius:50px;background:#fff4dc;color:var(--orange-dark);font-size:13px;font-weight:800;letter-spacing:1.5px;margin-bottom:16px}
+h1{font-size:clamp(30px,5vw,44px);margin-bottom:14px}
+.intro{max-width:580px;margin:0 auto;color:var(--muted);font-size:16px;line-height:1.65}
+.choose{margin:30px 0 18px;font-size:16px;font-weight:700}
+.courses{display:grid;gap:15px}
+.course-button{display:grid;grid-template-columns:52px 1fr 30px;align-items:center;gap:14px;text-decoration:none;text-align:left;padding:18px 20px;border-radius:16px;color:white;transition:transform .2s ease,box-shadow .2s ease}
+.course-button:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.14)}
+.operator{background:linear-gradient(135deg,var(--orange),var(--orange-dark))}
+.assistant{background:linear-gradient(135deg,var(--green),var(--green-dark))}
+.icon{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:13px;background:rgba(255,255,255,.20);font-size:25px}
+.course-button strong{display:block;font-size:17px;margin-bottom:5px}
+.course-button small{display:block;font-size:13px;opacity:.88}
+.arrow{font-size:27px;text-align:right}
+.footer{margin-top:30px;color:#96999c;font-size:12px;line-height:1.5}
+@media(max-width:600px){.page{padding:15px}.card{padding:32px 20px;border-radius:20px}.logo{max-height:105px;margin-bottom:20px}h1{font-size:30px}.intro{font-size:14px}.course-button{grid-template-columns:45px 1fr 25px;padding:15px;gap:11px}.icon{width:45px;height:45px;font-size:21px}.course-button strong{font-size:14px}.course-button small{font-size:12px}}
