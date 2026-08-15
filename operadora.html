@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Acesso ao material do curso Mulheres Mil">
+  <title>Mulheres Mil | Acessando materiais</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="loading-page">
+    <section class="card" aria-label="Carregamento">
+      <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil - Educação, Cidadania e Desenvolvimento Sustentável" class="logo">
+
+      <div class="divider"></div>
+
+      <h1>Preparando seu acesso</h1>
+      <p class="message">Aguarde enquanto direcionamos você para os materiais do curso.</p>
+
+      <div class="progress-area">
+        <div class="percentage" id="percentage">0%</div>
+
+        <div class="progress-track" role="progressbar"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+             aria-label="Progresso do carregamento">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <p class="status" id="status">Iniciando acesso...</p>
+      </div>
+
+      <p class="redirect-info">
+        Você será redirecionado automaticamente em <strong id="seconds">5</strong> segundos.
+      </p>
+    </section>
+  </main>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
