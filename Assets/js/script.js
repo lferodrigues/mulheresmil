@@ -41,7 +41,6 @@ document.addEventListener('keydown', function(event) {
         alert('A combinação Ctrl+U está desabilitada!');
     }
 })
-// drive do assistente escolar.
 const destination =
   "https://drive.google.com/drive/folders/1KDSAnPJ785LCJZeIIjZPesBlRGBtFNKA?usp=sharing";
 
