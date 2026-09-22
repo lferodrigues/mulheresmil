@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mulheres Mil -IF Sudeste MG | Material</title>
+<script>
+  // Proteção de acesso: só entra aqui quem passou pelo login em admin.html.
+  // Roda no <head>, antes da página renderizar, pra evitar mostrar o menu antes do redirecionamento.
+  if (sessionStorage.getItem('mm_logado') !== '1') {
+    window.location.href = 'admin.html';
+  }
+</script>
 <link rel="stylesheet" href="style-inicial.css">
 </head>
 <body>
