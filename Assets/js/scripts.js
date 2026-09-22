@@ -41,3 +41,61 @@ document.addEventListener('keydown', function(event) {
         alert('A combinação Ctrl+U está desabilitada!');
     }
 })
+const destination =
+  "https://drive.google.com/drive/folders/1oUywv7JIQSQk1zxOnCt3io1U0TsqDDl6?usp=sharing";
+
+const duration = 9000; // 9 segundos
+const startTime = performance.now();
+
+const percentage = document.getElementById("percentage");
+const progressBar = document.getElementById("progressBar");
+const status = document.getElementById("status");
+const seconds = document.getElementById("seconds");
+const progressTrack = document.querySelector(".progress-track");
+
+const statusMessages = [
+  [0, "Iniciando acesso..."],
+  [20, "Preparando os materiais..."],
+  [45, "Verificando o acesso..."],
+  [70, "Carregando a área de materiais..."],
+  [90, "Quase pronto..."],
+  [100, "Redirecionando..."]
+];
+
+function updateStatus(value) {
+  let current = statusMessages[0][1];
+
+  for (const [limit, message] of statusMessages) {
+    if (value >= limit) current = message;
+  }
+
+  status.textContent = current;
+}
+
+function animate(currentTime) {
+  const elapsed = currentTime - startTime;
+  const progress = Math.min(elapsed / duration, 1);
+  const value = Math.floor(progress * 100);
+
+  percentage.textContent = `${value}%`;
+  progressBar.style.width = `${value}%`;
+  progressTrack.setAttribute("aria-valuenow", value);
+
+  const remaining = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+  seconds.textContent = remaining;
+
+  updateStatus(value);
+
+  if (progress < 1) {
+    requestAnimationFrame(animate);
+  } else {
+    percentage.textContent = "100%";
+    progressBar.style.width = "100%";
+    status.textContent = "Redirecionando...";
+    seconds.textContent = "0";
+
+    window.location.href = destination;
+  }
+}
+
+requestAnimationFrame(animate);
