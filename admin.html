@@ -45,7 +45,7 @@ if(!window.FIREBASE_CONFIG || window.FIREBASE_CONFIG.apiKey.startsWith("COLE_AQU
   const auth=getAuth(app);
 
   onAuthStateChanged(auth,(user)=>{
-    if(user && sessionStorage.getItem("mm_auth_redirect") === "1"){
+    if(user){
       window.location.replace("painel.html");
     }
   });
@@ -60,9 +60,6 @@ if(!window.FIREBASE_CONFIG || window.FIREBASE_CONFIG.apiKey.startsWith("COLE_AQU
       const email=document.getElementById("usuario").value.trim();
       const senha=document.getElementById("senha").value;
       await signInWithEmailAndPassword(auth,email,senha);
-      sessionStorage.setItem("mm_logado","1");
-      sessionStorage.setItem("mm_usuario",email);
-      sessionStorage.setItem("mm_auth_redirect","1");
       sucesso.style.display="block";
       window.location.replace("painel.html");
     }catch(error){
@@ -70,7 +67,10 @@ if(!window.FIREBASE_CONFIG || window.FIREBASE_CONFIG.apiKey.startsWith("COLE_AQU
         "auth/invalid-credential":"E-mail ou senha incorretos.",
         "auth/invalid-email":"Digite um e-mail válido.",
         "auth/user-disabled":"Este usuário está desativado.",
-        "auth/too-many-requests":"Muitas tentativas. Aguarde alguns minutos e tente novamente."
+        "auth/too-many-requests":"Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+        "auth/operation-not-allowed":"O login por e-mail e senha não está habilitado no Firebase Authentication.",
+        "auth/network-request-failed":"Falha de conexão com o Firebase. Verifique sua internet.",
+        "auth/user-not-found":"Usuário não encontrado no Firebase Authentication."
       };
       mostrarErro(mensagens[error.code] || "Não foi possível entrar. Verifique o e-mail e a senha.");
       botao.disabled=false;
