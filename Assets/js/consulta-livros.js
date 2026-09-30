@@ -1,39 +1,12 @@
-/* =========================================================
-   Consulta de Livros — Biblioteca Itinerante (Mulheres Mil)
-   ========================================================= */
+/* Consulta de Livros — Biblioteca Itinerante (Realtime Database) */
+import { db } from "./firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
-/* ---------------------------------------------------------
-   1. Configuração do Firebase
-   --------------------------------------------------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyA2Kz1hwQM8HplqtIPM6GMBSX-aroExg0w",
-  authDomain: "biblioteca-virtual-8db41.firebaseapp.com",
-  projectId: "biblioteca-virtual-8db41",
-  storageBucket: "biblioteca-virtual-8db41.firebasestorage.app",
-  messagingSenderId: "247188034497",
-  appId: "1:247188034497:web:29d31ef65693d5d85e5540",
-  measurementId: "G-6F9T86KGZ3"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* ---------------------------------------------------------
-   2. Estado, constantes e referências do DOM
-   --------------------------------------------------------- */
 let livros = [];
-
-const PRAZO_DIAS = 15;           // prazo contado a partir da data da reserva
+const PRAZO_DIAS = 15;
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
-
 const $ = (id) => document.getElementById(id);
 
-/* ---------------------------------------------------------
-   3. Nomes alternativos dos campos no Firestore
-   --------------------------------------------------------- */
 const CAMPOS = {
   codigo: ["codigo", "numero", "numeroCodigo"],
   titulo: ["titulo", "title"],
@@ -44,198 +17,96 @@ const CAMPOS = {
   dataDevolucao: ["dataDevolucao", "data_devolucao", "devolvidoEm", "dataDevolvido"]
 };
 
-/* ---------------------------------------------------------
-   4. Situações possíveis do livro
-   --------------------------------------------------------- */
 const SITUACOES = {
   livre:      { chave: "livre",      icone: "🟢", rotulo: "Livre" },
   emprestado: { chave: "emprestado", icone: "🟡", rotulo: "Emprestado" },
   atrasado:   { chave: "atrasado",   icone: "🔴", rotulo: "Atrasado" }
 };
 
-/* ---------------------------------------------------------
-   5. Funções utilitárias
-   --------------------------------------------------------- */
-
-// Retorna o primeiro campo existente (e não nulo) como texto
 function valor(obj, ...chaves) {
-  for (const chave of chaves) {
-    if (obj[chave] !== undefined && obj[chave] !== null) {
-      return String(obj[chave]);
-    }
-  }
+  for (const c of chaves) if (obj[c] !== undefined && obj[c] !== null) return String(obj[c]);
   return "";
 }
-
-// Retorna o primeiro campo existente sem converter (útil para datas)
 function bruto(obj, ...chaves) {
-  for (const chave of chaves) {
-    if (obj[chave] !== undefined && obj[chave] !== null && obj[chave] !== "") {
-      return obj[chave];
-    }
-  }
+  for (const c of chaves) if (obj[c] !== undefined && obj[c] !== null && obj[c] !== "") return obj[c];
   return null;
 }
+function esc(t) {
+  return String(t || "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function normalizar(t) { return t.trim().toLocaleLowerCase("pt-BR"); }
 
-// Escapa caracteres HTML para evitar injeção de código
-function esc(texto) {
-  return String(texto || "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[c]));
+function estaReservado(l) {
+  return Boolean(l.reservado || l.reserva || l.status === "reservado" || l.status === "Reservado" || l.status === "emprestado");
 }
 
-// Normaliza texto para comparação (minúsculas, padrão pt-BR)
-function normalizar(texto) {
-  return texto.trim().toLocaleLowerCase("pt-BR");
-}
-
-// Verifica se o livro está marcado como reservado
-function estaReservado(livro) {
-  return Boolean(
-    livro.reservado ||
-    livro.reserva ||
-    livro.status === "reservado" ||
-    livro.status === "Reservado"
-  );
-}
-
-/* ---------------------------------------------------------
-   6. Datas
-   --------------------------------------------------------- */
-
-// Converte vários formatos em Date: Timestamp do Firestore,
-// Date, número, "dd/mm/aaaa" e "aaaa-mm-dd". Retorna null se inválido.
 function parseData(v) {
   if (v === null || v === undefined || v === "") return null;
-
-  let data = null;
-
-  if (typeof v.toDate === "function") {
-    data = v.toDate();
-  } else if (v instanceof Date) {
-    data = v;
-  } else if (typeof v === "object" && typeof v.seconds === "number") {
-    data = new Date(v.seconds * 1000);
-  } else if (typeof v === "number") {
-    data = new Date(v);
-  } else if (typeof v === "string") {
+  let d = null;
+  if (typeof v === "number") d = new Date(v);            // serverTimestamp do RTDB = milissegundos
+  else if (typeof v === "object" && typeof v.seconds === "number") d = new Date(v.seconds * 1000);
+  else if (typeof v === "string") {
     const br = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     const iso = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
-
-    if (br) data = new Date(+br[3], +br[2] - 1, +br[1]);
-    else if (iso) data = new Date(+iso[1], +iso[2] - 1, +iso[3]);
-    else data = new Date(v);
+    if (br) d = new Date(+br[3], +br[2] - 1, +br[1]);
+    else if (iso) d = new Date(+iso[1], +iso[2] - 1, +iso[3]);
+    else d = new Date(v);
   }
-
-  return data && !isNaN(data) ? data : null;
+  return d && !isNaN(d) ? d : null;
 }
+const diaInicial = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const diasEntre = (a, b) => Math.round((diaInicial(b) - diaInicial(a)) / MS_POR_DIA);
+function adicionarDias(d, n) { const x = diaInicial(d); x.setDate(x.getDate() + n); return x; }
+const formatarData = (d) => d.toLocaleDateString("pt-BR");
 
-function diaInicial(data) {
-  return new Date(data.getFullYear(), data.getMonth(), data.getDate());
-}
-
-function diasEntre(inicio, fim) {
-  return Math.round((diaInicial(fim) - diaInicial(inicio)) / MS_POR_DIA);
-}
-
-function adicionarDias(data, dias) {
-  const nova = diaInicial(data);
-  nova.setDate(nova.getDate() + dias);
-  return nova;
-}
-
-function formatarData(data) {
-  return data.toLocaleDateString("pt-BR");
-}
-
-/* ---------------------------------------------------------
-   7. Situação do livro (Livre / Emprestado / Atrasado)
-   --------------------------------------------------------- */
-
-// Regras:
-//  🟢 Livre:      há data de devolução (posterior à reserva) ou o livro não está reservado
-//  🟡 Emprestado: reservado e dentro do prazo de 15 dias
-//  🔴 Atrasado:   passou de 15 dias desde a data da reserva
 function obterSituacao(livro, hoje = new Date()) {
   const inicio = parseData(bruto(livro, ...CAMPOS.dataReserva));
   const devolucao = parseData(bruto(livro, ...CAMPOS.dataDevolucao));
-
   const devolvido = devolucao && (!inicio || devolucao >= inicio);
-  if (devolvido || (!inicio && !estaReservado(livro))) {
-    return { ...SITUACOES.livre, detalhe: "" };
-  }
-
-  // Reservado, mas sem data de reserva: não dá para calcular o prazo
-  if (!inicio) {
-    return { ...SITUACOES.emprestado, detalhe: "" };
-  }
+  if (devolvido || (!inicio && !estaReservado(livro))) return { ...SITUACOES.livre, detalhe: "" };
+  if (!inicio) return { ...SITUACOES.emprestado, detalhe: "" };
 
   const limite = adicionarDias(inicio, PRAZO_DIAS);
-  const diasDecorridos = diasEntre(inicio, hoje);
-
-  if (diasDecorridos > PRAZO_DIAS) {
-    const atraso = diasDecorridos - PRAZO_DIAS;
-    return {
-      ...SITUACOES.atrasado,
-      detalhe: `${atraso} ${atraso === 1 ? "dia" : "dias"} de atraso`
-    };
+  const dias = diasEntre(inicio, hoje);
+  if (dias > PRAZO_DIAS) {
+    const atraso = dias - PRAZO_DIAS;
+    return { ...SITUACOES.atrasado, detalhe: `${atraso} ${atraso === 1 ? "dia" : "dias"} de atraso` };
   }
-
-  return {
-    ...SITUACOES.emprestado,
-    detalhe: `devolver até ${formatarData(limite)}`
-  };
+  return { ...SITUACOES.emprestado, detalhe: `devolver até ${formatarData(limite)}` };
+}
+function textoSituacao(s) {
+  const base = `${s.icone} ${s.rotulo}`;
+  return s.detalhe ? `${base} · ${s.detalhe}` : base;
 }
 
-function textoSituacao(situacao) {
-  const base = `${situacao.icone} ${situacao.rotulo}`;
-  return situacao.detalhe ? `${base} · ${situacao.detalhe}` : base;
-}
-
-/* ---------------------------------------------------------
-   8. Carregamento dos dados
-   --------------------------------------------------------- */
 async function carregar() {
   try {
     $("status").textContent = "Carregando livros...";
-
-    const snapshot = await getDocs(collection(db, "livros"));
-    livros = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
+    const snap = await get(ref(db, "livros"));
+    const dados = snap.val() || {};
+    livros = Object.entries(dados).map(([id, l]) => ({ id, ...l }))
+      .sort((a, b) => String(a.codigo || a.id).localeCompare(String(b.codigo || b.id), "pt-BR", { numeric: true }));
     render(livros);
     $("status").textContent = "Livros carregados do Firebase.";
-  } catch (erro) {
-    console.error(erro);
-    $("status").textContent = "Não foi possível consultar o Firebase.";
+  } catch (e) {
+    console.error(e);
+    $("status").textContent = "Não foi possível consultar o Firebase (" + (e.code || e.message) + ").";
     $("vazio").hidden = false;
   }
 }
 
-/* ---------------------------------------------------------
-   9. Renderização da lista
-   --------------------------------------------------------- */
 function criarItemLivro(livro) {
-  const codigo = valor(livro, ...CAMPOS.codigo);
-  const titulo = valor(livro, ...CAMPOS.titulo);
-  const autor = valor(livro, ...CAMPOS.autor);
-  const situacao = obterSituacao(livro);
-
+  const s = obterSituacao(livro);
   const item = document.createElement("div");
   item.className = "livro-item";
   item.innerHTML = `
-    <strong class="livro-codigo">${esc(codigo)}</strong>
+    <strong class="livro-codigo">${esc(valor(livro, ...CAMPOS.codigo) || livro.id)}</strong>
     <span class="livro-info">
-      <strong>${esc(titulo)}</strong>
-      <small>${esc(autor)}</small>
-      <small class="livro-status livro-status-${situacao.chave}">${esc(textoSituacao(situacao))}</small>
+      <strong>${esc(valor(livro, ...CAMPOS.titulo))}</strong>
+      <small>${esc(valor(livro, ...CAMPOS.autor))}</small>
+      <small class="livro-status livro-status-${s.chave}">${esc(textoSituacao(s))}</small>
     </span>
-    <button class="expandir" type="button">Expandir</button>
-  `;
-
+    <button class="expandir" type="button">Expandir</button>`;
   item.querySelector("button").onclick = () => abrirDetalhes(livro);
   return item;
 }
@@ -244,69 +115,33 @@ function render(lista) {
   $("contador").textContent = lista.length + (lista.length === 1 ? " livro" : " livros");
   $("lista").innerHTML = "";
   $("vazio").hidden = lista.length > 0;
-
-  lista.forEach((livro) => $("lista").appendChild(criarItemLivro(livro)));
+  lista.forEach((l) => $("lista").appendChild(criarItemLivro(l)));
 }
 
-/* ---------------------------------------------------------
-   10. Filtro
-   --------------------------------------------------------- */
 function filtrar() {
-  const filtroCodigo = normalizar($("filtroCodigo").value);
-  const filtroTitulo = normalizar($("filtroTitulo").value);
-
-  const resultado = livros.filter((livro) => {
-    const codigo = valor(livro, ...CAMPOS.codigo).toLocaleLowerCase("pt-BR");
-    const titulo = valor(livro, ...CAMPOS.titulo).toLocaleLowerCase("pt-BR");
-    return codigo.includes(filtroCodigo) && titulo.includes(filtroTitulo);
-  });
-
-  render(resultado);
+  const fc = normalizar($("filtroCodigo").value), ft = normalizar($("filtroTitulo").value);
+  render(livros.filter((l) =>
+    (valor(l, ...CAMPOS.codigo) || l.id).toLocaleLowerCase("pt-BR").includes(fc) &&
+    valor(l, ...CAMPOS.titulo).toLocaleLowerCase("pt-BR").includes(ft)));
 }
 
-/* ---------------------------------------------------------
-   11. Modal de detalhes
-   --------------------------------------------------------- */
 function abrirDetalhes(livro) {
-  const situacao = obterSituacao(livro);
-  const livre = situacao.chave === "livre";
-  const aluna = valor(livro, ...CAMPOS.aluna);
-
-  $("modalCodigo").textContent = valor(livro, ...CAMPOS.codigo) || "—";
+  const s = obterSituacao(livro);
+  const livre = s.chave === "livre";
+  $("modalCodigo").textContent = valor(livro, ...CAMPOS.codigo) || livro.id || "—";
   $("modalTitulo").textContent = valor(livro, ...CAMPOS.titulo) || "—";
   $("modalAutor").textContent = valor(livro, ...CAMPOS.autor) || "—";
   $("modalGenero").textContent = valor(livro, ...CAMPOS.genero) || "—";
-
-  $("modalStatus").textContent = textoSituacao(situacao);
+  $("modalStatus").textContent = textoSituacao(s);
   $("modalStatus").className = "situacao" + (livre ? "" : " reservado");
-
-  $("modalAluna").textContent = aluna || "Nome da aluna não informado";
+  $("modalAluna").textContent = valor(livro, ...CAMPOS.aluna) || "Nome da aluna não informado";
   $("reservaBox").hidden = livre;
-
   $("modal").hidden = false;
 }
 
-function fecharModal() {
-  $("modal").hidden = true;
-}
+$("filtrar").onclick = filtrar;
+$("filtroCodigo").onkeydown = (e) => { if (e.key === "Enter") filtrar(); };
+$("filtroTitulo").onkeydown = (e) => { if (e.key === "Enter") filtrar(); };
+$("modalFechar").onclick = () => { $("modal").hidden = true; };
 
-/* ---------------------------------------------------------
-   12. Eventos
-   --------------------------------------------------------- */
-function iniciarEventos() {
-  $("filtrar").onclick = filtrar;
-
-  const aoApertarEnter = (e) => {
-    if (e.key === "Enter") filtrar();
-  };
-  $("filtroCodigo").onkeydown = aoApertarEnter;
-  $("filtroTitulo").onkeydown = aoApertarEnter;
-
-  $("modalFechar").onclick = fecharModal;
-}
-
-/* ---------------------------------------------------------
-   13. Inicialização
-   --------------------------------------------------------- */
-iniciarEventos();
 carregar();
