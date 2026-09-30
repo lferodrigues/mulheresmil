@@ -5,16 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
 <title>Painel | Mulheres Mil - IF Sudeste MG</title>
-<script>
-  // Proteção de acesso: só entra quem passou pelo login em admin.html
-  if (sessionStorage.getItem('mm_logado') !== '1') {
-    window.location.href = 'admin.html';
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import "./firebase-config.js";
+
+const app = initializeApp(window.FIREBASE_CONFIG);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.replace("admin.html");
   }
+});
 </script>
 <link rel="stylesheet" href="./Assets/css/style-inicial.css">
 </head>
 <body>
-<a class="login-btn" href="./admin.html" onclick="sessionStorage.clear()"><span class="login-icon">🚪</span>Sair</a>
+<a class="login-btn" href="./admin.html" id="btnSair"><span class="login-icon">🚪</span>Sair</a>
 <main class="page">
 <section class="card">
 <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
@@ -37,5 +45,16 @@
 <p class="footer">Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</p>
 </section>
 </main>
+<script type="module">
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import "./firebase-config.js";
+
+const auth = getAuth();
+document.getElementById("btnSair").addEventListener("click", async (event) => {
+  event.preventDefault();
+  await signOut(auth);
+  window.location.replace("admin.html");
+});
+</script>
 </body>
 </html>
