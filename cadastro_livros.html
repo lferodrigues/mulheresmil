@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="Logo-Mulheres-Mil.jpg">
 <title>Cadastro de Livros | Biblioteca Itinerante</title>
-<script>if(sessionStorage.getItem("mm_logado")!=="1")location.href="admin.html"</script>
+<script type="module" src="./Assets/js/auth-guard.js"></script>
 <link rel="stylesheet" href="Assets/css/cadastro_livros.css">
 </head>
 <body>
@@ -21,19 +21,15 @@
 <label>Nº/Código do livro
 <input id="codigo" type="text" maxlength="50" placeholder="Digite o número ou código do livro" autocomplete="off">
 </label>
-
 <label>Título
 <input id="titulo" type="text" maxlength="150" placeholder="Digite o título do livro">
 </label>
-
 <label>Autor(a)
 <input id="autor" type="text" maxlength="120" placeholder="Digite o nome do autor(a)">
 </label>
-
 <label>Gênero/Categoria
 <input id="genero" type="text" maxlength="80" placeholder="Ex.: Romance, Ficção, Educação...">
 </label>
-
 <div class="buttons">
 <button id="salvar" type="submit">Salvar</button>
 <button id="excluir" type="button">Excluir</button>
@@ -55,14 +51,12 @@
 <div id="modalIcon" class="modal-icon">✓</div>
 <h2 id="modalTitulo">Confirmar cadastro</h2>
 <p id="modalTexto">Confira os dados do livro antes de salvar.</p>
-
 <div id="modalData" class="modal-data">
 <div><span>Nº/Código</span><strong id="modalCodigo"></strong></div>
 <div><span>Título</span><strong id="modalTituloLivro"></strong></div>
 <div><span>Autor(a)</span><strong id="modalAutor"></strong></div>
 <div><span>Gênero/Categoria</span><strong id="modalGenero"></strong></div>
 </div>
-
 <div class="modal-actions">
 <button id="modalVoltar" type="button">Voltar</button>
 <button id="modalConfirmar" type="button">Confirmar e salvar</button>
