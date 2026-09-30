@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="Logo-Mulheres-Mil.jpg">
+<title>Consulta de Livros | Biblioteca Itinerante</title>
+<script>if(sessionStorage.getItem("mm_logado")!=="1")location.href="admin.html"</script>
+<link rel="stylesheet" href="Assets/css/consulta_livros.css">
+</head>
+<body>
+<main>
+<section class="card">
+<img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+<hr>
+<span class="badge">BIBLIOTECA ITINERANTE</span>
+<h1>Consulta de Livros</h1>
+<p>Pesquise por número/código ou título e consulte a situação de cada livro.</p>
+
+<div class="filtros">
+<label>Nº/Código
+<input id="filtroCodigo" type="search" placeholder="Digite o código">
+</label>
+<label>Título
+<input id="filtroTitulo" type="search" placeholder="Digite o título">
+</label>
+<button id="filtrar" type="button">Filtrar</button>
+</div>
+
+<div class="status-bar">
+<span id="status">Carregando livros...</span>
+<span id="contador">0 livros</span>
+</div>
+
+<section class="resultados">
+<div id="lista"></div>
+<div id="vazio" class="vazio" hidden>Nenhum livro encontrado.</div>
+</section>
+
+<a href="biblioteca.html">← Voltar para a biblioteca</a>
+<footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</section>
+</main>
+
+<div id="modal" class="modal" hidden>
+<div class="modal-box">
+<div class="modal-icon">📖</div>
+<h2>Detalhes do livro</h2>
+<div class="modal-data">
+<div><span>Nº/Código</span><strong id="modalCodigo"></strong></div>
+<div><span>Título</span><strong id="modalTitulo"></strong></div>
+<div><span>Autor(a)</span><strong id="modalAutor"></strong></div>
+<div><span>Gênero/Categoria</span><strong id="modalGenero"></strong></div>
+<div><span>Situação</span><strong id="modalStatus" class="situacao"></strong></div>
+<div id="reservaBox" hidden><span>Reservado para</span><strong id="modalAluna"></strong></div>
+</div>
+<div class="modal-actions">
+<button id="modalFechar" type="button">Voltar</button>
+</div>
+</div>
+</div>
+
+<script type="module" src="Assets/js/consulta_livros.js"></script>
+</body>
+</html>
