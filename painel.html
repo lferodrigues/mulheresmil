@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Painel | Mulheres Mil - IF Sudeste MG</title>
+<script>
+  // Proteção de acesso: só entra quem passou pelo login em admin.html
+  if (sessionStorage.getItem('mm_logado') !== '1') {
+    window.location.href = 'admin.html';
+  }
+</script>
+<link rel="stylesheet" href="./Assets/css/style-inicial.css">
+</head>
+<body>
+<a class="login-btn" href="./admin.html" onclick="sessionStorage.clear()"><span class="login-icon">🚪</span>Sair</a>
+<main class="page">
+<section class="card">
+<img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+<div class="line"></div>
+<p class="choose">O que você deseja acessar?</p>
+<div class="courses">
+<a class="course-button operator" href="./biblioteca.html">
+<span class="icon">📖</span>
+<span><strong>Biblioteca</strong><small>Livros, usuários, reservas e devoluções</small></span>
+<span class="arrow">→</span>
+</a>
+
+<a class="course-button assistant" href="./menu.html">
+<span class="icon">📝</span>
+<span><strong>Lançamento de Frequência</strong><small>Controle da lista de presença dos cursos</small></span>
+<span class="arrow">→</span>
+</a>
+</div>
+
+<p class="footer">Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</p>
+</section>
+</main>
+</body>
+</html>
