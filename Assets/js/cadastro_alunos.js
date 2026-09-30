@@ -6,7 +6,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/fireba
 import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA2Kz1hwQM8HplqtIPM6GMBS-XaroExg0w",
+  apiKey: "AIzaSyA2Kz1hwQM8HplqtIPM6GMBS-X-aroExg0w",
   authDomain: "biblioteca-virtual-8db41.firebaseapp.com",
   projectId: "biblioteca-virtual-8db41",
   storageBucket: "biblioteca-virtual-8db41.firebasestorage.app",
