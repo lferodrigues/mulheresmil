@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Biblioteca | Mulheres Mil - IF Sudeste MG</title>
+<script>
+  if (sessionStorage.getItem('mm_logado') !== '1') {
+    window.location.href = 'admin.html';
+  }
+</script>
+<link rel="stylesheet" href="./Assets/css/biblioteca.css">
+</head>
+<body>
+
+<a class="back-top" href="./painel.html" aria-label="Voltar ao painel">
+  <span>←</span> Voltar ao painel
+</a>
+
+<main class="page">
+  <section class="card">
+    <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+
+    <div class="line"></div>
+
+    <span class="badge">SISTEMA DE BIBLIOTECA</span>
+    <h1>Biblioteca</h1>
+    <p class="intro">
+      Gerencie os livros e os empréstimos da biblioteca do projeto Mulheres Mil.
+    </p>
+
+    <p class="choose">O que você deseja acessar?</p>
+
+    <div class="library-options">
+      <a class="library-button books" href="./cadastro_livros.html">
+        <span class="icon">📚</span>
+        <span>
+          <strong>Cadastro de Livros</strong>
+          <small>Cadastre e consulte os livros disponíveis</small>
+        </span>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="library-button students" href="./cadastro_alunos.html">
+        <span class="icon">👩‍🎓</span>
+        <span>
+          <strong>Cadastro de Alunos</strong>
+          <small>Cadastre os alunos que utilizam a biblioteca</small>
+        </span>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="library-button reservations" href="./reserva_livros.html">
+        <span class="icon">📖</span>
+        <span>
+          <strong>Reserva de Livros</strong>
+          <small>Registre e consulte reservas de livros</small>
+        </span>
+        <span class="arrow">→</span>
+      </a>
+
+      <a class="library-button returns" href="./devolucao_livros.html">
+        <span class="icon">↩️</span>
+        <span>
+          <strong>Devolução de Livros</strong>
+          <small>Registre a devolução dos livros emprestados</small>
+        </span>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+
+    <a class="back-button" href="./painel.html">
+      <span>←</span>
+      Voltar para o painel
+    </a>
+
+    <p class="footer">Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</p>
+  </section>
+</main>
+
+<script src="./Assets/js/biblioteca.js"></script>
+</body>
+</html>
