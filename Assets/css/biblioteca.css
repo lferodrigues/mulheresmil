@@ -357,3 +357,17 @@ h1 {
     font-size: 9px;
   }
 }
+
+
+/* Botão Consulta de Livros */
+.consultation {
+  background: linear-gradient(135deg, #c2185b, #8e0f45);
+  color: #ffffff;
+}
+
+.consultation strong,
+.consultation small,
+.consultation .arrow,
+.consultation .icon {
+  color: #ffffff;
+}
