@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="Logo-Mulheres-Mil.jpg">
+<title>Cadastro de Livros | Biblioteca Itinerante</title>
+<script>if(sessionStorage.getItem("mm_logado")!=="1")location.href="admin.html"</script>
+<link rel="stylesheet" href="Assets/css/cadastro_livros.css">
+</head>
+<body>
+<main>
+<section class="card">
+<img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+<hr>
+<span class="badge">BIBLIOTECA ITINERANTE</span>
+<h1>Cadastro de Livros</h1>
+<p>Informe os dados do livro para realizar o cadastro na biblioteca.</p>
+
+<form id="formLivro">
+<label>Nº/Código do livro
+<input id="codigo" type="text" maxlength="50" placeholder="Digite o número ou código do livro" autocomplete="off">
+</label>
+
+<label>Título
+<input id="titulo" type="text" maxlength="150" placeholder="Digite o título do livro">
+</label>
+
+<label>Autor(a)
+<input id="autor" type="text" maxlength="120" placeholder="Digite o nome do autor(a)">
+</label>
+
+<label>Gênero/Categoria
+<input id="genero" type="text" maxlength="80" placeholder="Ex.: Romance, Ficção, Educação...">
+</label>
+
+<div class="buttons">
+<button id="salvar" type="submit">Salvar</button>
+<button id="excluir" type="button">Excluir</button>
+</div>
+</form>
+
+<section id="livros" hidden>
+<h2>Livros cadastrados <span id="contador">0</span></h2>
+<div id="lista"></div>
+</section>
+
+<a href="biblioteca.html">← Voltar para a biblioteca</a>
+<footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</section>
+</main>
+
+<div id="modal" class="modal" hidden>
+<div class="modal-box">
+<div id="modalIcon" class="modal-icon">✓</div>
+<h2 id="modalTitulo">Confirmar cadastro</h2>
+<p id="modalTexto">Confira os dados do livro antes de salvar.</p>
+
+<div id="modalData" class="modal-data">
+<div><span>Nº/Código</span><strong id="modalCodigo"></strong></div>
+<div><span>Título</span><strong id="modalTituloLivro"></strong></div>
+<div><span>Autor(a)</span><strong id="modalAutor"></strong></div>
+<div><span>Gênero/Categoria</span><strong id="modalGenero"></strong></div>
+</div>
+
+<div class="modal-actions">
+<button id="modalVoltar" type="button">Voltar</button>
+<button id="modalConfirmar" type="button">Confirmar e salvar</button>
+</div>
+</div>
+</div>
+
+<script src="Assets/js/cadastro_livros.js"></script>
+</body>
+</html>
