@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Biblioteca | Mulheres Mil - IF Sudeste MG</title>
+<script>
+  // Mesma proteção do menu.html: só entra quem fez login em admin.html
+  if (sessionStorage.getItem('mm_logado') !== '1') { window.location.href = 'admin.html'; }
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#f5a623;--orange-dark:#e89400;--green:#39a845;--green-dark:#258d31;--red:#e04b3a;--text:#202124;--muted:#6b6f73;--bg:#f6f8f7;--line:#eadfcd}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(circle at 10% 10%,rgba(245,166,35,.13),transparent 30%),radial-gradient(circle at 90% 90%,rgba(57,168,69,.12),transparent 30%),var(--bg)}
+.page{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:25px}
+.card{width:min(900px,100%);background:rgba(255,255,255,.97);border-radius:28px;padding:40px;box-shadow:0 22px 65px rgba(0,0,0,.10);border:1px solid rgba(0,0,0,.05)}
+.logo{width:min(100%,520px);max-height:130px;object-fit:contain;display:block;margin:0 auto 20px}
+.line{width:75px;height:5px;border-radius:20px;margin:0 auto 20px;background:linear-gradient(90deg,var(--orange),var(--green))}
+.badge{display:table;margin:0 auto 12px;padding:8px 18px;border-radius:50px;background:#fff4dc;color:var(--orange-dark);font-size:13px;font-weight:800;letter-spacing:1.5px}
+h1{text-align:center;font-size:clamp(26px,5vw,38px);margin-bottom:8px}
+h2{font-size:20px;margin-bottom:16px}
+.sub{text-align:center;color:var(--muted);margin-bottom:26px}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.mbtn{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:14px;text-align:left;padding:16px 18px;border:0;border-radius:16px;color:#fff;cursor:pointer;font-family:inherit;transition:transform .2s,box-shadow .2s}
+.mbtn:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.14)}
+.mbtn .ic{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:13px;background:rgba(255,255,255,.2);font-size:25px}
+.mbtn strong{display:block;font-size:16px;margin-bottom:4px}.mbtn small{font-size:12px;opacity:.9}
+.o{background:linear-gradient(135deg,var(--orange),var(--orange-dark))}.g{background:linear-gradient(135deg,var(--green),var(--green-dark))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.back,.btn{border:0;border-radius:10px;padding:9px 16px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;color:#fff}
+.back{background:#fff;color:var(--text);border:1px solid var(--line)}
+.btn{background:var(--green)}.btn.or{background:var(--orange-dark)}.btn.rd{background:var(--red)}.btn.sm{padding:6px 11px;font-size:12px}
+.btn:hover{filter:brightness(1.08)}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end;margin-bottom:22px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:#5a4a30}
+input,select{width:100%;padding:10px 12px;border-radius:8px;border:1.5px solid var(--line);font-size:14px;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--orange)}
+.search{margin-bottom:16px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#fbe7c6;color:#5a3d10;text-align:left;padding:10px 8px;border-bottom:2px solid var(--orange)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:nth-child(even) td{background:#fffaf1}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.ok{background:#e3f5e6;color:var(--green-dark)}.no{background:#fdeceb;color:var(--red)}.wn{background:#fff2dd;color:#a05a00}
+.empty{text-align:center;color:#999;padding:24px 0}
+.footer{margin-top:28px;text-align:center;color:#96999c;font-size:12px}
+.hide{display:none}
+@media(max-width:600px){.page{padding:12px}.card{padding:24px 16px;border-radius:20px}}
+</style>
+</head>
+<body>
+<main class="page"><section class="card">
+<img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+<div class="line"></div>
+
+<!-- MENU -->
+<div id="v-menu">
+  <span class="badge">BIBLIOTECA</span>
+  <h1>Biblioteca Mulheres Mil</h1>
+  <p class="sub">Escolha uma opção:</p>
+  <div class="menu">
+    <button class="mbtn o" onclick="ir('livros')"><span class="ic">📖</span><span><strong>Cadastro de Livros</strong><small>Adicionar e remover livros</small></span></button>
+    <button class="mbtn g" onclick="ir('consulta')"><span class="ic">🔎</span><span><strong>Consulta da Biblioteca</strong><small>Buscar livros e ver disponibilidade</small></span></button>
+    <button class="mbtn o" onclick="ir('usuarios')"><span class="ic">👩</span><span><strong>Cadastro de Usuários</strong><small>Alunas, professores e equipe</small></span></button>
+    <button class="mbtn g" onclick="ir('reservar')"><span class="ic">📌</span><span><strong>Reservar Livros</strong><small>Registrar empréstimo</small></span></button>
+    <button class="mbtn o" onclick="ir('devolver')"><span class="ic">↩️</span><span><strong>Devolver Livros</strong><small>Registrar devolução</small></span></button>
+    <a class="mbtn g" href="./menu.html" style="text-decoration:none"><span class="ic">🏠</span><span><strong>Voltar ao Menu</strong><small>Listas de presença</small></span></a>
+  </div>
+</div>
+
+<!-- LIVROS -->
+<div id="v-livros" class="hide">
+  <div class="top"><h2>📖 Cadastro de Livros</h2><button class="back" onclick="ir('menu')">← Menu</button></div>
+  <form onsubmit="return addLivro(event)">
+    <div><label>Título</label><input id="lt" required></div>
+    <div><label>Autor</label><input id="la" required></div>
+    <div><label>Categoria</label><input id="lc" placeholder="ex: Informática"></div>
+    <div><label>Exemplares</label><input id="lq" type="number" min="1" value="1" required></div>
+    <button class="btn">Cadastrar livro</button>
+  </form>
+  <div class="tw"><table><thead><tr><th>Título</th><th>Autor</th><th>Categoria</th><th>Exemplares</th><th></th></tr></thead><tbody id="tb-livros"></tbody></table></div>
+</div>
+
+<!-- CONSULTA -->
+<div id="v-consulta" class="hide">
+  <div class="top"><h2>🔎 Consulta da Biblioteca</h2><button class="back" onclick="ir('menu')">← Menu</button></div>
+  <input class="search" id="busca" placeholder="Buscar por título, autor ou categoria..." oninput="render()">
+  <div class="tw"><table><thead><tr><th>Título</th><th>Autor</th><th>Categoria</th><th>Disponíveis</th><th>Situação</th></tr></thead><tbody id="tb-consulta"></tbody></table></div>
+</div>
+
+<!-- USUARIOS -->
+<div id="v-usuarios" class="hide">
+  <div class="top"><h2>👩 Cadastro de Usuários</h2><button class="back" onclick="ir('menu')">← Menu</button></div>
+  <form onsubmit="return addUsuario(event)">
+    <div><label>Nome completo</label><input id="un" required></div>
+    <div><label>Tipo</label><select id="ut"><option>Aluna - Operadora de Computador</option><option>Aluna - Assistente Escolar</option><option>Professor(a)</option><option>Equipe / Supervisão</option></select></div>
+    <div><label>Telefone / contato</label><input id="uc"></div>
+    <button class="btn">Cadastrar usuário</button>
+  </form>
+  <div class="tw"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Contato</th><th></th></tr></thead><tbody id="tb-usuarios"></tbody></table></div>
+</div>
+
+<!-- RESERVAR -->
+<div id="v-reservar" class="hide">
+  <div class="top"><h2>📌 Reservar Livros</h2><button class="back" onclick="ir('menu')">← Menu</button></div>
+  <form onsubmit="return reservar(event)">
+    <div><label>Usuário</label><select id="ru" required></select></div>
+    <div><label>Livro</label><select id="rl" required></select></div>
+    <div><label>Prazo (dias)</label><input id="rd" type="number" min="1" value="7" required></div>
+    <button class="btn">Confirmar reserva</button>
+  </form>
+  <p class="sub" id="msg-res"></p>
+</div>
+
+<!-- DEVOLVER -->
+<div id="v-devolver" class="hide">
+  <div class="top"><h2>↩️ Devolver Livros</h2><button class="back" onclick="ir('menu')">← Menu</button></div>
+  <div class="tw"><table><thead><tr><th>Livro</th><th>Usuário</th><th>Retirada</th><th>Devolução prevista</th><th>Situação</th><th></th></tr></thead><tbody id="tb-devolver"></tbody></table></div>
+</div>
+
+<p class="footer">Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</p>
+</section></main>
+
+<script>
+const KEY = "mulheresMil_biblioteca_v1";
+let db = { livros: [], usuarios: [], emprestimos: [] };
+try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && r.livros) db = r; } catch (e) {}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const hoje = () => new Date().toISOString().slice(0, 10);
+const br = iso => iso.split('-').reverse().join('/');
+const salvar = () => localStorage.setItem(KEY, JSON.stringify(db));
+const ativos = id => db.emprestimos.filter(e => e.livro === id && !e.devolvido).length;
+const disp = l => l.qtd - ativos(l.id);
+
+function ir(v) {
+  ['menu','livros','consulta','usuarios','reservar','devolver'].forEach(n => $('v-' + n).classList.toggle('hide', n !== v));
+  render(); window.scrollTo(0, 0);
+}
+
+function addLivro(ev) {
+  ev.preventDefault();
+  db.livros.push({ id: uid(), titulo: $('lt').value.trim(), autor: $('la').value.trim(), cat: $('lc').value.trim(), qtd: parseInt($('lq').value) });
+  salvar(); ev.target.reset(); $('lq').value = 1; render(); return false;
+}
+function delLivro(id) {
+  if (ativos(id)) return alert('Este livro tem empréstimos em aberto.');
+  if (!confirm('Remover este livro?')) return;
+  db.livros = db.livros.filter(l => l.id !== id); salvar(); render();
+}
+function addUsuario(ev) {
+  ev.preventDefault();
+  db.usuarios.push({ id: uid(), nome: $('un').value.trim(), tipo: $('ut').value, contato: $('uc').value.trim() });
+  salvar(); ev.target.reset(); render(); return false;
+}
+function delUsuario(id) {
+  if (db.emprestimos.some(e => e.usuario === id && !e.devolvido)) return alert('Este usuário tem livros pendentes de devolução.');
+  if (!confirm('Remover este usuário?')) return;
+  db.usuarios = db.usuarios.filter(u => u.id !== id); salvar(); render();
+}
+function reservar(ev) {
+  ev.preventDefault();
+  const l = db.livros.find(x => x.id === $('rl').value);
+  if (!l || disp(l) < 1) { $('msg-res').textContent = 'Livro indisponível.'; return false; }
+  const d = new Date(); d.setDate(d.getDate() + parseInt($('rd').value));
+  db.emprestimos.push({ id: uid(), livro: l.id, usuario: $('ru').value, data: hoje(), prazo: d.toISOString().slice(0, 10), devolvido: false });
+  salvar(); $('msg-res').textContent = '✅ Reserva registrada! Devolução prevista para ' + br(d.toISOString().slice(0, 10)) + '.';
+  render(); return false;
+}
+function devolver(id) {
+  const e = db.emprestimos.find(x => x.id === id);
+  if (e) { e.devolvido = true; e.dataDev = hoje(); salvar(); render(); }
+}
+
+function render() {
+  const vazio = (n, t) => `<tr><td colspan="${n}" class="empty">${t}</td></tr>`;
+
+  $('tb-livros').innerHTML = db.livros.map(l => `<tr><td>${esc(l.titulo)}</td><td>${esc(l.autor)}</td><td>${esc(l.cat || '-')}</td><td>${l.qtd}</td><td><button class="btn rd sm" onclick="delLivro('${l.id}')">Remover</button></td></tr>`).join('') || vazio(5, 'Nenhum livro cadastrado.');
+
+  const q = ($('busca').value || '').toLowerCase();
+  const achados = db.livros.filter(l => (l.titulo + ' ' + l.autor + ' ' + l.cat).toLowerCase().includes(q));
+  $('tb-consulta').innerHTML = achados.map(l => { const d = disp(l); return `<tr><td>${esc(l.titulo)}</td><td>${esc(l.autor)}</td><td>${esc(l.cat || '-')}</td><td>${d} de ${l.qtd}</td><td><span class="tag ${d > 0 ? 'ok' : 'no'}">${d > 0 ? 'Disponível' : 'Emprestado'}</span></td></tr>`; }).join('') || vazio(5, 'Nenhum livro encontrado.');
+
+  $('tb-usuarios').innerHTML = db.usuarios.map(u => `<tr><td>${esc(u.nome)}</td><td>${esc(u.tipo)}</td><td>${esc(u.contato || '-')}</td><td><button class="btn rd sm" onclick="delUsuario('${u.id}')">Remover</button></td></tr>`).join('') || vazio(4, 'Nenhum usuário cadastrado.');
+
+  $('ru').innerHTML = db.usuarios.map(u => `<option value="${u.id}">${esc(u.nome)}</option>`).join('') || '<option value="">Cadastre um usuário primeiro</option>';
+  $('rl').innerHTML = db.livros.filter(l => disp(l) > 0).map(l => `<option value="${l.id}">${esc(l.titulo)} (${disp(l)} disp.)</option>`).join('') || '<option value="">Nenhum livro disponível</option>';
+
+  const abertos = db.emprestimos.filter(e => !e.devolvido);
+  $('tb-devolver').innerHTML = abertos.map(e => {
+    const l = db.livros.find(x => x.id === e.livro), u = db.usuarios.find(x => x.id === e.usuario);
+    const atraso = e.prazo < hoje();
+    return `<tr><td>${esc(l ? l.titulo : '(removido)')}</td><td>${esc(u ? u.nome : '(removido)')}</td><td>${br(e.data)}</td><td>${br(e.prazo)}</td><td><span class="tag ${atraso ? 'no' : 'wn'}">${atraso ? 'Atrasado' : 'Em andamento'}</span></td><td><button class="btn sm" onclick="devolver('${e.id}')">Devolver</button></td></tr>`;
+  }).join('') || vazio(6, 'Nenhum empréstimo em aberto.');
+}
+render();
+</script>
+</body>
+</html>
