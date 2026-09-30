@@ -59,7 +59,7 @@ O sistema tem como principais objetivos:
 * registrar e acompanhar faltas das estudantes;
 * criar uma base tecnológica que possa receber novas funcionalidades.
 
-O projeto foi desenvolvido com uma abordagem **incremental**, sendo ampliado conforme as necessidades identificadas durante a utilização da plataforma.
+O projeto foi desenvolvido com uma abordagem **incremental**, sendo ampliado conforme as necessidades identificadas durante a utilização da plataforma. Entre as novas funcionalidades, destaca-se a **Biblioteca Itinerante**, criada para organizar o acervo e facilitar o controle de empréstimos e devoluções de livros.
 
 ---
 
@@ -297,7 +297,13 @@ Implementação do controle e lançamento de faltas das estudantes.
 
 ⬇️
 
-### Fase 6 — Evolução contínua
+### Fase 6 — Biblioteca Itinerante
+
+Implementação de uma área específica para organização do acervo, cadastro de estudantes, reservas, consultas e registro de devoluções, apoiando a circulação de livros entre as participantes do projeto.
+
+⬇️
+
+### Fase 7 — Evolução contínua
 
 O sistema continuará recebendo atualizações de acordo com as necessidades identificadas durante a execução dos cursos.
 
@@ -311,7 +317,11 @@ Novas funcionalidades poderão ser adicionadas conforme as necessidades dos prof
 
 Entre as possíveis evoluções estão:
 
-* [ ] cadastro de estudantes;
+* [x] cadastro de estudantes na Biblioteca Itinerante;
+* [x] cadastro de livros;
+* [x] reserva de livros;
+* [x] consulta de livros;
+* [x] registro de devolução de livros;
 * [ ] cadastro de professores;
 * [ ] cadastro de turmas;
 * [ ] controle de frequência;
