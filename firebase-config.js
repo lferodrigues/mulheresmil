@@ -1,12 +1,12 @@
 // Configuração do Firebase para o projeto Mulheres Mil.
-// No Firebase Console, abra: Configurações do projeto > Seus apps > Configuração do SDK.
-// Substitua SOMENTE os valores abaixo pelos dados do seu app Web.
+// Firebase Web SDK
 window.FIREBASE_CONFIG = {
-  apiKey: "COLE_AQUI_A_API_KEY",
+  apiKey: "AIzaSyA2Kz1hwQM8HplqtIPM6GMBSX-aroExg0w",
   authDomain: "biblioteca-virtual-8db41.firebaseapp.com",
-  databaseURL: "https://biblioteca-virtual-8db41-default-rtdb.firebaseio.com/",
+  databaseURL: "https://biblioteca-virtual-8db41-default-rtdb.firebaseio.com",
   projectId: "biblioteca-virtual-8db41",
   storageBucket: "biblioteca-virtual-8db41.firebasestorage.app",
-  messagingSenderId: "COLE_AQUI_O_MESSAGING_SENDER_ID",
-  appId: "COLE_AQUI_O_APP_ID"
+  messagingSenderId: "247188034497",
+  appId: "1:247188034497:web:29d31ef65693d5d85e5540",
+  measurementId: "G-6F9T86KGZ3"
 };
