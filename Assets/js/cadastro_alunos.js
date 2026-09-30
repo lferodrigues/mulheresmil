@@ -12,11 +12,12 @@ const firebaseConfig = {
   storageBucket: "biblioteca-virtual-8db41.firebasestorage.app",
   messagingSenderId: "247188034497",
   appId: "1:247188034497:web:29d31ef65693d5d85e5540",
+  databaseURL: "https://biblioteca-virtual-8db41-default-rtdb.firebaseio.com",
   measurementId: "G-6F9T86KGZ3"
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getDatabase(app, "https://biblioteca-virtual-8db41-default-rtdb.firebaseio.com");
 const ALUNAS_PATH = "alunas";
 
 const CURSOS = {
@@ -165,7 +166,7 @@ async function confirmarSalvar(){
   }catch(e){
     console.error(e);
     $("modalSalvar").disabled=false;
-    $("modalTexto").textContent="Não foi possível salvar no Firebase. Verifique as regras do Realtime Database.";
+    $("modalTexto").textContent=`Não foi possível salvar no Firebase. Erro: ${e?.code||e?.message||"desconhecido"}. Verifique as regras do Realtime Database.`;
   }
 }
 
