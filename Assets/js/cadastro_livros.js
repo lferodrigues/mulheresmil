@@ -1,12 +1,13 @@
 import { db } from "./firebase-config.js";
 import {
-  ref, get, set, update, onValue, serverTimestamp
+  ref, get, set, update, remove, onValue, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const $ = id => document.getElementById(id);
 const livrosRef = ref(db, "livros");
 let cache = {};
 let pendente = null;
+let paraRemover = null;
 
 /* ---------- utilidades ---------- */
 
@@ -44,7 +45,7 @@ function erro(e) {
   }
 }
 
-function fecharModal() { $("modal").hidden = true; }
+function fecharModal() { pendente = null; paraRemover = null; $("modal").hidden = true; }
 function limpar() { $("formLivro").reset(); }
 
 /* ---------- salvar ---------- */
@@ -68,6 +69,7 @@ async function salvar() {
     return erro(e);
   }
 
+  paraRemover = null;
   pendente = { id, d, existe };
 
   $("modalIcon").textContent = existe ? "!" : "✓";
@@ -131,6 +133,7 @@ function excluir() {
     limpar();
     return;
   }
+  pendente = null; paraRemover = null;
   $("modalIcon").textContent = "?";
   $("modalTitulo").textContent = "Confirmar exclusão";
   $("modalTexto").textContent = "Tem certeza de que deseja excluir e limpar todos os dados preenchidos?";
@@ -138,6 +141,65 @@ function excluir() {
   $("modalConfirmar").textContent = "Sim, excluir";
   $("modalConfirmar").onclick = () => { fecharModal(); limpar(); };
   $("modal").hidden = false;
+}
+
+/* ---------- remover livro cadastrado ---------- */
+
+function livroEmprestado(l) {
+  return Boolean(l && (l.reservado || l.status === "emprestado" || l.status === "reservado"));
+}
+
+function pedirRemocao(id) {
+  const l = cache[id];
+  if (!l) return;
+
+  // Não permite remover livro que está com uma aluna
+  if (livroEmprestado(l)) {
+    alert("Este livro está emprestado" + (l.aluna ? " para " + l.aluna : "") +
+      ". Registre a devolução em 'Devolução de Livros' antes de removê-lo do acervo.");
+    return;
+  }
+
+  pendente = null;
+  paraRemover = { id, ...l };
+  $("modalIcon").textContent = "🗑️";
+  $("modalTitulo").textContent = "Remover livro";
+  $("modalTexto").textContent = "Deseja realmente remover este livro do acervo? Esta ação não pode ser desfeita.";
+  $("modalCodigo").textContent = l.codigo || id;
+  $("modalTituloLivro").textContent = l.titulo || "—";
+  $("modalAutor").textContent = l.autor || "—";
+  $("modalGenero").textContent = l.genero || "—";
+  $("modalData").hidden = false;
+  $("modalConfirmar").textContent = "Sim, remover";
+  $("modalConfirmar").onclick = confirmarRemocao;
+  $("modal").hidden = false;
+}
+
+async function confirmarRemocao() {
+  if (!paraRemover) return;
+  const { id } = paraRemover;
+  const btn = $("modalConfirmar");
+  btn.disabled = true;
+
+  try {
+    // Confere o estado mais recente no banco antes de apagar
+    const atual = (await get(ref(db, "livros/" + id))).val();
+    if (livroEmprestado(atual)) {
+      fecharModal();
+      alert("Este livro acabou de ser emprestado. Registre a devolução antes de removê-lo.");
+      return;
+    }
+
+    await remove(ref(db, "livros/" + id));
+
+    // Se o livro removido estava aberto no formulário, limpa o formulário
+    if (chave($("codigo").value) === id) limpar();
+    fecharModal();
+  } catch (e) {
+    erro(e);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /* ---------- lista em tempo real ---------- */
@@ -156,12 +218,19 @@ function render() {
       '<b class="codigo">' + esc(x.codigo || x.id) + '</b>' +
       '<span class="livro"><strong>' + esc(x.titulo) + '</strong>' +
       '<small>' + esc(x.autor) + ' • ' + esc(x.genero) + '</small></span>' +
+      '<button type="button" class="remover-livro" data-id="' + esc(x.id) + '">Remover</button>' +
     '</div>'
   ).join("");
 }
 
-// clicar num livro da lista carrega os dados no formulário para editar
+// clicar em Remover abre a confirmação; clicar no resto do livro carrega os dados no formulário para editar
 $("lista").addEventListener("click", e => {
+  const botao = e.target.closest(".remover-livro");
+  if (botao) {
+    e.stopPropagation();
+    pedirRemocao(botao.dataset.id);
+    return;
+  }
   const item = e.target.closest("div[data-id]");
   if (!item) return;
   const l = cache[item.dataset.id];
