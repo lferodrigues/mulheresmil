@@ -36,11 +36,9 @@ A proposta inicial foi, portanto, criar um ambiente web simples, acessível e ce
 * centralizar os materiais utilizados nas aulas;
 * facilitar a organização dos conteúdos dos cursos.
 
-Com a evolução do projeto e a identificação de novas necessidades, a plataforma passou a atender também as **alunas dos cursos**.
+Com a evolução do projeto e a identificação de novas necessidades, a plataforma passou a atender também as **alunas dos cursos**, que podem acessar os materiais das aulas e baixar os arquivos em PDF para continuar os estudos em casa.
 
-Foi criada uma área específica para que as estudantes possam acessar os materiais das aulas e realizar o **download dos arquivos em PDF**, permitindo que continuem seus estudos em casa.
-
-Atualmente, o projeto também conta com uma área de **login administrativo**, destinada aos profissionais responsáveis pela gestão e acompanhamento dos cursos.
+Hoje o sistema conta ainda com uma **área administrativa protegida por login**, onde a equipe responsável faz o **lançamento de frequência** e gerencia a **Biblioteca Itinerante** (livros, alunas, reservas, consultas e devoluções).
 
 ---
 
@@ -57,9 +55,10 @@ O sistema tem como principais objetivos:
 * facilitar o gerenciamento acadêmico;
 * auxiliar supervisores e orientação no acompanhamento das turmas;
 * registrar e acompanhar faltas das estudantes;
+* controlar o acervo, os empréstimos e as devoluções de livros;
 * criar uma base tecnológica que possa receber novas funcionalidades.
 
-O projeto foi desenvolvido com uma abordagem **incremental**, sendo ampliado conforme as necessidades identificadas durante a utilização da plataforma. Entre as novas funcionalidades, destaca-se a **Biblioteca Itinerante**, criada para organizar o acervo e facilitar o controle de empréstimos e devoluções de livros.
+O projeto foi desenvolvido com uma abordagem **incremental**, sendo ampliado conforme as necessidades identificadas durante a utilização da plataforma.
 
 ---
 
@@ -77,11 +76,9 @@ O sistema foi pensado como uma ferramenta tecnológica de apoio a essas atividad
 
 # 💻 Funcionalidades
 
-## 👩‍🏫 Área dos cursos
+## 👩‍🏫 Área pública dos cursos
 
-A página inicial apresenta os cursos disponíveis na plataforma.
-
-Atualmente, a estrutura contempla:
+A página inicial (`index.html`) apresenta os cursos disponíveis e o botão de **Login**.
 
 ### 💻 Operadora de Computador
 
@@ -91,120 +88,170 @@ Atualmente, a estrutura contempla:
 
 Área destinada aos materiais do curso de **Assistente Escolar**.
 
-A página inicial utiliza uma interface simples para permitir que a usuária selecione diretamente o curso desejado.
+Ao escolher o curso, a usuária vê uma tela de carregamento (`operadora.html` / `assistente.html`) e é redirecionada automaticamente para a pasta de materiais do respectivo curso.
 
 ---
 
-# 🖥️ Utilização na lousa interativa
+## 🖥️ Utilização na lousa interativa
 
-Uma das principais finalidades do sistema é sua utilização diretamente nas **lousas interativas disponíveis na escola**.
+Uma das principais finalidades do sistema é sua utilização diretamente nas **lousas interativas** da escola.
 
-O professor pode acessar a plataforma pelo navegador e selecionar o curso e o conteúdo desejado.
-
-Dessa maneira, não é necessário:
+O professor acessa a plataforma pelo navegador e seleciona o curso desejado. Dessa maneira, não é necessário:
 
 * levar notebook pessoal;
 * utilizar pendrive;
 * copiar arquivos para o computador da sala;
 * procurar diferentes arquivos em dispositivos externos.
 
-O conteúdo fica disponível através da própria plataforma.
-
 Essa característica foi o ponto de partida para o desenvolvimento do projeto.
 
 ---
 
-# 📥 Materiais para as alunas
+## 📥 Materiais para as alunas
 
-Além do uso em sala de aula, a plataforma foi ampliada para permitir que as estudantes tenham acesso aos materiais utilizados durante as aulas.
-
-Os conteúdos podem ser disponibilizados em formato **PDF**, permitindo que as alunas:
+Os conteúdos são disponibilizados em formato **PDF**, permitindo que as alunas:
 
 * consultem os materiais;
 * estudem posteriormente;
 * façam download dos arquivos;
-* revisem os conteúdos em casa;
-* mantenham os materiais para consulta durante o curso.
-
-Essa funcionalidade amplia o uso da plataforma para além da sala de aula.
+* revisem os conteúdos em casa.
 
 ---
 
-# 🔐 Área administrativa
+## 🔐 Área administrativa
 
-O projeto também possui uma área de **login**, acessível através do botão localizado na página inicial.
+O botão **Login** da página inicial leva à tela `admin.html`, que usa **Firebase Authentication** (e-mail e senha).
 
-A finalidade dessa área é permitir que usuários autorizados tenham acesso às funcionalidades administrativas da plataforma.
+Após o login, a usuária acessa o **Painel** (`painel.html`) com duas opções:
 
-Entre as funções previstas/envolvidas estão:
+| Opção | Descrição |
+|---|---|
+| 📖 **Biblioteca** | Livros, alunas, reservas, consultas e devoluções |
+| 📝 **Lançamento de Frequência** | Controle da lista de presença dos cursos |
 
-* acesso restrito por login;
-* gerenciamento das informações acadêmicas;
-* acompanhamento das turmas;
-* controle das estudantes;
-* lançamento de faltas;
-* acompanhamento da frequência;
-* apoio às atividades dos supervisores;
-* apoio às atividades da orientação.
-
-A existência dessa área também permite que o projeto evolua posteriormente para um sistema de gestão acadêmica mais completo.
+As páginas administrativas da biblioteca usam o arquivo `auth-guard.js`: quem não estiver logado é redirecionado automaticamente para a tela de login.
 
 ---
 
-# 📊 Controle de frequência
+## 📊 Controle de frequência
 
-Uma das funcionalidades administrativas do projeto é o **controle de faltas das estudantes**.
+Acessível pelo painel (`menu.html`), com uma lista de presença para cada curso:
 
-A funcionalidade foi pensada para auxiliar os responsáveis pelo acompanhamento das turmas, permitindo registrar a frequência das alunas e manter essas informações organizadas.
+* `lista_presenca_mulheres_mil.html` — Operadora de Computador
+* `lista_presenca_assistente_escolar.html` — Assistente Escolar
 
-Esse recurso está alinhado às atividades de acompanhamento atribuídas à função de supervisão no Programa Mulheres Mil, que incluem o acompanhamento das frequências e dos controles de frequência das alunas.
+Recursos:
+
+* várias listas por curso, cada uma com **data** e **observação/turma**;
+* três aulas por lista, marcando **P** (presente) ou **A** (ausente) para cada aluna;
+* aba de **Resumo de Faltas**, somando presenças, faltas e aulas registradas por aluna;
+* **exportação em PDF** de todas as listas e do resumo de faltas (jsPDF);
+* alunas com faltas destacadas em vermelho.
+
+> ℹ️ As listas de presença guardam os dados no **navegador** (`localStorage`). Os dados ficam disponíveis no mesmo computador/navegador e não são sincronizados entre dispositivos. Recomenda-se baixar os PDFs periodicamente como cópia de segurança.
+
+Esse recurso está alinhado às atividades de acompanhamento atribuídas à função de supervisão no Programa Mulheres Mil.
+
+---
+
+## 📖 Biblioteca Itinerante
+
+A Biblioteca Itinerante organiza o acervo e a circulação de livros entre as participantes do projeto. Os dados ficam no **Firebase Realtime Database** e são atualizados em tempo real. O menu da biblioteca (`biblioteca.html`) reúne cinco áreas:
+
+### 📚 Cadastro de Livros (`cadastro_livros.html`)
+
+* cadastro com código, título, autor(a) e gênero/categoria;
+* confirmação antes de salvar;
+* se o código já existir, os dados são atualizados **sem alterar a situação** do livro (emprestado/livre);
+* clicar em um livro da lista carrega os dados no formulário para edição;
+* migração única de livros que estavam salvos apenas no navegador (versão antiga).
+
+### 👩‍🎓 Cadastro de Alunas (`cadastro_alunos.html`)
+
+* seleção do curso e pesquisa da aluna pelo nome (a lista vem das listas de presença);
+* registro do **WhatsApp** para contato, com máscara automática;
+* lista de **alunas cadastradas** do curso, com botão **Remover** em cada uma;
+* a remoção pede **confirmação** e é **bloqueada** se a aluna ainda estiver com livro emprestado (é preciso registrar antes a devolução).
+
+### 📖 Reserva de Livros (`reserva_livros.html`)
+
+* busca por livro (somente disponíveis) e por aluna cadastrada;
+* confirmação com data da reserva e **prazo de devolução de 15 dias**;
+* reserva feita por **transação atômica**, evitando que duas pessoas reservem o mesmo livro ao mesmo tempo;
+* lista dos livros emprestados, com destaque para os atrasados;
+* grava o histórico do empréstimo (quem, qual livro e quando).
+
+### 🔎 Consulta de Livros (`consulta-livros.html`)
+
+* filtro por número/código e por título;
+* situação de cada livro:
+  * 🟢 **Livre** — disponível;
+  * 🟡 **Emprestado** — dentro do prazo de 15 dias;
+  * 🔴 **Atrasado** — passou de 15 dias da reserva;
+* botão **Expandir** com os detalhes do livro e para quem está reservado.
+
+### ↩️ Devolução de Livros (`devolucao_livros.html`)
+
+* layout idêntico ao da Consulta de Livros, listando apenas os livros **emprestados ou atrasados**;
+* no lugar do "Expandir", o botão **Remover**;
+* ao clicar, abre um pop-up perguntando se a pessoa deseja realmente fazer a alteração;
+* confirmando, o livro volta ao status **🟢 Livre**, os dados da aluna são limpos e o empréstimo fica registrado como **devolvido**, com a data da devolução.
 
 ---
 
 # 🧩 Estrutura atual
 
-A plataforma utiliza uma estrutura web composta por páginas independentes.
-
-A página inicial atualmente apresenta:
-
 ```text
 Sistema Mulheres Mil
 │
-├── Página inicial
-│   ├── Logo Mulheres Mil
-│   ├── Login
-│   ├── Operadora de Computador
-│   └── Assistente Escolar
+├── Área pública
+│   ├── index.html ................. Escolha do curso + botão Login
+│   ├── operadora.html ............. Redireciona aos materiais (Operadora)
+│   └── assistente.html ............ Redireciona aos materiais (Assistente)
 │
-├── Operadora de Computador
-│   └── Materiais do curso
+├── Área administrativa (login)
+│   ├── admin.html ................. Login (Firebase Authentication)
+│   ├── painel.html ................ Biblioteca | Lançamento de Frequência
+│   │
+│   ├── Frequência
+│   │   ├── menu.html .............. Escolha do curso
+│   │   ├── lista_presenca_mulheres_mil.html
+│   │   └── lista_presenca_assistente_escolar.html
+│   │
+│   └── Biblioteca Itinerante
+│       ├── biblioteca.html ........ Menu da biblioteca
+│       ├── cadastro_livros.html
+│       ├── cadastro_alunos.html
+│       ├── reserva_livros.html
+│       ├── consulta-livros.html
+│       └── devolucao_livros.html
 │
-├── Assistente Escolar
-│   └── Materiais do curso
-│
-└── Área administrativa
-    ├── Login
-    ├── Gestão
-    └── Controle de frequência
+└── Assets
+    ├── css/ ....................... Estilos de cada página
+    └── js/ ........................ Scripts (firebase-config, auth-guard, etc.)
 ```
 
-A página inicial utiliza HTML e CSS para apresentar os cursos e direcionar as usuárias para suas respectivas áreas.
+### Banco de dados (Firebase Realtime Database)
+
+```text
+/livros/{codigo}        → dados do livro, status, reservado, aluna, datas
+/alunas/{curso}/{n}     → nome, nº da chamada, WhatsApp
+/emprestimos/{id}       → livro, aluna, data da reserva, prazo, status
+```
 
 ---
 
 # 🛠️ Tecnologias
 
-O projeto foi desenvolvido utilizando tecnologias web, permitindo sua execução diretamente através de um navegador.
-
-### Tecnologias principais
+O projeto foi desenvolvido com tecnologias web, executando diretamente no navegador.
 
 * **HTML5**
 * **CSS3**
-* **JavaScript**
-* **PDF**
-* **Web Browser**
-
-A estrutura foi pensada para funcionar em computadores utilizados pelos professores, lousas interativas e dispositivos das estudantes.
+* **JavaScript** (módulos ES)
+* **Firebase Authentication** — login da área administrativa
+* **Firebase Realtime Database** — dados da Biblioteca Itinerante
+* **jsPDF** e **jsPDF-AutoTable** — exportação das listas de presença em PDF
+* **GitHub Pages** — hospedagem (domínio `mulheresmil.com.br`)
 
 ---
 
@@ -216,9 +263,7 @@ A plataforma utiliza a configuração:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ```
 
-permitindo adaptação da interface para diferentes tamanhos de tela.
-
-O objetivo é possibilitar o acesso por:
+permitindo adaptação da interface para:
 
 * 🖥️ computadores;
 * 🖥️ lousas interativas;
@@ -230,32 +275,23 @@ O objetivo é possibilitar o acesso por:
 
 # 🎨 Interface
 
-A identidade visual do sistema utiliza elementos associados ao **Programa Mulheres Mil**, buscando manter uma apresentação simples, institucional e de fácil utilização.
+A identidade visual utiliza elementos associados ao **Programa Mulheres Mil**, com uma apresentação simples, institucional e de fácil utilização:
 
-A interface inicial utiliza:
-
-* cartões de conteúdo;
-* botões de acesso aos cursos;
+* cartões de conteúdo e botões de acesso;
 * ícones para identificação das áreas;
-* identidade visual do programa;
-* layout centralizado;
-* elementos responsivos.
-
-O CSS utiliza uma paleta baseada em tons de **laranja e verde**, além de elementos de destaque para facilitar a identificação dos cursos e ações da interface.
+* layout centralizado e responsivo;
+* paleta de **laranja e verde** na área pública e de **laranja e vinho** na Biblioteca Itinerante;
+* pop-ups de confirmação antes de ações importantes (salvar, reservar, devolver e remover).
 
 ---
 
 # 🏛️ Identidade institucional
 
-O projeto utiliza a identidade visual relacionada ao **Programa Mulheres Mil** e ao **IF Sudeste MG**.
-
-As logomarcas oficiais do IF Sudeste MG estão disponibilizadas pelo próprio instituto em sua página oficial de identidade visual:
+As logomarcas oficiais do IF Sudeste MG estão disponíveis na página oficial de identidade visual do instituto:
 
 **IF Sudeste MG — Identidade Visual**
 
 https://www.ifsudestemg.edu.br/comunicacao-social/logos
-
-O instituto também disponibiliza o manual oficial para utilização da marca.
 
 A documentação oficial da identidade visual do **Programa Mulheres Mil** pode ser encontrada no portal do Ministério da Educação:
 
@@ -265,8 +301,6 @@ https://www.gov.br/mec/pt-br/centrais-de-conteudo/marcas/educacao-profissional-e
 
 # 🔄 Evolução do projeto
 
-O projeto foi desenvolvido de forma gradual.
-
 ### Fase 1 — Necessidade em sala de aula
 
 Identificação da necessidade de utilização da lousa interativa sem depender de computadores pessoais ou pendrives.
@@ -275,31 +309,31 @@ Identificação da necessidade de utilização da lousa interativa sem depender 
 
 ### Fase 2 — Centralização dos materiais
 
-Criação de uma página para organização dos materiais dos cursos.
+Criação de páginas para organização dos materiais dos cursos.
 
 ⬇️
 
 ### Fase 3 — Acesso das estudantes
 
-Disponibilização dos materiais em PDF para que as alunas pudessem realizar os downloads e estudar em casa.
+Disponibilização dos materiais para que as alunas pudessem baixar e estudar em casa.
 
 ⬇️
 
 ### Fase 4 — Área administrativa
 
-Criação de uma área protegida por login para supervisores e orientação.
+Criação de uma área protegida por login (Firebase Authentication) para supervisores e orientação.
 
 ⬇️
 
 ### Fase 5 — Controle acadêmico
 
-Implementação do controle e lançamento de faltas das estudantes.
+Implementação das listas de presença, do resumo de faltas e da exportação em PDF.
 
 ⬇️
 
 ### Fase 6 — Biblioteca Itinerante
 
-Implementação de uma área específica para organização do acervo, cadastro de estudantes, reservas, consultas e registro de devoluções, apoiando a circulação de livros entre as participantes do projeto.
+Cadastro de livros e alunas, reservas com prazo de 15 dias, consulta com situação (livre, emprestado e atrasado) e **devolução de livros**, tudo integrado ao Firebase.
 
 ⬇️
 
@@ -311,34 +345,38 @@ O sistema continuará recebendo atualizações de acordo com as necessidades ide
 
 # 🚀 Próximas atualizações
 
-O projeto possui caráter evolutivo.
+O projeto possui caráter evolutivo. Novas funcionalidades poderão ser adicionadas conforme as necessidades dos professores, estudantes, supervisores e orientação.
 
-Novas funcionalidades poderão ser adicionadas conforme as necessidades dos professores, estudantes, supervisores e orientação.
+**Já implementado**
 
-Entre as possíveis evoluções estão:
-
-* [x] cadastro de estudantes na Biblioteca Itinerante;
+* [x] login administrativo com Firebase Authentication;
 * [x] cadastro de livros;
-* [x] reserva de livros;
-* [x] consulta de livros;
+* [x] cadastro de alunas na Biblioteca Itinerante;
+* [x] remoção do cadastro de alunas;
+* [x] reserva de livros com prazo de devolução;
+* [x] consulta de livros com situação (livre, emprestado, atrasado);
 * [x] registro de devolução de livros;
-* [ ] cadastro de professores;
-* [ ] cadastro de turmas;
-* [ ] controle de frequência;
-* [ ] relatórios de frequência;
-* [ ] histórico de faltas;
-* [ ] gerenciamento de materiais;
-* [ ] upload de PDFs;
+* [x] listas de presença por curso;
+* [x] resumo de faltas;
+* [x] exportação das listas e do resumo em PDF;
+* [x] melhorias para dispositivos móveis.
+
+**Ideias futuras**
+
+* [ ] salvar a frequência no Firebase (hoje fica no navegador);
+* [ ] proteger também as páginas de lista de presença com login;
+* [ ] histórico de empréstimos por aluna e por livro;
+* [ ] aviso (por exemplo, via WhatsApp) para livros atrasados;
+* [ ] excluir livros do acervo;
+* [ ] cadastro de professores e de turmas;
+* [ ] relatórios de frequência e histórico de faltas;
+* [ ] gerenciamento e upload de materiais em PDF;
 * [ ] organização dos materiais por disciplina;
 * [ ] calendário de aulas;
 * [ ] comunicados para as estudantes;
-* [ ] painel administrativo;
 * [ ] diferentes níveis de acesso;
-* [ ] melhorias de segurança;
-* [ ] melhorias na acessibilidade;
-* [ ] melhorias para dispositivos móveis;
-* [ ] sistema de notificações;
-* [ ] geração de relatórios.
+* [ ] melhorias de acessibilidade;
+* [ ] sistema de notificações.
 
 > A implementação dessas funcionalidades dependerá das necessidades identificadas durante a utilização da plataforma.
 
@@ -346,28 +384,30 @@ Entre as possíveis evoluções estão:
 
 # 🔐 Segurança
 
-A área administrativa possui acesso através de login para restringir funcionalidades destinadas à equipe responsável pela gestão do curso.
+O acesso à área administrativa é feito por login com **Firebase Authentication**, e as páginas da biblioteca são protegidas pelo `auth-guard.js`.
 
-Como o sistema trabalha com informações acadêmicas e dados de estudantes, futuras versões deverão priorizar:
+Pontos de atenção:
 
-* autenticação segura;
-* controle de permissões;
-* proteção de dados;
-* armazenamento seguro;
+* a configuração do Firebase presente no código é pública por natureza; **a proteção real dos dados está nas Regras do Realtime Database**, que devem permitir leitura e escrita apenas para usuários autenticados;
+* o domínio `mulheresmil.com.br` deve estar em *Authentication → Settings → Authorized domains* no Firebase;
+* o bloqueio do botão direito e dos atalhos de desenvolvedor nas páginas públicas é apenas um desestímulo e **não** substitui a segurança do servidor;
+* as listas de presença ficam no `localStorage` do navegador.
+
+Como o sistema trabalha com informações acadêmicas e dados de estudantes (nomes e WhatsApp), futuras versões deverão priorizar:
+
+* controle de permissões por perfil;
 * registro de alterações;
 * gerenciamento de sessões;
 * proteção contra acesso não autorizado;
-* adequação à legislação aplicável de proteção de dados.
+* adequação à **LGPD** (Lei Geral de Proteção de Dados).
 
 ---
 
 # 👥 Público-alvo
 
-O sistema foi desenvolvido para atender principalmente:
-
 ### 👩‍🎓 Estudantes
 
-Acesso aos materiais didáticos e PDFs das aulas.
+Acesso aos materiais didáticos e PDFs das aulas, além de empréstimo de livros pela Biblioteca Itinerante.
 
 ### 👨‍🏫 Professores
 
@@ -375,7 +415,7 @@ Acesso aos conteúdos para utilização durante as aulas e na lousa interativa.
 
 ### 👩‍💼 Supervisores
 
-Acompanhamento das turmas e controle de frequência.
+Acompanhamento das turmas, controle de frequência e gestão da biblioteca.
 
 ### 👩‍💼 Orientação
 
