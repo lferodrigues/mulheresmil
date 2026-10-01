@@ -83,18 +83,22 @@ $("btnOlho").addEventListener("click", () => {
   $("senha").focus();
 });
 
-// Já logado? vai direto para o painel.
-onAuthStateChanged(auth, (user) => { if (user) location.replace(DESTINO); });
+// Já logado ao abrir esta página? vai direto para o destino (sem animação).
+// Durante um login feito agora, quem redireciona é o formulário (com a flor).
+let entrando = false;
+onAuthStateChanged(auth, (user) => { if (user && !entrando) location.replace(DESTINO); });
 
 $("formLogin").addEventListener("submit", async (e) => {
   e.preventDefault();
   $("msgErro").style.display = "none";
   $("btnEntrar").disabled = true;
+  entrando = true;
   try {
     await signInWithEmailAndPassword(auth, $("usuario").value.trim(), $("senha").value);
     $("msgSucesso").style.display = "block";
-    location.replace(DESTINO);
+    location.replace("carregando.html?returnTo=" + encodeURIComponent(DESTINO));
   } catch (err) {
+    entrando = false;
     console.error(err);
     $("msgErro").textContent = MENSAGENS[err.code] || ("Não foi possível entrar (" + (err.code || err.message) + ").");
     $("msgErro").style.display = "block";
