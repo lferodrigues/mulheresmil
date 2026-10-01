@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Login — Mulheres Mil</title>
+<style>
+:root{--laranja:#f5a623;--laranja-escuro:#e07b1a;--vermelho:#e04b3a;--texto:#2c2620;--borda:#eadfcd}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--texto);background:linear-gradient(135deg,#f5a623,#e8871e 55%,#e04b3a);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border-radius:16px;box-shadow:0 10px 35px rgba(0,0,0,.25);padding:36px 32px;width:100%;max-width:380px;text-align:center}.login-card img{max-width:220px;margin-bottom:18px}.login-card h1{font-size:1.15rem;margin:0 0 4px}.subtitulo{margin:0 0 22px;font-size:.85rem;color:#8a7a63}.campo{text-align:left;margin-bottom:14px}.campo label{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px;color:#5a4a30}.campo input{width:100%;padding:11px 12px;border-radius:8px;border:1.5px solid var(--borda);font-size:.95rem;font-family:inherit}.campo input:focus{outline:none;border-color:var(--laranja)}.btn-entrar{width:100%;margin-top:8px;padding:12px;border:0;border-radius:8px;background:var(--laranja-escuro);color:#fff;font-weight:700;font-size:.95rem;cursor:pointer}.btn-entrar:disabled{opacity:.65;cursor:wait}.erro{margin-top:14px;background:#fdeceb;color:var(--vermelho);border:1px solid #f4b8b0;padding:9px 12px;border-radius:8px;font-size:.85rem;display:none}.sucesso{margin-top:14px;color:#287a3d;font-size:.85rem;display:none}footer{margin-top:22px;font-size:.72rem;color:#b7a689}
+
+/* Campo de senha com olhinho */
+.campo-senha{position:relative}
+.campo-senha input{padding-right:44px}
+.btn-olho{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:#8a7a63;cursor:pointer}
+.btn-olho:hover{background:#fdf3e3;color:var(--laranja-escuro)}
+.btn-olho:focus-visible{outline:2px solid var(--laranja);outline-offset:1px}
+.btn-olho svg{width:20px;height:20px;display:block}
+.btn-olho .icone-oculto{display:none}
+.btn-olho.ativo .icone-visivel{display:none}
+.btn-olho.ativo .icone-oculto{display:block}
+
+/* Botão de cadastro de novo usuário */
+.btn-novo-usuario{width:100%;margin-top:12px;padding:11px;border:1.5px solid var(--laranja-escuro);border-radius:8px;background:#fff;color:var(--laranja-escuro);font-weight:700;font-size:.9rem;cursor:pointer;transition:background .15s ease,color .15s ease}
+.btn-novo-usuario:hover{background:#fdf3e3}
+
+/* Pop-ups */
+[hidden]{display:none!important}
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(47,16,39,.45);backdrop-filter:blur(4px)}
+.modal-box{width:min(400px,100%);background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(47,16,39,.35);text-align:center}
+.modal-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#fdf3e3;color:var(--laranja-escuro);font-size:26px;font-weight:800}
+.modal-icon.negado{background:#fdeceb;color:var(--vermelho)}
+.modal-box h2{margin:0 0 8px;font-size:1.25rem;color:#5a1738}
+.modal-box p{margin:0 0 18px;color:#76656c;font-size:.9rem;line-height:1.5}
+.modal-box .campo{margin-bottom:12px}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions button{flex:1;border:0;border-radius:10px;padding:12px;font:inherit;font-weight:700;cursor:pointer}
+.btn-cancelar{background:#eee5e9;color:#5a1738}
+.btn-confirmar{background:var(--laranja-escuro);color:#fff}
+.btn-confirmar:disabled{opacity:.65;cursor:wait}
+.btn-fechar-negado{width:100%;border:0;border-radius:10px;padding:12px;background:var(--vermelho);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+@media(max-width:480px){.modal-actions{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="login-card">
+<img src="Logo-Mulheres-Mil.jpg" alt="Logo Mulheres Mil">
+<h1>Acesso ao Sistema</h1>
+<p class="subtitulo">Educação, Cidadania e Desenvolvimento Sustentável</p>
+<form id="formLogin">
+<div class="campo"><label for="usuario">E-mail</label><input type="email" id="usuario" autocomplete="username" placeholder="seu@email.com" required></div>
+<div class="campo">
+  <label for="senha">Senha</label>
+  <div class="campo-senha">
+    <input type="password" id="senha" autocomplete="current-password" placeholder="••••••••" required>
+    <button type="button" class="btn-olho" id="btnOlho" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+      <!-- olho aberto: senha oculta (clique para mostrar) -->
+      <svg class="icone-visivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <!-- olho riscado: senha visível (clique para ocultar) -->
+      <svg class="icone-oculto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.82 19.82 0 0 1-3.17 4.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    </button>
+  </div>
+</div>
+<button type="submit" class="btn-entrar" id="btnEntrar">Entrar</button>
+<button type="button" class="btn-novo-usuario" id="btnNovoUsuario">👤 Cadastrar novo usuário</button>
+<div class="erro" id="msgErro"></div><div class="sucesso" id="msgSucesso">Login realizado. Abrindo o painel...</div>
+</form>
+<footer>Mulheres Mil — Acesso restrito</footer>
+</div>
+
+<!-- Pop-up: credenciais de administrador -->
+<div id="modalAdmin" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="tituloAdmin">
+    <div class="modal-icon">🔐</div>
+    <h2 id="tituloAdmin">Acesso do administrador</h2>
+    <p>Para cadastrar um novo usuário, informe o login e a senha de administrador.</p>
+    <form id="formAdmin" novalidate>
+      <div class="campo"><label for="adminEmail">Login (e-mail)</label><input type="email" id="adminEmail" autocomplete="off" placeholder="administrador@email.com"></div>
+      <div class="campo">
+        <label for="adminSenha">Senha</label>
+        <div class="campo-senha">
+          <input type="password" id="adminSenha" autocomplete="off" placeholder="••••••••">
+          <button type="button" class="btn-olho" id="btnOlhoAdmin" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+            <svg class="icone-visivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icone-oculto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.82 19.82 0 0 1-3.17 4.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancelar" id="adminCancelar">Cancelar</button>
+        <button type="submit" class="btn-confirmar" id="adminConfirmar">Confirmar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Pop-up: acesso negado -->
+<div id="modalNegado" class="modal" hidden>
+  <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="tituloNegado">
+    <div class="modal-icon negado">✕</div>
+    <h2 id="tituloNegado">Acesso negado</h2>
+    <p>Login ou senha de administrador incorretos. Você não tem permissão para cadastrar novos usuários.</p>
+    <button type="button" class="btn-fechar-negado" id="negadoFechar">Entendi</button>
+  </div>
+</div>
+
+<script type="module">
+import { auth } from "./Assets/js/firebase-config.js";
+import { signInWithEmailAndPassword, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+const $ = (id) => document.getElementById(id);
+const PAINEL = "painel.html";
+const params = new URLSearchParams(window.location.search);
+const retornoSolicitado = params.get("returnTo");
+const DESTINO = retornoSolicitado && /^[a-zA-Z0-9_./-]+(?:\?.*)?$/.test(retornoSolicitado)
+  ? retornoSolicitado
+  : PAINEL;
+
+const MENSAGENS = {
+  "auth/invalid-credential": "E-mail ou senha incorretos.",
+  "auth/invalid-email": "E-mail inválido.",
+  "auth/user-disabled": "Este usuário está desativado.",
+  "auth/too-many-requests": "Muitas tentativas. Aguarde alguns minutos.",
+  "auth/network-request-failed": "Sem conexão com a internet.",
+  "auth/unauthorized-domain": "Este domínio não está autorizado no Firebase (Authentication > Settings > Authorized domains).",
+  "auth/operation-not-allowed": "Login por e-mail/senha não está ativado no Firebase.",
+  "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "Chave de API inválida."
+};
+
+// Olhinho: mostrar/ocultar a senha (serve para os dois campos de senha)
+function ligarOlho(botaoId, campoId) {
+  const btn = $(botaoId), campo = $(campoId);
+  btn.addEventListener("click", () => {
+    const mostrar = campo.type === "password";
+    campo.type = mostrar ? "text" : "password";
+    btn.classList.toggle("ativo", mostrar);
+    btn.setAttribute("aria-pressed", String(mostrar));
+    const texto = mostrar ? "Ocultar senha" : "Mostrar senha";
+    btn.setAttribute("aria-label", texto);
+    btn.title = texto;
+    campo.focus();
+  });
+}
+ligarOlho("btnOlho", "senha");
+ligarOlho("btnOlhoAdmin", "adminSenha");
+
+// Já logado ao abrir esta página? vai direto para o destino (sem animação).
+// Durante um login feito agora, quem redireciona é o formulário (com a flor).
+let entrando = false;
+onAuthStateChanged(auth, (user) => { if (user && !entrando) location.replace(DESTINO); });
+
+$("formLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("msgErro").style.display = "none";
+  $("btnEntrar").disabled = true;
+  entrando = true;
+  try {
+    await signInWithEmailAndPassword(auth, $("usuario").value.trim(), $("senha").value);
+    $("msgSucesso").style.display = "block";
+    location.replace("carregando.html?returnTo=" + encodeURIComponent(DESTINO));
+  } catch (err) {
+    entrando = false;
+    console.error(err);
+    $("msgErro").textContent = MENSAGENS[err.code] || ("Não foi possível entrar (" + (err.code || err.message) + ").");
+    $("msgErro").style.display = "block";
+    $("btnEntrar").disabled = false;
+  }
+});
+
+/* ---------- Cadastro de novo usuário (protegido por credencial de administrador) ---------- */
+// Só o hash SHA-256 de "sal|e-mail|senha" fica no código (a senha em texto puro não aparece aqui).
+const SAL = "mm-admin-v1";
+const HASH_ADMIN = "3644751e15c4233e2a4f9f6c4db59a1bf55c20bbded4d34fef2faafd6863a5fd";
+const PAGINA_CADASTRO = "cadastro.html";
+
+async function sha256(texto) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function abrirAdmin() {
+  $("adminEmail").value = "";
+  $("adminSenha").value = "";
+  $("adminSenha").type = "password";
+  $("btnOlhoAdmin").classList.remove("ativo");
+  $("modalAdmin").hidden = false;
+  $("adminEmail").focus();
+}
+function fecharAdmin() { $("modalAdmin").hidden = true; }
+function mostrarNegado() {
+  fecharAdmin();
+  $("modalNegado").hidden = false;
+  $("negadoFechar").focus();
+}
+
+$("btnNovoUsuario").addEventListener("click", abrirAdmin);
+$("adminCancelar").addEventListener("click", fecharAdmin);
+$("negadoFechar").addEventListener("click", () => { $("modalNegado").hidden = true; });
+
+$("formAdmin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = $("adminEmail").value.trim().toLowerCase();
+  const senha = $("adminSenha").value;
+  $("adminConfirmar").disabled = true;
+  try {
+    const hash = await sha256(SAL + "|" + email + "|" + senha);
+    if (hash === HASH_ADMIN) {
+      sessionStorage.setItem("mm_admin_cadastro", "1");
+      location.href = PAGINA_CADASTRO;
+    } else {
+      mostrarNegado();
+    }
+  } catch (err) {
+    console.error(err);
+    mostrarNegado();
+  } finally {
+    $("adminConfirmar").disabled = false;
+  }
+});
+</script>
+  <script src="./Assets/js/script.js"></script>
+</body>
+</html>
