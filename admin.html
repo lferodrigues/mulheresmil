@@ -32,6 +32,11 @@ import { signInWithEmailAndPassword, onAuthStateChanged }
 
 const $ = (id) => document.getElementById(id);
 const PAINEL = "painel.html";
+const params = new URLSearchParams(window.location.search);
+const retornoSolicitado = params.get("returnTo");
+const DESTINO = retornoSolicitado && /^[a-zA-Z0-9_./-]+(?:\?.*)?$/.test(retornoSolicitado)
+  ? retornoSolicitado
+  : PAINEL;
 
 const MENSAGENS = {
   "auth/invalid-credential": "E-mail ou senha incorretos.",
@@ -45,7 +50,7 @@ const MENSAGENS = {
 };
 
 // Já logado? vai direto para o painel.
-onAuthStateChanged(auth, (user) => { if (user) location.replace(PAINEL); });
+onAuthStateChanged(auth, (user) => { if (user) location.replace(DESTINO); });
 
 $("formLogin").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -54,7 +59,7 @@ $("formLogin").addEventListener("submit", async (e) => {
   try {
     await signInWithEmailAndPassword(auth, $("usuario").value.trim(), $("senha").value);
     $("msgSucesso").style.display = "block";
-    location.replace(PAINEL);
+    location.replace(DESTINO);
   } catch (err) {
     console.error(err);
     $("msgErro").textContent = MENSAGENS[err.code] || ("Não foi possível entrar (" + (err.code || err.message) + ").");
