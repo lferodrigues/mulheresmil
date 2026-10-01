@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Mulheres Mil | Abrindo o painel</title>
+<script type="module" src="./Assets/js/auth-guard.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#f5a623;--orange-dark:#e58e00;--green:#39a845;--green-dark:#258d31;--text:#222;--muted:#666;--bg:#f5f7f9}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);
+  background:radial-gradient(circle at 15% 20%,rgba(245,166,35,.14),transparent 30%),
+             radial-gradient(circle at 85% 80%,rgba(57,168,69,.12),transparent 30%),var(--bg)}
+.page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:min(520px,100%);background:rgba(255,255,255,.97);border-radius:24px;padding:36px 32px 32px;text-align:center;
+  box-shadow:0 18px 55px rgba(0,0,0,.10);border:1px solid rgba(0,0,0,.05)}
+.logo{display:block;width:min(100%,300px);max-height:80px;object-fit:contain;margin:0 auto 6px}
+
+/* ---------- Flor ---------- */
+.flor{display:block;width:min(100%,230px);height:auto;margin:6px auto 0;overflow:visible}
+.solo{transform-box:fill-box;transform-origin:center;transform:scaleX(0);animation:solo .6s ease-out .1s forwards}
+.caule{stroke-dasharray:1;stroke-dashoffset:1;animation:crescer 1.5s ease-in-out .5s forwards}
+.folha{transform-box:view-box;transform-origin:0 0;transform:scale(0);animation:brotar .7s cubic-bezier(.2,.9,.3,1.3) forwards}
+.folha.f1{animation-delay:1.35s}
+.folha.f2{animation-delay:1.6s}
+.cabeca{transform-box:view-box;transform-origin:100px 95px;transform:scale(0);animation:brotar .5s cubic-bezier(.2,.9,.3,1.4) 1.9s forwards}
+.petala{transform-box:view-box;transform-origin:0 0;transform:scale(0);animation:abrir .7s cubic-bezier(.2,.9,.3,1.4) forwards;animation-delay:calc(2.0s + var(--i)*.09s)}
+.miolo{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:brotar .5s cubic-bezier(.2,.9,.3,1.5) 2.9s forwards}
+.balanco{transform-box:view-box;transform-origin:100px 215px;animation:balancar 3s ease-in-out 3.2s infinite}
+.brilho{opacity:0;animation:brilhar 1.2s ease-out 3.1s forwards}
+
+@keyframes solo{to{transform:scaleX(1)}}
+@keyframes crescer{to{stroke-dashoffset:0}}
+@keyframes brotar{to{transform:scale(1)}}
+@keyframes abrir{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes balancar{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}
+@keyframes brilhar{0%{opacity:0;transform:scale(.6)}40%{opacity:.9}100%{opacity:0;transform:scale(1.5)}}
+
+/* ---------- Texto e progresso ---------- */
+h1{font-size:clamp(22px,4vw,28px);margin:10px 0 8px}
+.message{color:var(--muted);font-size:15px;line-height:1.55;margin-bottom:22px}
+.progress-track{width:100%;height:12px;background:#e9ecef;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.10)}
+.progress-bar{width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--orange),#ffd23f,var(--green))}
+.status{margin-top:12px;color:var(--muted);font-size:14px;min-height:20px}
+.skip{display:inline-block;margin-top:16px;font-size:13px;color:var(--green-dark);font-weight:700;text-decoration:none}
+.skip:hover{text-decoration:underline}
+
+@media (max-width:480px){.card{padding:28px 20px 26px}}
+@media (prefers-reduced-motion:reduce){
+  .solo,.caule,.folha,.cabeca,.petala,.miolo{animation:none;transform:none;stroke-dashoffset:0}
+  .balanco,.brilho{animation:none}
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="card" aria-label="Carregamento">
+    <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+
+    <svg class="flor" viewBox="0 0 200 240" role="img" aria-label="Uma flor nascendo">
+      <defs>
+        <radialGradient id="gPetala" cx="50%" cy="25%" r="80%">
+          <stop offset="0%" stop-color="#ffd27a"/>
+          <stop offset="60%" stop-color="#f5a623"/>
+          <stop offset="100%" stop-color="#e07b1a"/>
+        </radialGradient>
+        <radialGradient id="gMiolo" cx="40%" cy="35%" r="70%">
+          <stop offset="0%" stop-color="#ffe680"/>
+          <stop offset="100%" stop-color="#c2185b"/>
+        </radialGradient>
+        <linearGradient id="gFolha" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stop-color="#258d31"/>
+          <stop offset="100%" stop-color="#5cc46a"/>
+        </linearGradient>
+      </defs>
+
+      <!-- terra -->
+      <ellipse class="solo" cx="100" cy="218" rx="62" ry="12" fill="#8a5a3c"/>
+      <ellipse class="solo" cx="100" cy="215" rx="46" ry="8" fill="#a8704a"/>
+
+      <g class="balanco">
+        <!-- caule -->
+        <path class="caule" pathLength="1" d="M100 215 C100 180 94 148 100 100" fill="none" stroke="#39a845" stroke-width="6" stroke-linecap="round"/>
+
+        <!-- folhas -->
+        <g transform="translate(98 170)">
+          <path class="folha f1" d="M0 0 C26 -4 46 -24 52 -46 C26 -46 6 -26 0 0 Z" fill="url(#gFolha)"/>
+        </g>
+        <g transform="translate(98 150) scale(-1 1)">
+          <path class="folha f2" d="M0 0 C24 -4 42 -22 47 -42 C24 -42 5 -24 0 0 Z" fill="url(#gFolha)"/>
+        </g>
+
+        <!-- flor -->
+        <g class="cabeca">
+          <g transform="translate(100 95)">
+            <g transform="rotate(0)"><ellipse class="petala" style="--i:0" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(45)"><ellipse class="petala" style="--i:1" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(90)"><ellipse class="petala" style="--i:2" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(135)"><ellipse class="petala" style="--i:3" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(180)"><ellipse class="petala" style="--i:4" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(225)"><ellipse class="petala" style="--i:5" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(270)"><ellipse class="petala" style="--i:6" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <g transform="rotate(315)"><ellipse class="petala" style="--i:7" cx="0" cy="-24" rx="12" ry="24" fill="url(#gPetala)"/></g>
+            <circle class="miolo" cx="0" cy="0" r="15" fill="url(#gMiolo)"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- brilhinhos quando a flor abre -->
+      <g class="brilho" fill="#ffd23f">
+        <circle cx="38" cy="60" r="3"/><circle cx="165" cy="48" r="2.5"/><circle cx="30" cy="115" r="2"/>
+        <circle cx="172" cy="108" r="3"/><circle cx="100" cy="22" r="2.5"/>
+      </g>
+    </svg>
+
+    <h1>Bem-vinda!</h1>
+    <p class="message">Login realizado com sucesso. Estamos preparando o seu painel.</p>
+
+    <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso do carregamento">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <p class="status" id="status">Iniciando...</p>
+    <a class="skip" id="skip" href="painel.html">Ir agora →</a>
+  </section>
+</main>
+
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var pedido = params.get("returnTo");
+  var destino = pedido && /^[a-zA-Z0-9_./-]+(?:\?.*)?$/.test(pedido) ? pedido : "painel.html";
+  document.getElementById("skip").setAttribute("href", destino);
+
+  var reduzir = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var duracao = reduzir ? 1500 : 4600;
+  var inicio = performance.now();
+  var barra = document.getElementById("progressBar");
+  var trilho = document.querySelector(".progress-track");
+  var status = document.getElementById("status");
+  var mensagens = [
+    [0, "Plantando a semente..."],
+    [30, "Regando..."],
+    [60, "A flor está nascendo..."],
+    [85, "Quase pronto..."],
+    [100, "Abrindo o painel..."]
+  ];
+
+  function passo(agora) {
+    var p = Math.min((agora - inicio) / duracao, 1);
+    var v = Math.floor(p * 100);
+    barra.style.width = v + "%";
+    trilho.setAttribute("aria-valuenow", v);
+    var atual = mensagens[0][1];
+    for (var i = 0; i < mensagens.length; i++) if (v >= mensagens[i][0]) atual = mensagens[i][1];
+    status.textContent = atual;
+    if (p < 1) requestAnimationFrame(passo);
+    else window.location.replace(destino);
+  }
+  requestAnimationFrame(passo);
+})();
+</script>
+</body>
+</html>
