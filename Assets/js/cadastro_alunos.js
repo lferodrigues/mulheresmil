@@ -1,6 +1,6 @@
 /* Cadastro de Alunas — Biblioteca Itinerante (Firebase Realtime Database) */
 import { db } from "./firebase-config.js";
-import { ref, get, set } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const ALUNAS_PATH = "alunas";
 const CURSOS = {
@@ -9,6 +9,8 @@ const CURSOS = {
 };
 
 let alunas = [], curso = "", atual = null;
+let cadastradas = [];      // cadastros exibidos na lista do curso atual
+let paraRemover = null;    // cadastro aguardando confirmação de remoção
 const $ = id => document.getElementById(id);
 
 function esc(t) {
@@ -101,17 +103,18 @@ function limpar(){
 }
 
 function voltarInicio(){
-  curso = ""; atual = null; alunas = [];
+  curso = ""; atual = null; alunas = []; cadastradas = []; paraRemover = null;
   $("curso").value = ""; $("area").hidden = true; $("pesquisa").value = "";
   $("whatsapp").value = ""; $("dados").hidden = true; $("campoZap").hidden = true;
   $("salvar").disabled = true; $("apagar").disabled = false;
   $("listaSugestoes").innerHTML = ""; $("listaSugestoes").hidden = true; $("cadastros").hidden = true;
 }
 
-function fecharModal(){ $("modal").hidden = true; }
+function fecharModal(){ paraRemover = null; $("modal").hidden = true; }
 
 function salvar(){
   if(!atual || !whatsappDigitado()) return;
+  paraRemover = null;
   $("modalIcon").textContent = "✓"; $("modalTitulo").textContent = "Confirmar cadastro";
   $("modalTexto").textContent = "Confira os dados da aluna e confirme se deseja realmente salvar:";
   $("modalCurso").textContent = nomeDoCurso(); $("modalNome").textContent = atual.nome;
@@ -121,6 +124,7 @@ function salvar(){
 }
 
 function apagar(){
+  paraRemover = null;
   $("modalIcon").textContent = "!"; $("modalTitulo").textContent = "Voltar para o início?";
   $("modalTexto").textContent = "Você está prestes a sair desta etapa do cadastro. Os dados já salvos não serão apagados.";
   $("modalCurso").textContent = nomeDoCurso(); $("modalNome").textContent = atual ? atual.nome : "";
@@ -129,8 +133,53 @@ function apagar(){
   $("modalSalvar").dataset.acao = "voltar"; $("modal").hidden = false;
 }
 
+/* ---------- remover cadastro de aluna ---------- */
+function pedirRemocao(chamada){
+  const cadastro = cadastradas.find(x => String(x.chamada) === String(chamada));
+  if(!cadastro) return;
+  paraRemover = cadastro;
+  $("modalIcon").textContent = "🗑️"; $("modalTitulo").textContent = "Remover cadastro";
+  $("modalTexto").textContent = "Deseja realmente remover o cadastro desta aluna? Esta ação não pode ser desfeita.";
+  $("modalCurso").textContent = nomeDoCurso(); $("modalNome").textContent = cadastro.nome;
+  $("modalChamada").textContent = cadastro.chamada; $("modalWhatsapp").textContent = cadastro.whatsapp || "Não informado";
+  $("modalData").hidden = false; $("modalSalvar").textContent = "Sim, remover";
+  $("modalSalvar").dataset.acao = "remover"; $("modal").hidden = false;
+}
+
+async function confirmarRemocao(){
+  if(!paraRemover) return;
+  const cadastro = paraRemover;
+  $("modalSalvar").disabled = true;
+  try{
+    // Não permite remover aluna que ainda está com livro emprestado
+    const snap = await get(ref(db,"emprestimos"));
+    const emprestimos = Object.values(snap.val() || {});
+    const comLivro = emprestimos.some(e =>
+      e && e.status === "emprestado" &&
+      e.alunaCurso === curso && String(e.alunaChamada) === String(cadastro.chamada));
+    if(comLivro){
+      $("modalTexto").textContent = "Esta aluna ainda está com livro(s) emprestado(s). Registre a devolução em 'Devolução de Livros' antes de remover o cadastro.";
+      $("modalSalvar").disabled = false;
+      return;
+    }
+
+    await remove(ref(db,`${ALUNAS_PATH}/${curso}/${cadastro.chamada}`));
+    $("modalSalvar").disabled = false;
+    if(atual && String(atual.chamada) === String(cadastro.chamada)) limpar();
+    fecharModal();
+    await render();
+    $("status").textContent = "Cadastro de " + cadastro.nome + " removido.";
+  }catch(e){
+    console.error(e);
+    $("modalSalvar").disabled = false;
+    $("modalTexto").textContent = `Não foi possível remover no Firebase. Erro: ${e?.code||e?.message||"desconhecido"}. Verifique as regras do Realtime Database e se você está logado.`;
+  }
+}
+
 async function confirmarSalvar(){
-  if($("modalSalvar").dataset.acao === "voltar"){ fecharModal(); voltarInicio(); return; }
+  const acao = $("modalSalvar").dataset.acao;
+  if(acao === "remover"){ return confirmarRemocao(); }
+  if(acao === "voltar"){ fecharModal(); voltarInicio(); return; }
   if(!atual || !whatsappDigitado()) return;
   const cadastro = {
     curso, nome: atual.nome, chamada: atual.chamada,
@@ -152,10 +201,12 @@ async function confirmarSalvar(){
 async function render(){
   try{
     const dados = await buscarCadastros();
-    const cadastradas = Object.values(dados?.[curso] || {}).sort((a,b) => Number(a.chamada) - Number(b.chamada));
+    cadastradas = Object.values(dados?.[curso] || {}).sort((a,b) => Number(a.chamada) - Number(b.chamada));
     $("cadastros").hidden = !cadastradas.length;
     $("contador").textContent = cadastradas.length;
-    $("lista").innerHTML = cadastradas.map(x => `<div><b class="num">${esc(x.chamada)}</b><span><strong>${esc(x.nome)}</strong><br><small>${esc(nomeDoCurso())}</small></span><b class="phone">${esc(x.whatsapp)}</b></div>`).join("");
+    $("lista").innerHTML = cadastradas.map(x =>
+      `<div><b class="num">${esc(x.chamada)}</b><span><strong>${esc(x.nome)}</strong><br><small>${esc(nomeDoCurso())}</small></span><b class="phone">${esc(x.whatsapp)}</b><button type="button" class="remover-aluna" data-chamada="${esc(x.chamada)}">Remover</button></div>`
+    ).join("");
   }catch(e){ console.error(e); }
 }
 
@@ -164,3 +215,7 @@ $("pesquisa").oninput = preencher;
 $("whatsapp").oninput = () => { $("whatsapp").value = formatarWhatsapp($("whatsapp").value); atualizarBotoes(); };
 $("salvar").onclick = salvar; $("apagar").onclick = apagar;
 $("modalVoltar").onclick = fecharModal; $("modalSalvar").onclick = confirmarSalvar;
+$("lista").addEventListener("click", e => {
+  const b = e.target.closest(".remover-aluna");
+  if(b) pedirRemocao(b.dataset.chamada);
+});
