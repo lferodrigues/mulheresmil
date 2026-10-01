@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Cadastro de Usuário — Mulheres Mil</title>
+<style>
+:root{--laranja:#f5a623;--laranja-escuro:#e07b1a;--vermelho:#e04b3a;--verde:#4caf50;--texto:#2c2620;--borda:#eadfcd}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--texto);background:linear-gradient(135deg,#f5a623,#e8871e 55%,#e04b3a);display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 35px rgba(0,0,0,.25);padding:36px 32px;width:100%;max-width:400px;text-align:center}
+.card img.logo{max-width:220px;margin-bottom:18px}
+.card h1{font-size:1.15rem;margin:0 0 4px}
+.subtitulo{margin:0 0 22px;font-size:.85rem;color:#8a7a63}
+.campo{text-align:left;margin-bottom:14px}
+.campo label{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px;color:#5a4a30}
+.campo input{width:100%;padding:11px 12px;border-radius:8px;border:1.5px solid var(--borda);font-size:.95rem;font-family:inherit}
+.campo input:focus{outline:none;border-color:var(--laranja)}
+.campo input.invalido{border-color:var(--vermelho)}
+.dica{display:block;margin-top:5px;font-size:.75rem;color:#a99a80}
+.campo-senha{position:relative}
+.campo-senha input{padding-right:44px}
+.btn-olho{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:#8a7a63;cursor:pointer}
+.btn-olho:hover{background:#fdf3e3;color:var(--laranja-escuro)}
+.btn-olho:focus-visible{outline:2px solid var(--laranja);outline-offset:1px}
+.btn-olho svg{width:20px;height:20px;display:block}
+.btn-olho .icone-oculto{display:none}
+.btn-olho.ativo .icone-visivel{display:none}
+.btn-olho.ativo .icone-oculto{display:block}
+.btn-salvar{width:100%;margin-top:8px;padding:12px;border:0;border-radius:8px;background:var(--laranja-escuro);color:#fff;font-weight:700;font-size:.95rem;cursor:pointer}
+.btn-salvar:disabled{opacity:.65;cursor:wait}
+.erro{margin-top:14px;background:#fdeceb;color:var(--vermelho);border:1px solid #f4b8b0;padding:9px 12px;border-radius:8px;font-size:.85rem;display:none;text-align:left}
+.voltar{display:block;margin-top:18px;font-size:.85rem;font-weight:700;color:var(--laranja-escuro);text-decoration:none}
+.voltar:hover{text-decoration:underline}
+footer{margin-top:20px;font-size:.72rem;color:#b7a689}
+[hidden]{display:none!important}
+
+/* Pop-up de sucesso */
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(47,16,39,.4);backdrop-filter:blur(4px)}
+.modal-box{width:min(420px,100%);background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(47,16,39,.35);text-align:center}
+.modal-icon{width:60px;height:60px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#e8f5e9;color:#2e7d32;font-size:32px;font-weight:800}
+.modal-box h2{margin:0 0 8px;font-size:22px;color:#5a1738}
+.modal-box p{margin:0 0 20px;color:#76656c;font-size:.92rem;line-height:1.5}
+.modal-box button{width:100%;border:0;border-radius:10px;padding:13px;background:var(--verde);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card">
+  <img class="logo" src="Logo-Mulheres-Mil.jpg" alt="Logo Mulheres Mil">
+  <h1>Cadastro de Usuário</h1>
+  <p class="subtitulo">Informe um e-mail válido e crie uma senha</p>
+
+  <form id="formCadastro" novalidate>
+    <div class="campo">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" autocomplete="email" placeholder="seu@email.com" required>
+    </div>
+
+    <div class="campo">
+      <label for="senha">Senha</label>
+      <div class="campo-senha">
+        <input type="password" id="senha" autocomplete="new-password" placeholder="••••••••" minlength="6" required>
+        <button type="button" class="btn-olho" data-alvo="senha" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+          <svg class="icone-visivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="icone-oculto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.82 19.82 0 0 1-3.17 4.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+      <span class="dica">Mínimo de 6 caracteres.</span>
+    </div>
+
+    <div class="campo">
+      <label for="senha2">Confirmar senha</label>
+      <div class="campo-senha">
+        <input type="password" id="senha2" autocomplete="new-password" placeholder="••••••••" required>
+        <button type="button" class="btn-olho" data-alvo="senha2" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+          <svg class="icone-visivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="icone-oculto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.82 19.82 0 0 1-3.17 4.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-salvar" id="btnSalvar">Salvar</button>
+    <div class="erro" id="msgErro" role="alert"></div>
+  </form>
+
+  <a class="voltar" href="admin.html">← Voltar para o login</a>
+  <footer>Mulheres Mil — Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</div>
+
+<!-- Pop-up de sucesso -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-icon">✓</div>
+    <h2 id="modalTitulo">Cadastro realizado!</h2>
+    <p>Seu usuário foi criado com sucesso. Você será redirecionada em instantes.</p>
+    <button type="button" id="modalContinuar">Continuar</button>
+  </div>
+</div>
+
+<script type="module">
+import { auth } from "./Assets/js/firebase-config.js";
+import { createUserWithEmailAndPassword }
+  from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+const $ = (id) => document.getElementById(id);
+
+// carregando.html faz o redirecionamento final para admin.html
+const DESTINO = "carregando.html?returnTo=" + encodeURIComponent("admin.html");
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const MENSAGENS = {
+  "auth/email-already-in-use": "Este e-mail já está cadastrado.",
+  "auth/invalid-email": "E-mail inválido.",
+  "auth/weak-password": "Senha fraca. Use pelo menos 6 caracteres.",
+  "auth/operation-not-allowed": "Cadastro por e-mail/senha não está ativado no Firebase.",
+  "auth/network-request-failed": "Sem conexão com a internet.",
+  "auth/too-many-requests": "Muitas tentativas. Aguarde alguns minutos.",
+  "auth/unauthorized-domain": "Este domínio não está autorizado no Firebase (Authentication > Settings > Authorized domains).",
+  "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "Chave de API inválida."
+};
+
+function mostrarErro(msg, campo) {
+  $("msgErro").textContent = msg;
+  $("msgErro").style.display = "block";
+  ["email", "senha", "senha2"].forEach((id) => $(id).classList.remove("invalido"));
+  if (campo) { $(campo).classList.add("invalido"); $(campo).focus(); }
+}
+function limparErro() {
+  $("msgErro").style.display = "none";
+  ["email", "senha", "senha2"].forEach((id) => $(id).classList.remove("invalido"));
+}
+
+// Olhinho (mostrar/ocultar senha) para os dois campos
+document.querySelectorAll(".btn-olho").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const campo = $(btn.dataset.alvo);
+    const mostrar = campo.type === "password";
+    campo.type = mostrar ? "text" : "password";
+    btn.classList.toggle("ativo", mostrar);
+    btn.setAttribute("aria-pressed", String(mostrar));
+    const texto = mostrar ? "Ocultar senha" : "Mostrar senha";
+    btn.setAttribute("aria-label", texto);
+    btn.title = texto;
+    campo.focus();
+  });
+});
+
+let redirecionando = false;
+function irParaCarregando() {
+  if (redirecionando) return;
+  redirecionando = true;
+  location.replace(DESTINO);
+}
+
+$("modalContinuar").addEventListener("click", irParaCarregando);
+
+$("formCadastro").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  limparErro();
+
+  const email = $("email").value.trim();
+  const senha = $("senha").value;
+  const senha2 = $("senha2").value;
+
+  if (!REGEX_EMAIL.test(email)) return mostrarErro("Digite um e-mail válido.", "email");
+  if (senha.length < 6) return mostrarErro("A senha deve ter pelo menos 6 caracteres.", "senha");
+  if (senha !== senha2) return mostrarErro("As senhas não conferem.", "senha2");
+
+  $("btnSalvar").disabled = true;
+  try {
+    await createUserWithEmailAndPassword(auth, email, senha);
+    // Sucesso: pop-up e, em seguida, carregando.html -> admin.html
+    $("modal").hidden = false;
+    $("modalContinuar").focus();
+    setTimeout(irParaCarregando, 2000);
+  } catch (err) {
+    console.error(err);
+    mostrarErro(MENSAGENS[err.code] || ("Não foi possível cadastrar (" + (err.code || err.message) + ")."));
+    $("btnSalvar").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
