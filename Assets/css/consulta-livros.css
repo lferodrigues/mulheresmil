@@ -262,11 +262,16 @@ input {
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 650px) {
-  body { padding: 8px; }
+  /* padding-top maior: abre espaço para o sino acima do cartão (não cobre a logo) */
+  body { padding: 54px 8px 8px; }
   .card { padding: 20px 15px; }
   .filtros { grid-template-columns: 1fr; }
   .livro-item { grid-template-columns: 1fr; }
   .expandir { width: 100%; }
   .status-bar { flex-direction: column; }
   .modal-box { padding: 22px 17px; }
+
+  /* sino no canto superior direito, fora do cartão (nesta página não há botão Sair) */
+  body .sino-wrap { top: 10px; right: 10px; }
+  body .sino-painel { right: 0; }
 }
