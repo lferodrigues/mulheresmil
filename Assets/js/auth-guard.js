@@ -2,6 +2,7 @@
 import { auth } from "./firebase-config.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { registrarLog } from "./logs-acesso.js";
+import "./rastreamento.js";
 
 console.log("[auth-guard v3] carregado em", location.pathname);
 document.documentElement.style.visibility = "hidden";
