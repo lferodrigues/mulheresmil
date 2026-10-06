@@ -1,8 +1,9 @@
-/* Proteção de página via Firebase Auth (v2 - com diagnóstico no console). */
+/* Proteção de página via Firebase Auth (v3 - registra logout nos logs de acesso). */
 import { auth } from "./firebase-config.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { registrarLog } from "./logs-acesso.js";
 
-console.log("[auth-guard v2] carregado em", location.pathname);
+console.log("[auth-guard v3] carregado em", location.pathname);
 document.documentElement.style.visibility = "hidden";
 
 (async () => {
@@ -24,6 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const b = document.getElementById("btnSair");
   if (b) b.addEventListener("click", async (e) => {
     e.preventDefault();
+    // grava o logout ANTES de sair (depois não haveria usuário autenticado); no máximo 3 s de espera
+    await Promise.race([registrarLog("logout"), new Promise((r) => setTimeout(r, 3000))]);
     await signOut(auth);
     location.replace("admin.html");
   });
