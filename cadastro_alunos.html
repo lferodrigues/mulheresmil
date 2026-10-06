@@ -7,9 +7,10 @@
 <title>Cadastro de Alunas | Biblioteca Itinerante</title>
 <link rel="stylesheet" href="Assets/css/cadastro_alunos.css">
 <style>
-/* Botão que leva para a página de importação de alunas */
+/* Botões que levam para as páginas de importação e de cursos */
 a.btn-importar{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;padding:13px;border-radius:10px;background:#f9e4ee;color:#8e0f45;font-weight:800;text-decoration:none;border:1px solid #eadbe3;transition:background .15s ease,transform .15s ease}
 a.btn-importar:hover{background:#f3d0e0;transform:translateY(-1px)}
+a.btn-importar+a.btn-importar{margin-top:10px}
 </style>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 </head>
@@ -20,10 +21,9 @@ a.btn-importar:hover{background:#f3d0e0;transform:translateY(-1px)}
 <hr><span class="badge">Painel do Administrador(a)</span>
 <h1>Cadastro de Alunas</h1>
 <p>Selecione o curso, pesquise a aluna e informe o WhatsApp para contato.</p>
+<a class="btn-importar" href="cadastro_cursos.html">🎓 Cadastrar novo curso</a>
 <a class="btn-importar" href="importar_alunas.html">📄 Importar alunas de planilha</a>
-<label>Curso<select id="curso"><option value="">Selecione</option>
-<option value="assistente">Assistente Escolar</option><option value="operadora">Operadora de Computador</option>
-</select></label>
+<label>Curso<select id="curso"><option value="">Carregando cursos...</option></select></label>
 <div id="area" hidden>
 <label class="campo-pesquisa">Pesquisar aluna<input id="pesquisa" type="search" placeholder="Digite o nome..." autocomplete="off">
 <div id="listaSugestoes" class="lista-sugestoes" hidden></div></label>
