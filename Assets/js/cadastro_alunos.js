@@ -1,23 +1,26 @@
 /* Cadastro de Alunas — Biblioteca Itinerante (Firebase Realtime Database) */
 import { db } from "./firebase-config.js";
 import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { carregarCursos } from "./cursos.js";
 
 const ALUNAS_PATH = "alunas";
-const CURSOS = {
-  assistente: ["lista_presenca_assistente_escolar.html", "Assistente Escolar"],
-  operadora: ["lista_presenca_mulheres_mil.html", "Operadora de Computador"]
+// Listas antigas em HTML (só usadas se o curso ainda não tiver alunas no banco)
+const LISTAS_ANTIGAS = {
+  assistente: "lista_presenca_assistente_escolar.html",
+  operadora: "lista_presenca_mulheres_mil.html"
 };
 
 let alunas = [], curso = "", atual = null;
-let cadastradas = [];      // cadastros exibidos na lista do curso atual
-let paraRemover = null;    // cadastro aguardando confirmação de remoção
+let cursos = {};           // { id: nome } — vem do banco (cursos/) + padrão
+let cadastradas = [];
+let paraRemover = null;
 const $ = id => document.getElementById(id);
 
 function esc(t) {
   return String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 function normalizar(t){ return t.trim().toLocaleLowerCase("pt-BR"); }
-function nomeDoCurso(){ return CURSOS[curso]?.[1] || ""; }
+function nomeDoCurso(){ return cursos[curso] || ""; }
 function whatsappDigitado(){ return $("whatsapp").value.trim(); }
 
 function formatarWhatsapp(texto){
@@ -26,12 +29,37 @@ function formatarWhatsapp(texto){
   return v.length<=10 ? d.replace(/(\d{4})(\d)/,"$1-$2") : d.replace(/(\d{5})(\d)/,"$1-$2");
 }
 
-async function carregar(arquivo){
-  const resposta = await fetch(arquivo,{cache:"no-store"});
-  const texto = await resposta.text();
-  const match = texto.match(/(?:const|let|var)\s+ALUNAS\s*=\s*(\[[\s\S]*?\]);/);
-  if(!resposta.ok || !match) throw Error("Lista não encontrada");
-  return Function("return "+match[1])().map((nome,i)=>({nome,chamada:i+1}));
+/* ---------- cursos (vêm do banco) ---------- */
+async function montarCursos(){
+  const sel = $("curso");
+  sel.innerHTML = '<option value="">Carregando cursos...</option>';
+  cursos = await carregarCursos();
+  const ordenados = Object.entries(cursos).sort((a,b) => a[1].localeCompare(b[1],"pt-BR"));
+  sel.innerHTML = '<option value="">Selecione</option>' +
+    ordenados.map(([id,nome]) => `<option value="${esc(id)}">${esc(nome)}</option>`).join("");
+}
+
+/* ---------- lista de alunas do curso ---------- */
+async function carregarAlunasDoCurso(id){
+  // 1) banco: alunas/{curso}/{nº}
+  const snap = await get(ref(db,`${ALUNAS_PATH}/${id}`));
+  const doBanco = Object.values(snap.val() || {})
+    .filter(a => a && a.nome)
+    .map(a => ({ nome: String(a.nome), chamada: Number(a.chamada) }))
+    .sort((a,b) => a.chamada - b.chamada);
+  if(doBanco.length) return doBanco;
+
+  // 2) lista antiga em HTML (cursos antigos)
+  const arquivo = LISTAS_ANTIGAS[id];
+  if(arquivo){
+    try{
+      const resposta = await fetch(arquivo,{cache:"no-store"});
+      const texto = await resposta.text();
+      const match = texto.match(/(?:const|let|var)\s+ALUNAS\s*=\s*(\[[\s\S]*?\]);/);
+      if(resposta.ok && match) return Function("return "+match[1])().map((nome,i)=>({nome,chamada:i+1}));
+    }catch(e){ console.error(e); }
+  }
+  return [];
 }
 
 async function buscarCadastros(){
@@ -46,13 +74,15 @@ async function aoTrocarCurso(){
   if(!curso) return;
   $("status").textContent = "Carregando lista...";
   try{
-    alunas = await carregar(CURSOS[curso][0]);
-    $("status").textContent = alunas.length+" alunas carregadas.";
+    alunas = await carregarAlunasDoCurso(curso);
+    $("status").textContent = alunas.length
+      ? alunas.length+" alunas carregadas."
+      : "Nenhuma aluna neste curso ainda. Use 'Importar alunas de planilha' para enviar a lista de presença.";
     preencher();
     await render();
   }catch(e){
     console.error(e);
-    $("status").textContent = "Não foi possível carregar a lista de presença.";
+    $("status").textContent = "Não foi possível carregar a lista de alunas.";
   }
 }
 
@@ -151,7 +181,6 @@ async function confirmarRemocao(){
   const cadastro = paraRemover;
   $("modalSalvar").disabled = true;
   try{
-    // Não permite remover aluna que ainda está com livro emprestado
     const snap = await get(ref(db,"emprestimos"));
     const emprestimos = Object.values(snap.val() || {});
     const comLivro = emprestimos.some(e =>
@@ -201,7 +230,8 @@ async function confirmarSalvar(){
 async function render(){
   try{
     const dados = await buscarCadastros();
-    cadastradas = Object.values(dados?.[curso] || {}).sort((a,b) => Number(a.chamada) - Number(b.chamada));
+    // só mostra quem já tem WhatsApp cadastrado (alunas importadas entram com WhatsApp vazio)
+    cadastradas = Object.values(dados?.[curso] || {}).filter(x => x && x.whatsapp).sort((a,b) => Number(a.chamada) - Number(b.chamada));
     $("cadastros").hidden = !cadastradas.length;
     $("contador").textContent = cadastradas.length;
     $("lista").innerHTML = cadastradas.map(x =>
@@ -219,3 +249,5 @@ $("lista").addEventListener("click", e => {
   const b = e.target.closest(".remover-aluna");
   if(b) pedirRemocao(b.dataset.chamada);
 });
+
+montarCursos().catch(e => { console.error(e); $("curso").innerHTML = '<option value="">Erro ao carregar cursos</option>'; });
