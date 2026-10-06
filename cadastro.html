@@ -8,13 +8,14 @@
 <style>
 :root{--laranja:#f5a623;--laranja-escuro:#e07b1a;--vermelho:#e04b3a;--verde:#4caf50;--texto:#2c2620;--borda:#eadfcd}
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{min-height:100%}
 body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--texto);background:linear-gradient(135deg,#f5a623,#e8871e 55%,#e04b3a);display:flex;align-items:center;justify-content:center;padding:20px}
-.card{background:#fff;border-radius:16px;box-shadow:0 10px 35px rgba(0,0,0,.25);padding:36px 32px;width:100%;max-width:400px;text-align:center}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 35px rgba(0,0,0,.25);padding:36px 32px;width:100%;max-width:420px;text-align:center}
 .card img.logo{max-width:220px;margin-bottom:18px}
 .card h1{font-size:1.15rem;margin:0 0 4px}
 .subtitulo{margin:0 0 22px;font-size:.85rem;color:#8a7a63}
 .campo{text-align:left;margin-bottom:14px}
+.linha2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .campo label{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px;color:#5a4a30}
 .campo input{width:100%;padding:11px 12px;border-radius:8px;border:1.5px solid var(--borda);font-size:.95rem;font-family:inherit}
 .campo input:focus{outline:none;border-color:var(--laranja)}
@@ -36,6 +37,7 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--texto);
 .voltar:hover{text-decoration:underline}
 footer{margin-top:20px;font-size:.72rem;color:#b7a689}
 [hidden]{display:none!important}
+@media(max-width:480px){.linha2{grid-template-columns:1fr;gap:0}}
 
 /* Pop-up de sucesso */
 .modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(47,16,39,.4);backdrop-filter:blur(4px)}
@@ -50,9 +52,25 @@ footer{margin-top:20px;font-size:.72rem;color:#b7a689}
 <div class="card">
   <img class="logo" src="Logo-Mulheres-Mil.jpg" alt="Logo Mulheres Mil">
   <h1>Cadastro de Usuário</h1>
-  <p class="subtitulo">Informe um e-mail válido e crie uma senha</p>
+  <p class="subtitulo">Informe seus dados, um e-mail válido e crie uma senha</p>
 
   <form id="formCadastro" novalidate>
+    <div class="linha2">
+      <div class="campo">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" autocomplete="given-name" maxlength="60" placeholder="Maria" required>
+      </div>
+      <div class="campo">
+        <label for="sobrenome">Sobrenome</label>
+        <input type="text" id="sobrenome" autocomplete="family-name" maxlength="80" placeholder="da Silva" required>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="whatsapp">WhatsApp</label>
+      <input type="tel" id="whatsapp" inputmode="numeric" autocomplete="tel-national" maxlength="15" placeholder="(32) 99999-9999" required>
+    </div>
+
     <div class="campo">
       <label for="email">E-mail</label>
       <input type="email" id="email" autocomplete="email" placeholder="seu@email.com" required>
@@ -100,11 +118,15 @@ footer{margin-top:20px;font-size:.72rem;color:#b7a689}
 </div>
 
 <script type="module">
-import { auth } from "./Assets/js/firebase-config.js";
-import { createUserWithEmailAndPassword }
+import { auth, db } from "./Assets/js/firebase-config.js";
+import { createUserWithEmailAndPassword, updateProfile }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { ref, set, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { registrarLog } from "./Assets/js/logs-acesso.js";
 
 const $ = (id) => document.getElementById(id);
+const CAMPOS = ["nome", "sobrenome", "whatsapp", "email", "senha", "senha2"];
 
 // carregando.html faz o redirecionamento final para admin.html
 const DESTINO = "carregando.html?returnTo=" + encodeURIComponent("admin.html");
@@ -121,15 +143,24 @@ const MENSAGENS = {
   "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "Chave de API inválida."
 };
 
+const limpar = (v) => String(v || "").replace(/\s+/g, " ").trim();
+
+function formatarWhatsapp(texto) {
+  const v = texto.replace(/\D/g, "").slice(0, 11);
+  const d = v.replace(/^(\d{2})(\d)/, "($1) $2");
+  return v.length <= 10 ? d.replace(/(\d{4})(\d)/, "$1-$2") : d.replace(/(\d{5})(\d)/, "$1-$2");
+}
+$("whatsapp").addEventListener("input", () => { $("whatsapp").value = formatarWhatsapp($("whatsapp").value); });
+
 function mostrarErro(msg, campo) {
   $("msgErro").textContent = msg;
   $("msgErro").style.display = "block";
-  ["email", "senha", "senha2"].forEach((id) => $(id).classList.remove("invalido"));
+  CAMPOS.forEach((id) => $(id).classList.remove("invalido"));
   if (campo) { $(campo).classList.add("invalido"); $(campo).focus(); }
 }
 function limparErro() {
   $("msgErro").style.display = "none";
-  ["email", "senha", "senha2"].forEach((id) => $(id).classList.remove("invalido"));
+  CAMPOS.forEach((id) => $(id).classList.remove("invalido"));
 }
 
 // Olhinho (mostrar/ocultar senha) para os dois campos
@@ -160,17 +191,48 @@ $("formCadastro").addEventListener("submit", async (e) => {
   e.preventDefault();
   limparErro();
 
-  const email = $("email").value.trim();
+  const nome = limpar($("nome").value);
+  const sobrenome = limpar($("sobrenome").value);
+  const whatsapp = $("whatsapp").value.trim();
+  const digitos = whatsapp.replace(/\D/g, "");
+  const email = $("email").value.trim().toLowerCase();
   const senha = $("senha").value;
   const senha2 = $("senha2").value;
 
+  if (nome.length < 2) return mostrarErro("Informe o nome.", "nome");
+  if (sobrenome.length < 2) return mostrarErro("Informe o sobrenome.", "sobrenome");
+  if (digitos.length < 10 || digitos.length > 11) return mostrarErro("Informe um WhatsApp válido com DDD.", "whatsapp");
   if (!REGEX_EMAIL.test(email)) return mostrarErro("Digite um e-mail válido.", "email");
   if (senha.length < 6) return mostrarErro("A senha deve ter pelo menos 6 caracteres.", "senha");
   if (senha !== senha2) return mostrarErro("As senhas não conferem.", "senha2");
 
   $("btnSalvar").disabled = true;
   try {
-    await createUserWithEmailAndPassword(auth, email, senha);
+    const cred = await createUserWithEmailAndPassword(auth, email, senha);
+    const user = cred.user;
+
+    try { await updateProfile(user, { displayName: nome + " " + sobrenome }); } catch (_) {}
+
+    // Grava o perfil no Realtime Database: usuarios/{uid}
+    try {
+      await set(ref(db, "usuarios/" + user.uid), {
+        uid: user.uid,
+        nome,
+        sobrenome,
+        email,
+        whatsapp,
+        criadoEm: serverTimestamp(),
+        ultimoAcesso: serverTimestamp()
+      });
+    } catch (errDb) {
+      console.error(errDb);
+      mostrarErro("A conta foi criada, mas não foi possível salvar os dados no banco (" +
+        (errDb.code || errDb.message) + "). Verifique as regras do Realtime Database.");
+      return; // mantém o botão desativado: a conta já existe
+    }
+
+    await registrarLog("cadastro", { nome: nome + " " + sobrenome });
+
     // Sucesso: pop-up e, em seguida, carregando.html -> admin.html
     $("modal").hidden = false;
     $("modalContinuar").focus();
