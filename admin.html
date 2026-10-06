@@ -106,10 +106,10 @@
 </div>
 
 <script type="module">
-import { registrarLog } from "./Assets/js/logs-acesso.js";
 import { auth } from "./Assets/js/firebase-config.js";
 import { signInWithEmailAndPassword, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { registrarLog } from "./Assets/js/logs-acesso.js";
 
 const $ = (id) => document.getElementById(id);
 const PAINEL = "painel.html";
@@ -159,6 +159,8 @@ $("formLogin").addEventListener("submit", async (e) => {
   entrando = true;
   try {
     await signInWithEmailAndPassword(auth, $("usuario").value.trim(), $("senha").value);
+    // Registra o log de acesso ANTES de redirecionar (espera no máximo 3 s, para nunca travar o login)
+    await Promise.race([registrarLog("login"), new Promise((r) => setTimeout(r, 3000))]);
     $("msgSucesso").style.display = "block";
     location.replace("carregando.html?returnTo=" + encodeURIComponent(DESTINO));
   } catch (err) {
