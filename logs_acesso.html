@@ -34,7 +34,7 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{position:sticky;top:0;background:#f9e4ee;color:#5a1738;text-align:left;padding:10px 12px;white-space:nowrap}
 td{padding:9px 12px;border-top:1px solid #f0e6ea;vertical-align:top}
 .tag{font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;white-space:nowrap}
-.tag.login{background:#e8f5e9;color:#2e7d32}.tag.logout{background:#eef0f2;color:#6b6f73}.tag.cadastro{background:#fff4dc;color:#b7791f}
+.tag.login{background:#e8f5e9;color:#2e7d32}.tag.logout{background:#eef0f2;color:#6b6f73}.tag.cadastro{background:#fff4dc;color:#b7791f}.tag.pagina{background:#e3f2fd;color:#1565c0}.tag.clique{background:#f3e5f5;color:#7b1fa2}.tag.selecao{background:#e0f7fa;color:#00838f}td small{color:#8a777f;word-break:break-word}
 .vazio{text-align:center;padding:30px;color:#8a777f}
 .erro{color:#c62828;font-weight:700}
 a.voltar{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
@@ -71,11 +71,11 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
   <!-- estado liberado -->
   <div id="conteudo" hidden>
     <div class="filtros">
-      <label>Buscar (e-mail ou página)<input id="busca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
+      <label>Buscar (e-mail, IP, página ou ação)<input id="busca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
       <label>Tipo
         <select id="filtroTipo">
           <option value="">Todos</option><option value="login">Login</option>
-          <option value="logout">Logout</option><option value="cadastro">Cadastro</option>
+          <option value="logout">Logout</option><option value="cadastro">Cadastro</option><option value="pagina">Página visitada</option><option value="clique">Clique</option><option value="selecao">Seleção</option>
         </select>
       </label>
       <button type="button" class="btn cinza" id="btnAtualizar">↻ Atualizar</button>
@@ -84,7 +84,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
     <div class="status-bar"><span id="status">Carregando...</span><span id="contador">0 registros</span></div>
     <div class="tabela">
       <table>
-        <thead><tr><th>Data/hora</th><th>Tipo</th><th>E-mail</th><th>Página</th><th>Navegador</th></tr></thead>
+        <thead><tr><th>Data/hora</th><th>Tipo</th><th>E-mail</th><th>IP</th><th>Página</th><th>Ação</th><th>Navegador</th></tr></thead>
         <tbody id="corpo"></tbody>
       </table>
       <div id="vazio" class="vazio" hidden>Nenhum registro encontrado.</div>
@@ -121,7 +121,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 
 <script type="module">
 import { db } from "./Assets/js/firebase-config.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { ref, get, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -134,7 +134,7 @@ let logs = [], filtrados = [], tentativas = 0, bloqueadoAte = 0;
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const norm = (t) => String(t || "").trim().toLocaleLowerCase("pt-BR");
 const fmtData = (ms) => ms ? new Date(ms).toLocaleString("pt-BR") : "—";
-const ROTULO = { login: "Login", logout: "Logout", cadastro: "Cadastro" };
+const ROTULO = { login: "Login", logout: "Logout", cadastro: "Cadastro", pagina: "Página", clique: "Clique", selecao: "Seleção" };
 
 function navegador(ua) {
   ua = ua || "";
@@ -191,10 +191,10 @@ async function carregar() {
   $("status").className = ""; $("status").textContent = "Carregando logs...";
   $("btnPdf").disabled = true;
   try {
-    const snap = await get(ref(db, "logsAcesso"));
+    const snap = await get(query(ref(db, "logsAcesso"), orderByKey(), limitToLast(5000)));
     logs = Object.entries(snap.val() || {})
       .map(([id, l]) => ({ id, ...l }))
-      .sort((a, b) => (Number(b.data) || 0) - (Number(a.data) || 0));
+      .sort((a, b) => (Number(b.quando || b.data) || 0) - (Number(a.quando || a.data) || 0));
     $("status").textContent = "Logs carregados do Firebase.";
     filtrar();
   } catch (e) {
@@ -211,15 +211,17 @@ async function carregar() {
 function filtrar() {
   const q = norm($("busca").value), t = $("filtroTipo").value;
   filtrados = logs.filter((l) =>
-    (!t || l.tipo === t) && (!q || norm(l.email).includes(q) || norm(l.pagina).includes(q) || norm(l.nome).includes(q)));
+    (!t || l.tipo === t) && (!q || norm(l.email).includes(q) || norm(l.pagina).includes(q) || norm(l.nome).includes(q) || norm(l.ip).includes(q) || norm(l.acao).includes(q) || norm(l.detalhe).includes(q)));
   $("contador").textContent = filtrados.length + (filtrados.length === 1 ? " registro" : " registros");
   $("vazio").hidden = filtrados.length > 0;
   $("btnPdf").disabled = filtrados.length === 0;
   $("corpo").innerHTML = filtrados.map((l) => `<tr>
-    <td>${esc(fmtData(l.data))}</td>
+    <td>${esc(fmtData(l.quando || l.data))}</td>
     <td><span class="tag ${esc(l.tipo)}">${esc(ROTULO[l.tipo] || l.tipo)}</span></td>
     <td>${esc(l.email)}${l.nome ? `<br><small>${esc(l.nome)}</small>` : ""}</td>
+    <td>${esc(l.ip || "—")}</td>
     <td>${esc(l.pagina)}</td>
+    <td>${esc(l.acao || "")}${l.detalhe ? `<br><small>${esc(l.detalhe)}</small>` : ""}</td>
     <td>${esc(navegador(l.navegador))}</td></tr>`).join("");
 }
 
@@ -239,9 +241,10 @@ $("btnPdf").onclick = () => {
 
   doc.autoTable({
     startY: 72,
-    head: [["Data/hora", "Tipo", "E-mail", "Nome", "Página", "Navegador"]],
-    body: filtrados.map((l) => [fmtData(l.data), ROTULO[l.tipo] || l.tipo || "", l.email || "", l.nome || "", l.pagina || "", navegador(l.navegador)]),
-    styles: { fontSize: 8.5, cellPadding: 4 },
+    head: [["Data/hora", "Tipo", "E-mail", "IP", "Página", "Ação / detalhe", "Navegador"]],
+    body: filtrados.map((l) => [fmtData(l.quando || l.data), ROTULO[l.tipo] || l.tipo || "", l.email || "", l.ip || "", l.pagina || "", [l.acao, l.detalhe].filter(Boolean).join(" — ") || l.nome || "", navegador(l.navegador)]),
+    styles: { fontSize: 7.5, cellPadding: 3 },
+    columnStyles: { 5: { cellWidth: 230 } },
     headStyles: { fillColor: [142, 15, 69], textColor: 255 },
     didDrawPage: (d) => {
       doc.setFontSize(8); doc.setTextColor(140);
