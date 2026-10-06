@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="Logo-Mulheres-Mil.jpg">
+<title>Cadastro de Cursos | Mulheres Mil</title>
+<link rel="stylesheet" href="Assets/css/cadastro_alunos.css">
+<style>
+.padrao{font-size:11px;background:#eef0f2;color:#6b6f73;border-radius:20px;padding:3px 9px;font-weight:800;white-space:nowrap}
+#lista>div{grid-template-columns:1fr auto auto}
+@media(max-width:600px){#lista>div{grid-template-columns:1fr}.remover-aluna{grid-column:1}}
+#status{display:block;margin-top:10px}
+#status.ok{color:#2e7d32;font-weight:700}
+#status.erro{color:#c62828;font-weight:700}
+</style>
+<script type="module" src="./Assets/js/auth-guard.js"></script>
+</head>
+<body>
+<main>
+<section class="card">
+<img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+<hr><span class="badge">Painel do Administrador(a)</span>
+<h1>Cadastro de Cursos</h1>
+<p>Cadastre os cursos do projeto. Eles aparecerão automaticamente no Cadastro de Alunas.</p>
+
+<form id="formCurso" novalidate>
+<label>Nome do curso
+<input id="nome" type="text" maxlength="80" placeholder="Ex.: Auxiliar Administrativo" autocomplete="off">
+</label>
+<small id="status"></small>
+<div class="buttons">
+<button id="salvar" type="submit" disabled>Salvar</button>
+<button id="limpar" type="button">Limpar</button>
+</div>
+</form>
+
+<section id="cadastros">
+<h2>Cursos cadastrados <span id="contador">0</span></h2>
+<div id="lista"></div>
+</section>
+
+<a href="cadastro_alunos.html">← Ir para o Cadastro de Alunas</a>
+<a href="painel.html" style="margin-top:10px">← Voltar para a Tela Inicial</a>
+<footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</section>
+</main>
+
+<div id="modal" class="modal" hidden>
+<div class="modal-box"><div id="modalIcon" class="modal-icon">✓</div>
+<h2 id="modalTitulo">Confirmar cadastro</h2>
+<p id="modalTexto">Confira os dados do curso antes de salvar:</p>
+<div id="modalData" class="modal-data">
+<div><span>Nome do curso</span><strong id="modalNome"></strong></div>
+<div><span>Código interno</span><strong id="modalId"></strong></div></div>
+<div class="modal-actions"><button id="modalVoltar" type="button">Voltar</button>
+<button id="modalSalvar" type="button">Salvar curso</button></div></div></div>
+
+<script type="module" src="Assets/js/cadastro_cursos.js"></script>
+<script src="./Assets/js/script.js"></script>
+</body>
+</html>
