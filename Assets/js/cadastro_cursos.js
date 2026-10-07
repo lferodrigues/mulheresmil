@@ -20,7 +20,7 @@ function erro(e) {
 }
 
 function todos() {
-  const lista = Object.entries(CURSOS_PADRAO).map(([id, nome]) => ({ id, nome, padrao: true }));
+  const lista = [];
   Object.entries(noBanco).forEach(([id, c]) => {
     if (c && c.nome && !CURSOS_PADRAO[id]) lista.push({ id, nome: String(c.nome), padrao: false });
   });
@@ -30,10 +30,10 @@ function todos() {
 function render() {
   const itens = todos();
   $("contador").textContent = itens.length;
+  $("cadastros").hidden = !itens.length;
   $("lista").innerHTML = itens.map((c) =>
     `<div><span><strong>${esc(c.nome)}</strong><br><small>código: ${esc(c.id)}</small></span>` +
-    (c.padrao ? '<span class="padrao">padrão</span>' : '<span></span>') +
-    (c.padrao ? '' : `<button type="button" class="remover-aluna" data-id="${esc(c.id)}">Remover</button>`) +
+    `<button type="button" class="remover-aluna" data-id="${esc(c.id)}">Remover</button>` +
     `</div>`).join("");
 }
 
