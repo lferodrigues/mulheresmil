@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+  <meta name="description" content="Acesso ao material do curso Educação Inclusiva - Mulheres Mil">
+  <title>Mulheres Mil | Acessando materiais</title>
+  <link rel="stylesheet" href="./Assets/css/style.css">
+</head>
+<body>
+  <main class="loading-page">
+    <section class="card" aria-label="Carregamento">
+      <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil - Educação, Cidadania e Desenvolvimento Sustentável" class="logo">
+
+      <div class="divider"></div>
+
+      <h1>Preparando seu acesso</h1>
+      <p class="message">Aguarde enquanto direcionamos você para os materiais do curso.</p>
+
+      <div class="progress-area">
+        <div class="percentage" id="percentage">0%</div>
+
+        <div class="progress-track" role="progressbar"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+             aria-label="Progresso do carregamento">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <p class="status" id="status">Iniciando acesso...</p>
+      </div>
+
+      <p class="redirect-info">
+        Você será redirecionado automaticamente em <strong id="seconds">9</strong> segundos.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    // Bloquear botão direito do mouse
+    document.addEventListener("contextmenu", function (event) {
+      event.preventDefault();
+      alert("Função desabilitada!");
+    });
+
+    // Bloquear atalhos de desenvolvedor / salvar / ver código-fonte
+    document.addEventListener("keydown", function (event) {
+      var k = (event.key || "").toLowerCase();
+      if (
+        event.key === "F12" ||
+        (event.ctrlKey && event.shiftKey && (k === "i" || k === "j")) ||
+        (event.ctrlKey && (k === "u" || k === "s"))
+      ) {
+        event.preventDefault();
+        alert("Ação bloqueada!");
+      }
+    });
+
+    // Redirecionamento com barra de progresso
+    var destination =
+      "https://drive.google.com/drive/folders/1khDEVIbD_eggkcJljSPnTi3Ox5lT00lZ?usp=sharing";
+
+    var duration = 9000; // 9 segundos
+    var startTime = performance.now();
+
+    var percentage = document.getElementById("percentage");
+    var progressBar = document.getElementById("progressBar");
+    var statusEl = document.getElementById("status");
+    var seconds = document.getElementById("seconds");
+    var progressTrack = document.querySelector(".progress-track");
+
+    var statusMessages = [
+      [0, "Iniciando acesso..."],
+      [20, "Preparando os materiais..."],
+      [45, "Verificando o acesso..."],
+      [70, "Carregando a área de materiais..."],
+      [90, "Quase pronto..."],
+      [100, "Redirecionando..."]
+    ];
+
+    function updateStatus(value) {
+      var current = statusMessages[0][1];
+      for (var i = 0; i < statusMessages.length; i++) {
+        if (value >= statusMessages[i][0]) current = statusMessages[i][1];
+      }
+      statusEl.textContent = current;
+    }
+
+    function animate(currentTime) {
+      var elapsed = currentTime - startTime;
+      var progress = Math.min(elapsed / duration, 1);
+      var value = Math.floor(progress * 100);
+
+      percentage.textContent = value + "%";
+      progressBar.style.width = value + "%";
+      progressTrack.setAttribute("aria-valuenow", value);
+      seconds.textContent = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+      updateStatus(value);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        percentage.textContent = "100%";
+        progressBar.style.width = "100%";
+        statusEl.textContent = "Redirecionando...";
+        seconds.textContent = "0";
+        window.location.href = destination;
+      }
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
