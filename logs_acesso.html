@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="Logo-Mulheres-Mil.jpg">
-<title>Logs de Acesso | Mulheres Mil</title>
+<title>Logs de Acesso |Sistema Mulheres Mil</title>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -158,11 +158,28 @@ import { ref, get, query, orderByKey, limitToLast } from "https://www.gstatic.co
 
 const $ = (id) => document.getElementById(id);
 
+/* ---------- abas (registradas primeiro, antes de qualquer outra coisa que possa falhar) ---------- */
+function abrirAba(nome) {
+  const visitasAberta = nome === "visitas";
+  document.getElementById("painelSistema").hidden = visitasAberta;
+  document.getElementById("painelVisitas").hidden = !visitasAberta;
+  document.getElementById("abaSistema").classList.toggle("ativa", !visitasAberta);
+  document.getElementById("abaVisitas").classList.toggle("ativa", visitasAberta);
+  if (visitasAberta && !visCarregado) carregarVisitas();
+}
+document.addEventListener("click", (e) => {
+  const aba = e.target.closest && e.target.closest(".aba");
+  if (!aba) return;
+  try { abrirAba(aba.id === "abaVisitas" ? "visitas" : "sistema"); }
+  catch (err) { console.error("Erro ao abrir aba:", err); alert("Erro ao abrir aba: " + err.message); }
+});
+
 // Só o hash SHA-256 de "sal|e-mail|senha" fica no código (a senha não aparece em texto puro).
 const SAL = "mm-logs-v1";
 const HASH = "8795b37d00310c22034ac0f66108d28716737b7c814ab602db0f2b175b522dca";
 
 let logs = [], filtrados = [], tentativas = 0, bloqueadoAte = 0;
+let visitas = [], visFiltradas = [], visCarregado = false;
 
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const norm = (t) => String(t || "").trim().toLocaleLowerCase("pt-BR");
@@ -261,6 +278,95 @@ function filtrar() {
 $("busca").oninput = filtrar;
 $("filtroTipo").onchange = filtrar;
 $("btnAtualizar").onclick = carregar;
+
+/* ---------- abas ---------- */
+
+/* ---------- visitas ao site (index.html) ---------- */
+// Cada visita vira vários eventos em visitasSite (visita, clique, saida) ligados pelo mesmo "vid".
+
+function fmtTempo(s) {
+  s = Number(s) || 0;
+  if (s < 60) return s + " s";
+  return Math.floor(s / 60) + " min " + String(s % 60).padStart(2, "0") + " s";
+}
+
+function agruparVisitas(eventos) {
+  const mapa = new Map();
+  eventos.forEach((e) => {
+    if (!e || !e.vid) return;
+    const q = Number(e.quando) || Number(e.data) || 0;
+    let v = mapa.get(e.vid);
+    if (!v) {
+      v = { vid: e.vid, quando: q, ip: "", dispositivo: "", sistema: "", navegador: "", tela: "", origem: "",
+            pagina: "", cliques: [], tempo: 0, temSaida: false };
+      mapa.set(e.vid, v);
+    }
+    if (q && (!v.quando || q < v.quando)) v.quando = q;
+    if (!v.pagina && e.pagina) v.pagina = e.pagina;
+    if (e.tipo === "visita") {
+      v.ip = e.ip || ""; v.dispositivo = e.dispositivo || ""; v.sistema = e.sistema || "";
+      v.navegador = e.navegador || ""; v.tela = e.tela || ""; v.origem = e.origem || "";
+    } else if (e.tipo === "clique") {
+      v.cliques.push({ acao: e.acao || "", t: Number(e.t) || 0 });
+    } else if (e.tipo === "saida") {
+      v.temSaida = true;
+      v.tempo = Math.max(v.tempo, Number(e.tempo) || 0);   // vale o maior tempo enviado
+    }
+  });
+  const lista = [...mapa.values()];
+  lista.forEach((v) => v.cliques.sort((a, b) => a.t - b.t));
+  return lista.sort((a, b) => b.quando - a.quando);
+}
+
+async function carregarVisitas() {
+  $("vStatus").className = ""; $("vStatus").textContent = "Carregando visitas...";
+  try {
+    const snap = await get(query(ref(db, "visitasSite"), orderByKey(), limitToLast(5000)));
+    visitas = agruparVisitas(Object.values(snap.val() || {}));
+    visCarregado = true;
+    $("vStatus").textContent = "Visitas carregadas do Firebase.";
+  } catch (e) {
+    console.error(e);
+    const perm = String(e.code || e.message || "").toUpperCase().includes("PERMISSION");
+    $("vStatus").className = "erro";
+    $("vStatus").textContent = perm
+      ? "Sem permissão para ler as visitas. Entre com a conta autorizada e confira as regras de 'visitasSite' no Realtime Database."
+      : "Não foi possível carregar as visitas (" + (e.code || e.message) + ").";
+    visitas = [];
+  }
+  filtrarVisitas();
+}
+
+function filtrarVisitas() {
+  const q = norm($("vBusca").value);
+  visFiltradas = visitas.filter((v) => !q ||
+    norm(v.ip).includes(q) || norm(v.dispositivo).includes(q) || norm(v.sistema).includes(q) ||
+    norm(v.navegador).includes(q) || norm(v.pagina).includes(q) || norm(v.origem).includes(q) ||
+    v.cliques.some((c) => norm(c.acao).includes(q)));
+
+  const ips = new Set(visFiltradas.map((v) => v.ip).filter(Boolean)).size;
+  $("vContador").textContent = visFiltradas.length + (visFiltradas.length === 1 ? " visita" : " visitas") +
+    " · " + ips + (ips === 1 ? " IP" : " IPs");
+  $("vVazio").hidden = visFiltradas.length > 0;
+  $("vCorpo").innerHTML = visFiltradas.map((v) => {
+    const detalhes = [v.sistema, v.navegador, v.tela].filter(Boolean).join(" · ");
+    const cliques = v.cliques.length
+      ? `<details><summary>${v.cliques.length} ${v.cliques.length === 1 ? "clique" : "cliques"}</summary>` +
+        v.cliques.map((c) => `<small>${esc(c.acao)} <em>(aos ${esc(fmtTempo(c.t))})</em></small>`).join("") +
+        `</details>`
+      : "—";
+    return `<tr>
+      <td>${esc(fmtData(v.quando))}</td>
+      <td>${esc(v.ip || "—")}</td>
+      <td>${esc(v.dispositivo || "—")}${detalhes ? `<br><small>${esc(detalhes)}</small>` : ""}${v.origem ? `<br><small>Veio de: ${esc(v.origem)}</small>` : ""}</td>
+      <td>${esc(v.pagina || "")}</td>
+      <td>${cliques}</td>
+      <td>${v.temSaida ? esc(fmtTempo(v.tempo)) : "—"}</td></tr>`;
+  }).join("");
+}
+
+$("vBusca").oninput = filtrarVisitas;
+$("vAtualizar").onclick = carregarVisitas;
 
 /* ---------- PDF (exporta o que está na tela, já filtrado) ---------- */
 $("btnPdf").onclick = () => {
