@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="Logo-Mulheres-Mil.jpg">
+<title>Importar Alunas | Biblioteca Itinerante</title>
+<script type="module" src="./Assets/js/auth-guard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="Assets/css/importar_alunas.css">
+<link rel="stylesheet" href="./Assets/css/notificacoes.css">
+</head>
+<body>
+<main>
+<section class="card">
+  <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+  <hr>
+  <span class="badge">BIBLIOTECA ITINERANTE</span>
+  <h1>Importar Alunas</h1>
+  <p>Envie a lista de presença (planilha .xlsx ou arquivo .pdf) de um ou mais cursos. O sistema lê o número e o nome de cada aluna e salva no banco de dados.</p>
+
+  <label id="drop" class="drop" for="arquivo">
+    <span class="drop-icone">📄</span>
+    <strong>Clique para escolher os arquivos</strong>
+    <small>ou arraste planilhas (.xlsx) e PDFs para cá</small>
+    <input id="arquivo" type="file" accept=".xlsx,.xls,.csv,.pdf,application/pdf" multiple hidden>
+  </label>
+
+  <small id="status"></small>
+
+  <div id="arquivos"></div>
+
+  <div id="rodape" hidden>
+    <label class="check"><input id="chkAtualizar" type="checkbox"> Atualizar o nome quando o nº já existir com outro nome <small>(o WhatsApp é mantido)</small></label>
+    <div id="resumo" class="resumo"></div>
+    <div class="buttons">
+      <button id="salvar" type="button" disabled>Salvar no banco de dados</button>
+      <button id="limpar" type="button">Limpar</button>
+    </div>
+  </div>
+
+  <a href="cadastro_alunos.html">← Voltar para o cadastro de alunas</a>
+  <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</section>
+</main>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-box">
+    <div id="modalIcon" class="modal-icon">✓</div>
+    <h2 id="modalTitulo">Confirmar importação</h2>
+    <p id="modalTexto">Confira o resumo antes de salvar no banco de dados:</p>
+    <div id="modalResumo" class="modal-data"></div>
+    <div class="modal-actions">
+      <button id="modalVoltar" type="button">Voltar</button>
+      <button id="modalConfirmar" type="button">Confirmar e salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="Assets/js/importar_alunas.js"></script>
+<script type="module" src="./Assets/js/notificacoes.js"></script>
+<script src="./Assets/js/script.js"></script>
+</body>
+</html>
