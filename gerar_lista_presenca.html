@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="Logo-Mulheres-Mil.jpg">
-<title>Gerar Lista de Presença | Sistema Mulheres Mil</title>
+<title>Gerar Lista de Presença | Mulheres Mil</title>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -119,9 +119,17 @@ async function iniciar() {
     const [todos, snap] = await Promise.all([carregarCursos(true), get(ref(db, "alunas"))]);
     alunasDb = snap.val() || {};
     const total = (id) => Object.values(alunasDb[id] || {}).filter((a) => a && a.nome).length;
-    // cursos do banco + cursos padrão que já tenham alunas
+    // junta cursos com o mesmo nome (ex.: o padrão "assistente" e o cadastrado "assistente-escolar"),
+    // ficando com o código que tem mais alunas
+    const nomeChave = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+    const escolhidos = {};
+    Object.entries(todos).forEach(([id, nome]) => {
+      const k = nomeChave(nome);
+      const atual = escolhidos[k];
+      if (!atual || total(id) > total(atual)) escolhidos[k] = id;
+    });
     cursos = {};
-    Object.entries(todos).forEach(([id, nome]) => { cursos[id] = nome; });
+    Object.values(escolhidos).forEach((id) => { cursos[id] = todos[id]; });
     const ids = Object.keys(cursos).sort((a, b) => cursos[a].localeCompare(cursos[b], "pt-BR"));
     if (!ids.length) { $("curso").innerHTML = '<option value="">Nenhum curso cadastrado</option>'; aviso("Cadastre um curso em 'Cadastro de Cursos' primeiro.", "erro"); return; }
     $("curso").innerHTML = '<option value="">Selecione o curso</option>' +
@@ -245,6 +253,5 @@ $("data").onchange = () => { if (cursoId) $("pData").textContent = "Data: " + te
 $("btnPdf").onclick = baixarPdf;
 iniciar();
 </script>
-<script src="./Assets/js/script.js"></script>
 </body>
 </html>
