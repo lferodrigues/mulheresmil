@@ -6,18 +6,24 @@
 <link rel="icon" href="Logo-Mulheres-Mil.jpg">
 <title>Cadastro de Alunas | Biblioteca Itinerante</title>
 <link rel="stylesheet" href="Assets/css/cadastro_alunos.css">
+<style>
+/* Botões que levam para as páginas de importação e de cursos */
+a.btn-importar{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;padding:13px;border-radius:10px;background:#f9e4ee;color:#8e0f45;font-weight:800;text-decoration:none;border:1px solid #eadbe3;transition:background .15s ease,transform .15s ease}
+a.btn-importar:hover{background:#f3d0e0;transform:translateY(-1px)}
+a.btn-importar+a.btn-importar{margin-top:10px}
+</style>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 </head>
 <body>
 <main>
 <section class="card">
 <img src="Logo-Mulheres-Mil.jpg" class="logo">
-<hr><span class="badge">BIBLIOTECA ITINERANTE</span>
+<hr><span class="badge">Painel do Administrador(a)</span>
 <h1>Cadastro de Alunas</h1>
 <p>Selecione o curso, pesquise a aluna e informe o WhatsApp para contato.</p>
-<label>Curso<select id="curso"><option value="">Selecione</option>
-<option value="assistente">Assistente Escolar</option><option value="operadora">Operadora de Computador</option>
-</select></label>
+<a class="btn-importar" href="cadastro_cursos.html">🎓 Cadastrar novo curso</a>
+<a class="btn-importar" href="importar_alunas.html">📄 Importar alunas de planilha</a>
+<label>Curso<select id="curso"><option value="">Carregando cursos...</option></select></label>
 <div id="area" hidden>
 <label class="campo-pesquisa">Pesquisar aluna<input id="pesquisa" type="search" placeholder="Digite o nome..." autocomplete="off">
 <div id="listaSugestoes" class="lista-sugestoes" hidden></div></label>
@@ -27,7 +33,7 @@
 <div class="buttons"><button id="salvar" disabled>Salvar</button><button id="apagar" disabled>Apagar</button></div>
 <section id="cadastros" hidden><h2>Alunas cadastradas <span id="contador">0</span></h2><div id="lista"></div></section>
 </div>
-<a href="biblioteca.html">← Voltar para a biblioteca</a>
+<a href="painel.html">← Voltar para a Tela Inicial</a>
 <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
 </section>
 </main>
