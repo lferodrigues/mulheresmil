@@ -38,7 +38,7 @@ A proposta inicial foi, portanto, criar um ambiente web simples, acessível e ce
 
 Com a evolução do projeto e a identificação de novas necessidades, a plataforma passou a atender também as **alunas dos cursos**, que podem acessar os materiais das aulas e baixar os arquivos em PDF para continuar os estudos em casa.
 
-Hoje o sistema conta ainda com uma **área administrativa protegida por login**, onde a equipe responsável faz o **lançamento de frequência**, gerencia a **Biblioteca Itinerante** (livros, alunas, reservas, consultas e devoluções), cadastra **novos usuários** e consulta os **logs de acesso** ao sistema.
+Hoje o sistema conta ainda com uma **área administrativa protegida por login**, onde a equipe responsável **cadastra os cursos**, cadastra e **importa as alunas**, faz o **lançamento de frequência por curso**, gerencia a **Biblioteca Itinerante** (livros, reservas, consultas e devoluções), cadastra **novos usuários** e consulta os **logs de acesso** ao sistema.
 
 ---
 
@@ -52,6 +52,7 @@ O sistema tem como principais objetivos:
 * reduzir a necessidade de dispositivos físicos, como pendrives;
 * disponibilizar materiais para estudo fora da sala de aula;
 * centralizar os conteúdos dos cursos;
+* permitir o cadastro de novos cursos sem precisar alterar o código;
 * facilitar o gerenciamento acadêmico;
 * auxiliar supervisores e orientação no acompanhamento das turmas;
 * registrar e acompanhar faltas das estudantes;
@@ -91,6 +92,8 @@ A página inicial (`index.html`) apresenta os cursos disponíveis e o botão de 
 
 Ao escolher o curso, a usuária vê uma tela de carregamento (`operadora.html` / `assistente.html`) e é redirecionada automaticamente para a pasta de materiais do respectivo curso.
 
+> ℹ️ A página pública continua com os dois cursos fixos, pois cada um aponta para uma pasta própria de materiais. Os cursos cadastrados na área administrativa (veja abaixo) ainda não aparecem aqui.
+
 ---
 
 ## 🖥️ Utilização na lousa interativa
@@ -123,15 +126,42 @@ Os conteúdos são disponibilizados em formato **PDF**, permitindo que as alunas
 
 O botão **Login** da página inicial leva à tela `admin.html`, que usa **Firebase Authentication** (e-mail e senha).
 
-Após o login, a usuária passa por uma tela de carregamento animada (`carregando.html`) e acessa o **Painel** (`painel.html`) com três opções:
+Após o login, a usuária passa por uma tela de carregamento animada (`carregando.html`) e acessa o **Painel** (`painel.html`) com quatro opções:
 
 | Opção | Descrição |
 |---|---|
-| 📖 **Biblioteca** | Livros, alunas, reservas, consultas e devoluções |
-| 📝 **Lançamento de Frequência** | Controle da lista de presença dos cursos |
+| 📖 **Biblioteca** | Livros, reservas, consultas e devoluções |
+| 📝 **Lançamento de Frequência** | Controle da lista de presença, por curso |
+| 👩‍🎓 **Cadastro de Alunas** | Cadastro das alunas e do WhatsApp para contato (com acesso a **cursos** e **importação**) |
 | 🔒 **Logs de Acesso** | Área restrita com o histórico de acessos ao sistema |
 
 As páginas administrativas usam o arquivo `auth-guard.js`: quem não estiver logado é redirecionado automaticamente para a tela de login.
+
+---
+
+## 🎓 Cadastro de Cursos
+
+Página `cadastro_cursos.html`, acessada pelo botão **🎓 Cadastrar novo curso** dentro do **Cadastro de Alunas**.
+
+* o usuário informa o **nome do curso**;
+* um pop-up pede a confirmação, mostrando o nome e o **código interno** gerado automaticamente (ex.: "Auxiliar Administrativo" → `auxiliar-administrativo`);
+* ao confirmar, o curso é gravado no **Realtime Database**, em `cursos/{id}`;
+* não permite cadastrar dois cursos com o mesmo nome;
+* a lista **Cursos cadastrados** mostra apenas os cursos do banco, cada um com botão **Remover** (com confirmação);
+* a remoção é **bloqueada** se o curso ainda tiver alunas cadastradas.
+
+Os cursos cadastrados aparecem automaticamente em:
+
+| Tela | Como usa os cursos |
+|---|---|
+| **Cadastro de Alunas** | o seletor de curso lista só os cursos do banco |
+| **Importar Alunas** | o seletor de curso de cada planilha vem do banco; o curso é detectado pelo texto "Curso: ..." da planilha |
+| **Lista de Presença** (`lista_presenca_mulheres_mil.html`) | pop-up para escolher o curso (veja abaixo) |
+| **Menu de Frequência** (`menu.html`) | um botão por curso |
+
+A leitura dos cursos é centralizada em `Assets/js/cursos.js` (função `carregarCursos`).
+
+> ⚠️ Cada curso tem o seu próprio código no banco. As alunas e a presença ficam gravadas sob o código do curso (`alunas/{curso}`, `presenca/{curso}`). Se um curso for recadastrado com outro nome, ele recebe outro código e começa vazio.
 
 ---
 
@@ -163,10 +193,13 @@ O sistema registra, no **Realtime Database**, os seguintes eventos:
 | `login` | quando a usuária entra pela tela `admin.html` (também atualiza o `ultimoAcesso` do perfil) |
 | `logout` | quando clica em **Sair** (gravado antes de encerrar a sessão) |
 | `cadastro` | quando um novo usuário é criado |
+| `pagina` | quando uma página do sistema é aberta |
+| `clique` | quando um botão ou link é clicado (com o contexto, como os dados do pop-up) |
+| `selecao` | quando uma opção de lista, caixa de marcar ou arquivo é escolhido |
 
-Cada registro guarda: `uid`, `email`, `tipo`, `pagina`, `data` (horário do servidor) e `navegador`.
+Cada registro guarda: `uid`, `email`, `tipo`, `ip`, `sessao`, `pagina`, `url`, `data` (horário do servidor), `quando` (horário do aparelho), `navegador`, `idioma`, `tela` e `fuso`. Cliques e páginas são enviados em lote, e **nunca** é gravado o conteúdo de campos digitados (como senhas).
 
-A gravação é centralizada em `Assets/js/logs-acesso.js` (função `registrarLog`). Ela **nunca interrompe** o fluxo do sistema: se a gravação falhar, apenas registra o erro no console.
+A gravação é centralizada em `Assets/js/logs-acesso.js` (funções `registrarLog` e `registrarEvento`), e o acompanhamento de páginas, cliques e seleções fica em `Assets/js/rastreamento.js`. Elas **nunca interrompem** o fluxo do sistema: se a gravação falhar, apenas registram o erro no console.
 
 ### 🔒 Página de logs (`logs_acesso.html`)
 
@@ -175,8 +208,8 @@ Acessada pelo botão **Logs de Acesso** do painel.
 * a página abre **bloqueada** (cadeado);
 * ao clicar em **Acessar logs**, um pop-up personalizado pede e-mail e senha;
 * a senha também fica protegida por **hash SHA-256**, com bloqueio de 30 segundos após 5 tentativas erradas;
-* depois de liberada, mostra a tabela com **data/hora, tipo, e-mail, página e navegador**;
-* possui **busca** (e-mail/página), **filtro por tipo** e botão **Atualizar**;
+* depois de liberada, mostra a tabela com **data/hora, tipo, e-mail, IP, página, ação e navegador**;
+* possui **busca** (e-mail, IP, página ou ação), **filtro por tipo** (login, logout, cadastro, página, clique, seleção) e botão **Atualizar**;
 * o botão **⬇️ Salvar em PDF** exporta em paisagem exatamente o que está na tela (já filtrado), com data de geração e numeração de páginas;
 * ao recarregar, a página volta a ficar bloqueada.
 
@@ -186,28 +219,64 @@ Acessada pelo botão **Logs de Acesso** do painel.
 
 ## 📊 Controle de frequência
 
-Acessível pelo painel (`menu.html`), com uma lista de presença para cada curso:
+Acessível pelo painel (`menu.html`). O menu mostra **um botão por curso**, montado a partir do banco de dados.
 
-* `lista_presenca_mulheres_mil.html` — Operadora de Computador
-* `lista_presenca_assistente_escolar.html` — Assistente Escolar
+### Lista de presença por curso
+
+Ao abrir `lista_presenca_mulheres_mil.html`, aparece um **pop-up personalizado "Escolha o curso"**:
+
+* lista todos os cursos cadastrados no banco, cada um com o número de alunas cadastradas;
+* ao escolher o curso, a lista carrega **todas as alunas cadastradas naquele curso** (em tempo real);
+* o botão **🎓 Trocar curso** reabre o pop-up a qualquer momento;
+* sem curso cadastrado, o pop-up avisa e leva ao Cadastro de Cursos;
+* se a página for aberta com `?curso=ID`, ela abre direto naquele curso.
 
 Recursos:
 
 * várias listas por curso, cada uma com **data** e **observação/turma**;
 * três aulas por lista, marcando **P** (presente) ou **A** (ausente) para cada aluna;
 * aba de **Resumo de Faltas**, somando presenças, faltas e aulas registradas por aluna;
-* **exportação em PDF** de todas as listas e do resumo de faltas (jsPDF);
+* botões **💾 Salvar lista de chamada** e **☁️ Carregar do banco**, que gravam e leem as listas no Realtime Database, em `presenca/{curso}`;
+* **exportação em PDF** de todas as listas e do resumo de faltas (jsPDF), com o nome do curso no cabeçalho;
 * alunas com faltas destacadas em vermelho.
 
-> ℹ️ As listas de presença guardam os dados no **navegador** (`localStorage`). Os dados ficam disponíveis no mesmo computador/navegador e não são sincronizados entre dispositivos. Recomenda-se baixar os PDFs periodicamente como cópia de segurança.
+Cada curso tem as **suas próprias listas**: as de um curso não se misturam com as de outro, tanto no navegador quanto no banco.
+
+### Outras páginas de lista
+
+* `lista_presenca.html` — lista de presença genérica, aberta pelo menu para cursos novos (`?curso=ID`). Tem os mesmos recursos da página acima, sem o pop-up.
+* `lista_presenca_assistente_escolar.html` — página antiga do curso Assistente Escolar, com a lista de alunas fixa no código.
+
+> ℹ️ Enquanto não forem salvas no banco, as listas ficam no **navegador** (`localStorage`), disponíveis só naquele computador. Use **Salvar lista de chamada** para guardar no banco e baixe os PDFs periodicamente como cópia de segurança.
 
 Esse recurso está alinhado às atividades de acompanhamento atribuídas à função de supervisão no Programa Mulheres Mil.
 
 ---
 
+## 👩‍🎓 Cadastro de Alunas (`cadastro_alunos.html`)
+
+* o seletor de **curso** lista só os cursos cadastrados no banco;
+* a lista de alunas do curso vem do banco (`alunas/{curso}`), alimentada pela importação de planilhas;
+* pesquisa da aluna pelo nome e registro do **WhatsApp** para contato, com máscara automática;
+* lista de **alunas cadastradas** do curso (as que já têm WhatsApp), com botão **Remover** em cada uma;
+* a remoção pede **confirmação** e é **bloqueada** se a aluna ainda estiver com livro emprestado (é preciso registrar antes a devolução);
+* botões **🎓 Cadastrar novo curso** e **📄 Importar alunas de planilha**.
+
+### 📄 Importar Alunas (`importar_alunas.html`)
+
+* envio de uma ou mais planilhas de lista de presença (`.xlsx`, `.xls` ou `.csv`), por clique ou arrastando os arquivos;
+* leitura automática do **curso**, do **número da chamada** e do **nome** de cada aluna (biblioteca SheetJS);
+* o curso é identificado comparando a linha "Curso: ..." da planilha com os **cursos cadastrados no banco**; se não for reconhecido, é escolhido manualmente no seletor;
+* se não houver curso cadastrado, a tela avisa para cadastrar o curso antes;
+* pré-visualização com a situação de cada linha: **nova**, **já cadastrada**, **nome diferente**, **nº repetido** ou **sem curso**;
+* opção de atualizar o nome quando o número já existir com outro nome (o **WhatsApp é sempre mantido**);
+* confirmação com resumo antes de gravar em `alunas/{curso}/{nº}`.
+
+---
+
 ## 📖 Biblioteca Itinerante
 
-A Biblioteca Itinerante organiza o acervo e a circulação de livros entre as participantes do projeto. Os dados ficam no **Firebase Realtime Database** e são atualizados em tempo real. O menu da biblioteca (`biblioteca.html`) reúne cinco áreas:
+A Biblioteca Itinerante organiza o acervo e a circulação de livros entre as participantes do projeto. Os dados ficam no **Firebase Realtime Database** e são atualizados em tempo real. O menu da biblioteca (`biblioteca.html`) reúne quatro áreas:
 
 ### 📚 Cadastro de Livros (`cadastro_livros.html`)
 
@@ -217,22 +286,6 @@ A Biblioteca Itinerante organiza o acervo e a circulação de livros entre as pa
 * clicar em um livro da lista carrega os dados no formulário para edição;
 * botão **Remover** em cada livro, com confirmação — **bloqueado** se o livro estiver emprestado;
 * migração única de livros que estavam salvos apenas no navegador (versão antiga).
-
-### 👩‍🎓 Cadastro de Alunas (`cadastro_alunos.html`)
-
-* seleção do curso e pesquisa da aluna pelo nome (a lista vem das listas de presença);
-* registro do **WhatsApp** para contato, com máscara automática;
-* lista de **alunas cadastradas** do curso, com botão **Remover** em cada uma;
-* a remoção pede **confirmação** e é **bloqueada** se a aluna ainda estiver com livro emprestado (é preciso registrar antes a devolução);
-* botão **📄 Importar alunas de planilha** (veja abaixo).
-
-### 📄 Importar Alunas (`importar_alunas.html`)
-
-* envio de uma ou mais planilhas de lista de presença (`.xlsx`, `.xls` ou `.csv`), por clique ou arrastando os arquivos;
-* leitura automática do **curso**, do **número da chamada** e do **nome** de cada aluna (biblioteca SheetJS);
-* pré-visualização com a situação de cada linha: **nova**, **já cadastrada**, **nome diferente**, **nº repetido** ou **sem curso**;
-* opção de atualizar o nome quando o número já existir com outro nome (o **WhatsApp é sempre mantido**);
-* confirmação com resumo antes de gravar em `alunas/{curso}/{nº}`.
 
 ### 📖 Reserva de Livros (`reserva_livros.html`)
 
@@ -284,19 +337,23 @@ Sistema Mulheres Mil
 │   ├── admin.html ................. Login + cadastrar novo usuário (pop-up de administrador)
 │   ├── cadastro.html .............. Cadastro de usuário (nome, sobrenome, WhatsApp, e-mail, senha)
 │   ├── carregando.html ............ Animação pós-login
-│   ├── painel.html ................ Biblioteca | Frequência | Logs de Acesso
+│   ├── painel.html ................ Biblioteca | Frequência | Cadastro de Alunas | Logs de Acesso
 │   ├── logs_acesso.html ........... Logs de acesso (pop-up de senha + PDF)
 │   │
+│   ├── Cursos e alunas
+│   │   ├── cadastro_cursos.html ... Cadastro de cursos (salva em cursos/)
+│   │   ├── cadastro_alunos.html ... Cadastro de alunas + WhatsApp (curso vem do banco)
+│   │   └── importar_alunas.html ... Importação de alunas por planilha
+│   │
 │   ├── Frequência
-│   │   ├── menu.html .............. Escolha do curso
-│   │   ├── lista_presenca_mulheres_mil.html
-│   │   └── lista_presenca_assistente_escolar.html
+│   │   ├── menu.html .............. Um botão por curso (lido do banco)
+│   │   ├── lista_presenca_mulheres_mil.html ..... Lista de presença com pop-up de escolha do curso
+│   │   ├── lista_presenca.html .... Lista de presença genérica (?curso=ID)
+│   │   └── lista_presenca_assistente_escolar.html ... Página antiga (lista fixa)
 │   │
 │   └── Biblioteca Itinerante
 │       ├── biblioteca.html ........ Menu da biblioteca
 │       ├── cadastro_livros.html
-│       ├── cadastro_alunos.html
-│       ├── importar_alunas.html
 │       ├── reserva_livros.html
 │       ├── consulta-livros.html
 │       └── devolucao_livros.html
@@ -306,19 +363,26 @@ Sistema Mulheres Mil
     └── js/
         ├── firebase-config.js ..... Configuração única do Firebase (módulo)
         ├── auth-guard.js .......... Proteção de páginas + log de logout
+        ├── cursos.js .............. Leitura dos cursos do banco (compartilhado)
         ├── logs-acesso.js ......... Gravação dos logs de acesso
+        ├── rastreamento.js ........ Registro de páginas, cliques e seleções
         ├── notificacoes.js ........ Sino de atrasos + aviso por WhatsApp
+        ├── cadastro_cursos.js ..... Cadastro e remoção de cursos
+        ├── cadastro_alunos.js ..... Cadastro de alunas
+        ├── importar_alunas.js ..... Importação de planilhas
         └── (demais scripts de cada página)
 ```
 
 ### Banco de dados (Firebase Realtime Database)
 
 ```text
+/cursos/{id}            → id, nome, criadoEm
 /livros/{codigo}        → dados do livro, status, reservado, aluna, datas
 /alunas/{curso}/{n}     → nome, nº da chamada, WhatsApp
 /emprestimos/{id}       → livro, aluna, data da reserva, prazo, status
+/presenca/{curso}       → listas de presença do curso (proximoId, listas, atualizadoEm, atualizadoPor)
 /usuarios/{uid}         → nome, sobrenome, email, whatsapp, criadoEm, ultimoAcesso
-/logsAcesso/{id}        → uid, email, tipo (login | logout | cadastro), pagina, data, navegador
+/logsAcesso/{id}        → uid, email, tipo, ip, sessao, pagina, acao, data, navegador...
 ```
 
 ### Regras do Realtime Database
@@ -331,6 +395,7 @@ Sistema Mulheres Mil
       ".write": "auth != null"
     },
     "alunas": { ".read": "auth != null", ".write": "auth != null" },
+    "cursos": { ".read": "auth != null", ".write": "auth != null" },
     "emprestimos": {
       ".read": "auth != null",
       ".write": "auth != null",
@@ -355,6 +420,8 @@ Sistema Mulheres Mil
 }
 ```
 
+* **`cursos`**: sem esta regra o Cadastro de Cursos retorna "Sem permissão no banco de dados";
+* **`presenca`**: guarda as listas de chamada de cada curso;
 * **`usuarios`**: cada usuária lê e grava apenas o próprio perfil;
 * **`logsAcesso`**: os registros só podem ser **criados** (nunca editados ou apagados) e cada um precisa carregar o `uid` de quem o gravou; a **leitura** é restrita à conta do administrador.
 
@@ -368,7 +435,7 @@ O projeto foi desenvolvido com tecnologias web, executando diretamente no navega
 * **CSS3**
 * **JavaScript** (módulos ES)
 * **Firebase Authentication** — login e cadastro de usuários
-* **Firebase Realtime Database** — Biblioteca Itinerante, perfis de usuários e logs de acesso
+* **Firebase Realtime Database** — cursos, alunas, presença, Biblioteca Itinerante, perfis de usuários e logs de acesso
 * **jsPDF** e **jsPDF-AutoTable** — exportação das listas de presença e dos logs em PDF
 * **SheetJS (xlsx)** — leitura das planilhas na importação de alunas
 * **Web Crypto API (SHA-256)** — verificação das credenciais de administrador sem guardar senha em texto puro
@@ -401,8 +468,9 @@ A identidade visual utiliza elementos associados ao **Programa Mulheres Mil**, c
 * cartões de conteúdo e botões de acesso;
 * ícones para identificação das áreas;
 * layout centralizado e responsivo;
-* paleta de **laranja e verde** na área pública e de **laranja e vinho** na Biblioteca Itinerante e nos logs;
-* pop-ups de confirmação antes de ações importantes (salvar, reservar, devolver, remover e acessar áreas restritas).
+* paleta de **laranja e verde** na área pública e de **laranja e vinho** na Biblioteca Itinerante, nos cursos e nos logs;
+* pop-ups de confirmação antes de ações importantes (salvar, reservar, devolver, remover e acessar áreas restritas);
+* pop-up personalizado para escolher o curso na lista de presença.
 
 ---
 
@@ -460,11 +528,17 @@ Cadastro de livros e alunas, importação de planilhas, reservas com prazo de 15
 
 ### Fase 7 — Usuários e rastreabilidade
 
-Cadastro de novos usuários com nome, sobrenome e WhatsApp, perfis salvos no banco, **logs de acesso** (login, logout e cadastro) e página restrita para consulta e exportação dos logs em PDF.
+Cadastro de novos usuários com nome, sobrenome e WhatsApp, perfis salvos no banco, **logs de acesso** (login, logout, cadastro, páginas, cliques e seleções) e página restrita para consulta e exportação dos logs em PDF.
 
 ⬇️
 
-### Fase 8 — Evolução contínua
+### Fase 8 — Cursos dinâmicos
+
+Criação do **Cadastro de Cursos**: os cursos passam a ser gravados no banco e usados no cadastro e importação de alunas, no menu de frequência e na **lista de presença com pop-up de escolha do curso**, com presença salva por curso no banco.
+
+⬇️
+
+### Fase 9 — Evolução contínua
 
 O sistema continuará recebendo atualizações de acordo com as necessidades identificadas durante a execução dos cursos.
 
@@ -479,28 +553,32 @@ O projeto possui caráter evolutivo. Novas funcionalidades poderão ser adiciona
 * [x] login administrativo com Firebase Authentication;
 * [x] cadastro de novos usuários (nome, sobrenome, WhatsApp, e-mail) protegido por credencial de administrador;
 * [x] perfis de usuários salvos no Realtime Database;
-* [x] logs de acesso (login, logout e cadastro);
+* [x] logs de acesso (login, logout, cadastro, páginas, cliques e seleções);
 * [x] página de logs com pop-up de senha, filtros e exportação em PDF;
+* [x] cadastro de cursos no banco de dados, com remoção protegida;
+* [x] cursos cadastrados usados no cadastro de alunas, na importação e no menu de frequência;
 * [x] cadastro de livros e remoção de livros do acervo;
-* [x] cadastro de alunas na Biblioteca Itinerante;
-* [x] importação de alunas por planilha (.xlsx/.xls/.csv);
+* [x] cadastro de alunas por curso;
+* [x] importação de alunas por planilha (.xlsx/.xls/.csv), com detecção do curso;
 * [x] remoção do cadastro de alunas;
 * [x] reserva de livros com prazo de devolução;
 * [x] consulta de livros com situação (livre, emprestado, atrasado);
 * [x] registro de devolução de livros;
 * [x] aviso de livros atrasados por sino de notificações, com mensagem de cobrança pelo WhatsApp;
-* [x] listas de presença por curso;
+* [x] lista de presença com pop-up para escolher o curso e carregar as alunas dele;
+* [x] presença salva no banco de dados por curso;
 * [x] resumo de faltas;
 * [x] exportação das listas e do resumo em PDF;
 * [x] melhorias para dispositivos móveis.
 
 **Ideias futuras**
 
-* [ ] salvar a frequência no Firebase (hoje fica no navegador);
-* [ ] proteger também as páginas de lista de presença com login;
+* [ ] usar os cursos do banco também na página pública (`index.html`), com link de materiais por curso;
+* [ ] adaptar a lista do Assistente Escolar para também usar o pop-up e o banco;
+* [ ] proteger também as páginas de lista de presença antigas com login;
 * [ ] verificar a credencial de administrador também dentro de `cadastro.html`;
 * [ ] tela de administração de usuários (listar, desativar, redefinir senha);
-* [ ] registrar também as páginas visitadas e tentativas de login com falha (exige função no servidor);
+* [ ] registrar tentativas de login com falha (exige função no servidor);
 * [ ] histórico de empréstimos por aluna e por livro;
 * [ ] cadastro de professores e de turmas;
 * [ ] relatórios de frequência e histórico de faltas;
@@ -517,7 +595,7 @@ O projeto possui caráter evolutivo. Novas funcionalidades poderão ser adiciona
 
 # 🔐 Segurança
 
-O acesso à área administrativa é feito por login com **Firebase Authentication**, e as páginas da biblioteca, o painel e os logs são protegidos pelo `auth-guard.js`.
+O acesso à área administrativa é feito por login com **Firebase Authentication**, e as páginas da biblioteca, o painel, os cursos e os logs são protegidos pelo `auth-guard.js`.
 
 Pontos de atenção:
 
@@ -527,11 +605,12 @@ Pontos de atenção:
 * para consultar os logs, é preciso estar logado com a conta autorizada na regra `logsAcesso` (`auth.token.email`); essa conta deve existir no Firebase Authentication;
 * `cadastro.html` ainda não confere o acesso de administrador por conta própria (o `admin.html` apenas redireciona para ele); essa verificação está na lista de ideias futuras;
 * os logs **não registram tentativas de login com falha**, pois o banco só aceita gravação de usuários autenticados;
+* os logs guardam o **IP** de quem acessa (obtido por serviço externo) e as ações realizadas, o que exige atenção à LGPD;
 * o bloqueio do botão direito e dos atalhos de desenvolvedor nas páginas é apenas um desestímulo e **não** substitui a segurança do servidor;
-* as listas de presença ficam no `localStorage` do navegador;
+* as listas de presença ficam no `localStorage` do navegador até serem salvas no banco;
 * recomenda-se **trocar periodicamente** as senhas de administrador e nunca compartilhá-las em canais abertos.
 
-Como o sistema trabalha com informações acadêmicas e dados pessoais (nomes, e-mails, WhatsApp e registros de acesso), futuras versões deverão priorizar:
+Como o sistema trabalha com informações acadêmicas e dados pessoais (nomes, e-mails, WhatsApp, IP e registros de acesso), futuras versões deverão priorizar:
 
 * controle de permissões por perfil;
 * gerenciamento de sessões;
@@ -553,7 +632,7 @@ Acesso aos conteúdos para utilização durante as aulas e na lousa interativa.
 
 ### 👩‍💼 Supervisores
 
-Acompanhamento das turmas, controle de frequência e gestão da biblioteca.
+Acompanhamento das turmas, cadastro de cursos e alunas, controle de frequência e gestão da biblioteca.
 
 ### 👩‍💼 Orientação
 
