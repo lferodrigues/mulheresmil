@@ -37,6 +37,7 @@ td{padding:9px 12px;border-top:1px solid #f0e6ea;vertical-align:top}
 .tag.login{background:#e8f5e9;color:#2e7d32}.tag.logout{background:#eef0f2;color:#6b6f73}.tag.cadastro{background:#fff4dc;color:#b7791f}.tag.pagina{background:#e3f2fd;color:#1565c0}.tag.clique{background:#f3e5f5;color:#7b1fa2}.tag.selecao{background:#e0f7fa;color:#00838f}td small{color:#8a777f;word-break:break-word}
 .vazio{text-align:center;padding:30px;color:#8a777f}
 .erro{color:#c62828;font-weight:700}
+.did{font-family:Consolas,monospace;font-size:12px;white-space:nowrap}
 /* abas */
 .abas{display:flex;gap:6px;margin-top:20px;border-bottom:2px solid #eadbe3;flex-wrap:wrap}
 .aba{border:0;background:transparent;padding:10px 16px;font:inherit;font-weight:700;color:#8a777f;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
@@ -108,15 +109,15 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 
     <!-- aba: visitas à página pública (index.html) -->
     <div id="painelVisitas" hidden>
-      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, dispositivo, cliques e tempo em tela.</p>
+      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, ID do aparelho, dispositivo, cliques e tempo em tela.</p>
       <div class="filtros v">
-        <label>Buscar (IP, dispositivo, sistema ou clique)<input id="vBusca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
+        <label>Buscar (IP, ID do aparelho, dispositivo, sistema ou clique)<input id="vBusca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
         <button type="button" class="btn cinza" id="vAtualizar">↻ Atualizar</button>
       </div>
       <div class="status-bar"><span id="vStatus">Carregando...</span><span id="vContador">0 visitas</span></div>
       <div class="tabela">
         <table>
-          <thead><tr><th>Data/hora</th><th>IP</th><th>Dispositivo</th><th>Página</th><th>Cliques</th><th>Tempo em tela</th></tr></thead>
+          <thead><tr><th>Data/hora</th><th>IP</th><th>ID do aparelho</th><th>Dispositivo</th><th>Página</th><th>Cliques</th><th>Tempo em tela</th></tr></thead>
           <tbody id="vCorpo"></tbody>
         </table>
         <div id="vVazio" class="vazio" hidden>Nenhuma visita registrada.</div>
@@ -279,8 +280,6 @@ $("busca").oninput = filtrar;
 $("filtroTipo").onchange = filtrar;
 $("btnAtualizar").onclick = carregar;
 
-/* ---------- abas ---------- */
-
 /* ---------- visitas ao site (index.html) ---------- */
 // Cada visita vira vários eventos em visitasSite (visita, clique, saida) ligados pelo mesmo "vid".
 
@@ -297,12 +296,13 @@ function agruparVisitas(eventos) {
     const q = Number(e.quando) || Number(e.data) || 0;
     let v = mapa.get(e.vid);
     if (!v) {
-      v = { vid: e.vid, quando: q, ip: "", dispositivo: "", sistema: "", navegador: "", tela: "", origem: "",
+      v = { vid: e.vid, quando: q, ip: "", did: "", dispositivo: "", sistema: "", navegador: "", tela: "", origem: "",
             pagina: "", cliques: [], tempo: 0, temSaida: false };
       mapa.set(e.vid, v);
     }
     if (q && (!v.quando || q < v.quando)) v.quando = q;
     if (!v.pagina && e.pagina) v.pagina = e.pagina;
+    if (!v.did && e.did) v.did = e.did;
     if (e.tipo === "visita") {
       v.ip = e.ip || ""; v.dispositivo = e.dispositivo || ""; v.sistema = e.sistema || "";
       v.navegador = e.navegador || ""; v.tela = e.tela || ""; v.origem = e.origem || "";
@@ -340,13 +340,15 @@ async function carregarVisitas() {
 function filtrarVisitas() {
   const q = norm($("vBusca").value);
   visFiltradas = visitas.filter((v) => !q ||
-    norm(v.ip).includes(q) || norm(v.dispositivo).includes(q) || norm(v.sistema).includes(q) ||
+    norm(v.ip).includes(q) || norm(v.did).includes(q) || norm(v.dispositivo).includes(q) || norm(v.sistema).includes(q) ||
     norm(v.navegador).includes(q) || norm(v.pagina).includes(q) || norm(v.origem).includes(q) ||
     v.cliques.some((c) => norm(c.acao).includes(q)));
 
   const ips = new Set(visFiltradas.map((v) => v.ip).filter(Boolean)).size;
+  const aparelhos = new Set(visFiltradas.map((v) => v.did).filter(Boolean)).size;
   $("vContador").textContent = visFiltradas.length + (visFiltradas.length === 1 ? " visita" : " visitas") +
-    " · " + ips + (ips === 1 ? " IP" : " IPs");
+    " · " + ips + (ips === 1 ? " IP" : " IPs") +
+    " · " + aparelhos + (aparelhos === 1 ? " aparelho" : " aparelhos");
   $("vVazio").hidden = visFiltradas.length > 0;
   $("vCorpo").innerHTML = visFiltradas.map((v) => {
     const detalhes = [v.sistema, v.navegador, v.tela].filter(Boolean).join(" · ");
@@ -358,6 +360,7 @@ function filtrarVisitas() {
     return `<tr>
       <td>${esc(fmtData(v.quando))}</td>
       <td>${esc(v.ip || "—")}</td>
+      <td class="did">${esc(v.did || "—")}</td>
       <td>${esc(v.dispositivo || "—")}${detalhes ? `<br><small>${esc(detalhes)}</small>` : ""}${v.origem ? `<br><small>Veio de: ${esc(v.origem)}</small>` : ""}</td>
       <td>${esc(v.pagina || "")}</td>
       <td>${cliques}</td>
