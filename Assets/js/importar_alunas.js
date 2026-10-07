@@ -1,7 +1,15 @@
 /* Importar Alunas — Biblioteca Itinerante (Firebase Realtime Database)
-   Lê listas de presença em planilha (.xlsx/.xls/.csv) ou PDF (.pdf, com texto) e grava as alunas em:
+   Lê listas de alunas em planilha (.xlsx/.xls), CSV (.csv) ou PDF (.pdf, com texto) e grava em:
      alunas/{curso}/{nº da chamada} = { curso, nome, chamada, whatsapp, atualizadoEm }
+   Formatos aceitos:
+     - planilha/CSV com coluna "Nome" (e, opcionalmente, "Nº"/"Chamada"); sem cabeçalho também funciona
+       (uma coluna só de nomes, ou "número | nome");
+     - PDF com linhas "número nome" (lista de presença);
+     - PDF com lista de nomes com marcadores (ex.: resultado final de edital) — o nº da chamada
+       passa a ser a ordem em que o nome aparece.
    - os cursos vêm do banco (cursos/), cadastrados em "Cadastro de Cursos";
+   - o curso é detectado por "Curso: ..." ou pelo título do documento (ex.: "Curso FIC OPERADOR DE COMPUTADOR"),
+     tolerando masculino/feminino (operador/operadora);
    - alunas novas entram com WhatsApp vazio (preenchido depois em "Cadastro de Alunas");
    - alunas que já existem NUNCA perdem o WhatsApp (só o nome é atualizado, se você permitir).
    - PDF: precisa da biblioteca pdf.js (script no importar_alunas.html). PDFs digitalizados (imagem) não funcionam. */
@@ -32,16 +40,36 @@ function erro(e) {
     : "Não foi possível concluir a operação. Verifique a conexão e tente novamente.", "erro");
 }
 
-// Descobre o curso pelo texto "Curso: ..." da planilha/PDF, comparando com os cursos cadastrados
+/* ---------- detecção do curso ---------- */
+const PALAVRAS_VAZIAS = new Set([
+  "de", "da", "do", "dos", "das", "e", "em", "para", "a", "o", "as", "os",
+  "fic", "curso", "formacao", "inicial", "continuada", "qualificacao", "profissional"
+]);
+
+// "Operadora" e "Operador" viram o mesmo radical; plural também
+function radical(t) {
+  return t.replace(/s$/, "").replace(/ora$/, "or");
+}
+function tokens(texto) {
+  return norm(texto).split(/[^a-z0-9]+/).filter((t) => t && !PALAVRAS_VAZIAS.has(t)).map(radical);
+}
+
+// Descobre o curso dentro de um texto (ex.: "Curso: X" ou o título do documento),
+// comparando com os cursos cadastrados. Aceita variações de gênero/plural.
 function detectarCurso(texto) {
   const t = norm(texto);
   if (!t) return "";
-  const achados = Object.entries(CURSOS).filter(([, nome]) => {
+  const conjunto = new Set(tokens(texto));
+  const achados = [];
+  for (const [id, nome] of Object.entries(CURSOS)) {
     const n = norm(nome);
-    return n && (t.includes(n) || n.includes(t));
-  });
-  // se mais de um combinar, fica com o nome mais longo (mais específico)
-  achados.sort((a, b) => b[1].length - a[1].length);
+    if (!n) continue;
+    const toks = tokens(nome);
+    const tudo = t.includes(n) || n.includes(t) || (toks.length && toks.every((x) => conjunto.has(x)));
+    if (tudo) achados.push([id, nome, toks.length]);
+  }
+  // se mais de um combinar, fica com o mais específico (mais palavras / nome mais longo)
+  achados.sort((a, b) => b[2] - a[2] || b[1].length - a[1].length);
   return achados.length ? achados[0][0] : "";
 }
 
@@ -49,7 +77,36 @@ function opcoesCurso() {
   return Object.entries(CURSOS).sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
 }
 
-/* ---------- leitura da planilha ---------- */
+/* ---------- validação de nomes ---------- */
+// Aceita só texto que "parece nome de pessoa" (2+ palavras, sem números nem símbolos)
+function nomeValido(n) {
+  n = limparTxt(n);
+  if (n.length < 5 || n.length > 90) return false;
+  if (/[\d\/ª:@_]/.test(n)) return false;
+  if (!/^\p{L}[\p{L}\s'’`´.\-]*$/u.test(n)) return false;
+  if (n.split(" ").length < 2) return false;
+  return !/^(edital|processo|resultado|candidatas?|aprovad|campus|curso|oferta|instituto|programa|professor|assinatura|total|observa|data|pagina|nome|lista|presenca|turma)/.test(norm(n));
+}
+
+/* ---------- leitura de planilha / CSV ---------- */
+// Quando não há coluna "Nome": aceita "número | nome" ou uma coluna só de nomes
+function extrairSemCabecalho(linhas) {
+  const alunas = [];
+  let seq = 0;
+  for (const cel of linhas) {
+    const c = cel.map(limparTxt).filter(Boolean);
+    if (!c.length) continue;
+    let num = NaN, nome = "";
+    if (/^\d{1,3}$/.test(c[0]) && c[1]) { num = +c[0]; nome = c[1]; }
+    else { nome = c[0]; }
+    if (!nomeValido(nome)) continue;
+    const chamada = Number.isFinite(num) && num > 0 ? num : seq + 1;
+    seq = chamada;
+    alunas.push({ chamada, nome: limparTxt(nome) });
+  }
+  return alunas;
+}
+
 function extrair(linhas) {
   // 1) curso: procura "Curso: ..." nas primeiras linhas
   let curso = "";
@@ -65,17 +122,26 @@ function extrair(linhas) {
       }
     }
   }
+  // sem "Curso:": tenta achar o curso em qualquer texto do cabeçalho (título do arquivo)
+  if (!curso) {
+    curso = detectarCurso(linhas.slice(0, 15).map((c) => c.map(limparTxt).join(" ")).join(" "));
+  }
 
   // 2) cabeçalho: linha com a coluna "Nome"
   let hLinha = -1, nomeCol = -1, numCol = -1;
   for (let i = 0; i < linhas.length && hLinha < 0; i++) {
-    const j = linhas[i].findIndex((c) => /^(nome|nome da aluna|nome completo|aluna)$/.test(norm(c)));
+    const j = linhas[i].findIndex((c) => /^(nome|nome da aluna|nome completo|aluna|candidata)$/.test(norm(c)));
     if (j >= 0) {
       hLinha = i; nomeCol = j;
       numCol = linhas[i].findIndex((c) => /^(n[ºo°.]*|num|numero|n\.?\s*chamada|chamada)$/.test(norm(c)));
     }
   }
-  if (hLinha < 0) return { curso, alunas: [], erro: "Não encontrei a coluna \"Nome\" nesta planilha." };
+
+  if (hLinha < 0) {
+    // sem cabeçalho "Nome": tenta ler como lista simples
+    const alunas = extrairSemCabecalho(linhas);
+    return { curso, alunas, erro: alunas.length ? "" : "Não encontrei a coluna \"Nome\" nem uma lista de nomes neste arquivo." };
+  }
 
   // 3) alunas
   const alunas = [];
@@ -104,23 +170,62 @@ function lerPlanilha(buffer) {
   return ultimo;
 }
 
+/* ---------- leitura de CSV ---------- */
+// UTF-8 primeiro; se houver bytes inválidos, assume Windows-1252 (Excel brasileiro)
+function decodificarTexto(buffer) {
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(buffer); }
+  catch (_) { return new TextDecoder("windows-1252").decode(buffer); }
+}
+
+function parseCsv(texto) {
+  texto = texto.replace(/^\uFEFF/, "");
+  // descobre o separador (; , ou tab) olhando as primeiras linhas
+  const amostra = texto.split(/\r?\n/).slice(0, 5).join("\n");
+  const [delim, qtd] = [";", ",", "\t"]
+    .map((d) => [d, amostra.split(d).length - 1])
+    .sort((a, b) => b[1] - a[1])[0];
+  const D = qtd > 0 ? delim : ";";
+
+  const linhas = [];
+  let linha = [], cel = "", aspas = false;
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i];
+    if (aspas) {
+      if (c === '"' && texto[i + 1] === '"') { cel += '"'; i++; }
+      else if (c === '"') aspas = false;
+      else cel += c;
+    } else if (c === '"') aspas = true;
+    else if (c === D) { linha.push(cel); cel = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && texto[i + 1] === "\n") i++;
+      linha.push(cel); cel = "";
+      linhas.push(linha); linha = [];
+    } else cel += c;
+  }
+  linha.push(cel);
+  linhas.push(linha);
+  return linhas.filter((l) => l.some((x) => limparTxt(x)));
+}
+
+function lerCsv(buffer) {
+  const linhas = parseCsv(decodificarTexto(buffer));
+  if (!linhas.length) return { curso: "", alunas: [], erro: "O arquivo CSV está vazio." };
+  return extrair(linhas);
+}
+
 /* ---------- leitura de PDF ---------- */
 // Cada linha do PDF vira uma lista de "células" (textos separados por espaço grande).
-function extrairPdf(linhas) {
-  // curso: "Curso: ..." nas primeiras linhas
-  let curso = "";
-  for (let i = 0; i < Math.min(linhas.length, 20) && !curso; i++) {
-    const cel = linhas[i];
-    for (let j = 0; j < cel.length && !curso; j++) {
-      const m = cel[j].match(/curso\s*:\s*(.+)/i);
-      if (m) { curso = detectarCurso(m[1]); continue; }
-      if (/^curso\s*:?$/i.test(cel[j]) && cel[j + 1]) curso = detectarCurso(cel[j + 1]);
-    }
-  }
+const BULLET = /^[\s\u2022\u2023\u2043\u204C\u204D\u2217\u25AA\u25AB\u25CB\u25CF\u25E6\u25A0\u25A1\u2013\u2014*·•\-\uE000-\uF8FF]+/;
+const textoLinha = (cel) => limparTxt(cel.join(" "));
 
-  // alunas: linhas que começam com o número da chamada seguido do nome
-  const alunas = [];
-  for (const cel of linhas) {
+function extrairPdf(linhas) {
+  const textos = linhas.map(textoLinha);
+  let alunas = [];
+  let inicio = textos.length;   // índice da primeira linha de aluna (o que vem antes é cabeçalho)
+
+  // A) lista numerada: "1  Maria da Silva" (célula separada ou na mesma célula)
+  const numeradas = [];
+  linhas.forEach((cel, i) => {
     let num = NaN, nome = "";
     if (/^\d{1,3}$/.test(cel[0]) && cel.length > 1) { num = +cel[0]; nome = cel[1]; }
     else {
@@ -128,11 +233,51 @@ function extrairPdf(linhas) {
       if (m) { num = +m[1]; nome = m[2]; }
     }
     nome = limparTxt(nome);
-    if (!(num > 0) || nome.length < 3 || !/\p{L}{2,}/u.test(nome)) continue;
-    if (/[\/ª]/.test(nome) || /^(professor|professora|assinatura|total|observa|curso|data|pagina|nome)/.test(norm(nome))) continue;
-    alunas.push({ chamada: num, nome });
+    if (num > 0 && nomeValido(nome)) numeradas.push({ i, chamada: num, nome });
+  });
+
+  if (numeradas.length >= 2) {
+    alunas = numeradas.map(({ chamada, nome }) => ({ chamada, nome }));
+    inicio = numeradas[0].i;
+  } else {
+    // B) lista com marcadores (∗ • - ...), sem número: a chamada é a ordem da lista
+    const marcadas = [];
+    textos.forEach((t, i) => {
+      const m = t.match(BULLET);
+      if (!m) return;
+      const nome = limparTxt(t.slice(m[0].length));
+      if (nomeValido(nome)) marcadas.push({ i, nome });
+    });
+
+    if (marcadas.length >= 2) {
+      alunas = marcadas.map((x, k) => ({ chamada: k + 1, nome: x.nome }));
+      inicio = marcadas[0].i;
+    } else {
+      // C) lista de nomes soltos, uma por linha, depois de um título
+      //    como "Candidatas aprovadas", "Classificadas", "Matriculadas"...
+      const h = textos.findIndex((t) => /(aprovad|classificad|matriculad|convocad|relacao de alunas|lista de alunas)/.test(norm(t)));
+      if (h >= 0) {
+        const soltas = [];
+        for (let i = h + 1; i < textos.length; i++) if (nomeValido(textos[i])) soltas.push({ i, nome: textos[i] });
+        if (soltas.length >= 2) {
+          alunas = soltas.map((x, k) => ({ chamada: k + 1, nome: x.nome }));
+          inicio = soltas[0].i;
+        }
+      }
+    }
   }
-  return { curso, alunas, erro: alunas.length ? "" : "Não encontrei alunas neste PDF. Ele precisa ter o número e o nome de cada aluna." };
+
+  // curso: "Curso: ..." ou o título do documento (ex.: "Curso FIC OPERADOR DE COMPUTADOR ...")
+  const cabecalho = textos.slice(0, Math.min(inicio, 30)).join(" ");
+  let curso = "";
+  const m = cabecalho.match(/curso\s*:\s*(.+)/i);
+  if (m) curso = detectarCurso(m[1]);
+  if (!curso) curso = detectarCurso(cabecalho);
+
+  return {
+    curso, alunas,
+    erro: alunas.length ? "" : "Não encontrei alunas neste PDF. Ele precisa ter uma lista de nomes (com ou sem número)."
+  };
 }
 
 async function lerPdf(buffer) {
@@ -172,7 +317,7 @@ async function lerPdf(buffer) {
     fechar();
   }
 
-  if (!temTexto) return { curso: "", alunas: [], erro: "Este PDF não tem texto (parece digitalizado). Use uma planilha ou um PDF gerado no computador." };
+  if (!temTexto) return { curso: "", alunas: [], erro: "Este PDF não tem texto (parece digitalizado). Use uma planilha, um CSV ou um PDF gerado no computador." };
   return extrairPdf(linhas);
 }
 
@@ -185,7 +330,8 @@ async function adicionarArquivos(lista) {
     try {
       const buffer = await f.arrayBuffer();
       const ehPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
-      const r = ehPdf ? await lerPdf(buffer) : lerPlanilha(buffer);
+      const ehCsv = /\.csv$/i.test(f.name) || f.type === "text/csv";
+      const r = ehPdf ? await lerPdf(buffer) : ehCsv ? lerCsv(buffer) : lerPlanilha(buffer);
       arquivos.push({ nome: f.name, curso: r.curso, alunas: r.alunas, erro: r.erro });
     } catch (e) {
       console.error(e);
