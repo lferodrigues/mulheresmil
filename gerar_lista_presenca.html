@@ -190,30 +190,38 @@ async function baixarPdf() {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const ML = 40, W = 515;
 
-    // caixa do cabeçalho: logo do IF | título | logo Mulheres Mil
-    doc.setLineWidth(.8); doc.setDrawColor(0);
-    doc.rect(ML, 30, W, 72);
-    colocar(doc, logoIf, ML + 10, 38, 56, 120, false);
-    colocar(doc, logoMm, ML + W - 10, 38, 56, 150, true);
-    doc.setFont("times", "bold"); doc.setFontSize(21); doc.setTextColor(0);
-    doc.text("Lista de Presença", ML + W / 2, 73, { align: "center" });
+    const POR_PAGINA = 40;
+    const grupos = [];
+    for (let i = 0; i < linhas.length; i += POR_PAGINA) grupos.push(linhas.slice(i, i + POR_PAGINA));
 
-    // curso e data
-    doc.setFont("times", "normal"); doc.setFontSize(12);
-    doc.text("Curso: " + cursos[cursoId], ML + 8, 124);
-    doc.text("Data: " + textoData(), ML + W - 8, 124, { align: "right" });
+    grupos.forEach((grupo, g) => {
+      if (g) doc.addPage();
 
-    doc.autoTable({
-      startY: 136,
-      margin: { left: ML, right: ML, top: 40, bottom: 30 },
-      head: [["Nº", "Nome", "1ª aula", "2ª aula", "3ª aula"]],
-      body: linhas.map((l) => [l.n, l.nome, "", "", ""]),
-      theme: "grid",
-      styles: { font: "times", fontSize: 11, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 }, minCellHeight: 16, lineColor: [0, 0, 0], lineWidth: .5, textColor: 0, valign: "middle" },
-      headStyles: { fillColor: [79, 98, 40], textColor: 255, fontStyle: "bold", fontSize: 11.5 },
-      alternateRowStyles: { fillColor: 255 },
-      columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 80 }, 3: { cellWidth: 80 }, 4: { cellWidth: 80 } },
-      didParseCell: (d) => { if (d.section === "head" && d.column.index >= 2) d.cell.styles.halign = "center"; }
+      // caixa do cabeçalho: logo do IF | título | logo Mulheres Mil
+      doc.setLineWidth(.8); doc.setDrawColor(0);
+      doc.rect(ML, 30, W, 72);
+      colocar(doc, logoIf, ML + 10, 38, 56, 120, false);
+      colocar(doc, logoMm, ML + W - 10, 38, 56, 150, true);
+      doc.setFont("times", "bold"); doc.setFontSize(21); doc.setTextColor(0);
+      doc.text("Lista de Presença", ML + W / 2, 73, { align: "center" });
+
+      // curso e data
+      doc.setFont("times", "normal"); doc.setFontSize(12);
+      doc.text("Curso: " + cursos[cursoId], ML + 8, 124);
+      doc.text("Data: " + textoData(), ML + W - 8, 124, { align: "right" });
+
+      doc.autoTable({
+        startY: 136,
+        margin: { left: ML, right: ML, top: 30, bottom: 30 },
+        head: [["Nº", "Nome", "1ª aula", "2ª aula", "3ª aula"]],
+        body: grupo.map((l) => [l.n, l.nome, "", "", ""]),
+        theme: "grid",
+        styles: { font: "times", fontSize: 10.5, cellPadding: { top: 2, bottom: 2, left: 4, right: 4 }, minCellHeight: 16, lineColor: [0, 0, 0], lineWidth: .5, textColor: 0, valign: "middle" },
+        headStyles: { fillColor: [79, 98, 40], textColor: 255, fontStyle: "bold", fontSize: 11 },
+        alternateRowStyles: { fillColor: 255 },
+        columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 80 }, 3: { cellWidth: 80 }, 4: { cellWidth: 80 } },
+        didParseCell: (d) => { if (d.section === "head" && d.column.index >= 2) d.cell.styles.halign = "center"; }
+      });
     });
 
     const paginas = doc.internal.getNumberOfPages();
