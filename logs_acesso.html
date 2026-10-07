@@ -37,6 +37,15 @@ td{padding:9px 12px;border-top:1px solid #f0e6ea;vertical-align:top}
 .tag.login{background:#e8f5e9;color:#2e7d32}.tag.logout{background:#eef0f2;color:#6b6f73}.tag.cadastro{background:#fff4dc;color:#b7791f}.tag.pagina{background:#e3f2fd;color:#1565c0}.tag.clique{background:#f3e5f5;color:#7b1fa2}.tag.selecao{background:#e0f7fa;color:#00838f}td small{color:#8a777f;word-break:break-word}
 .vazio{text-align:center;padding:30px;color:#8a777f}
 .erro{color:#c62828;font-weight:700}
+/* abas */
+.abas{display:flex;gap:6px;margin-top:20px;border-bottom:2px solid #eadbe3;flex-wrap:wrap}
+.aba{border:0;background:transparent;padding:10px 16px;font:inherit;font-weight:700;color:#8a777f;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.aba:hover{color:#8e0f45}
+.aba.ativa{color:#8e0f45;border-bottom-color:#8e0f45}
+.filtros.v{grid-template-columns:1fr auto}
+details summary{cursor:pointer;color:#8e0f45;font-weight:700}
+details small{display:block;margin-top:3px}
+@media(max-width:700px){.filtros.v{grid-template-columns:1fr}}
 a.voltar{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
 footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 /* pop-up */
@@ -70,6 +79,12 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 
   <!-- estado liberado -->
   <div id="conteudo" hidden>
+    <div class="abas" role="tablist">
+      <button type="button" class="aba ativa" id="abaSistema" role="tab">📋 Atividade do sistema</button>
+      <button type="button" class="aba" id="abaVisitas" role="tab">🌐 Visitas ao site</button>
+    </div>
+
+    <div id="painelSistema">
     <div class="filtros">
       <label>Buscar (e-mail, IP, página ou ação)<input id="busca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
       <label>Tipo
@@ -88,6 +103,24 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
         <tbody id="corpo"></tbody>
       </table>
       <div id="vazio" class="vazio" hidden>Nenhum registro encontrado.</div>
+    </div>
+    </div>
+
+    <!-- aba: visitas à página pública (index.html) -->
+    <div id="painelVisitas" hidden>
+      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, dispositivo, cliques e tempo em tela.</p>
+      <div class="filtros v">
+        <label>Buscar (IP, dispositivo, sistema ou clique)<input id="vBusca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
+        <button type="button" class="btn cinza" id="vAtualizar">↻ Atualizar</button>
+      </div>
+      <div class="status-bar"><span id="vStatus">Carregando...</span><span id="vContador">0 visitas</span></div>
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Data/hora</th><th>IP</th><th>Dispositivo</th><th>Página</th><th>Cliques</th><th>Tempo em tela</th></tr></thead>
+          <tbody id="vCorpo"></tbody>
+        </table>
+        <div id="vVazio" class="vazio" hidden>Nenhuma visita registrada.</div>
+      </div>
     </div>
   </div>
 
