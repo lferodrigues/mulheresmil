@@ -175,7 +175,7 @@ $("formLogin").addEventListener("submit", async (e) => {
 /* ---------- Cadastro de novo usuário (protegido por credencial de administrador) ---------- */
 // Só o hash SHA-256 de "sal|e-mail|senha" fica no código (a senha em texto puro não aparece aqui).
 const SAL = "mm-admin-v1";
-const HASH_ADMIN = "3644751e15c4233e2a4f9f6c4db59a1bf55c20bbded4d34fef2faafd6863a5fd";
+const HASH_ADMIN = "37ea76192aee8a20e0f29573de7edff2a6f06ed8ecfaf07cb37a67bafa16d69f";
 const PAGINA_CADASTRO = "cadastro.html";
 
 async function sha256(texto) {
