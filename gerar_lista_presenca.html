@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="Logo-Mulheres-Mil.jpg">
+<title>Gerar Lista de Presença | Mulheres Mil</title>
+<script type="module" src="./Assets/js/auth-guard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#fff7f0;font-family:"Segoe UI",Arial,sans-serif;color:#3b2931}
+main{min-height:95vh;display:grid;place-items:center}
+[hidden]{display:none!important}
+.card{width:min(860px,100%);background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px #4b14251a;border:1px solid #eadbe3}
+.logo{display:block;width:180px;max-width:70%;margin:auto;border-radius:8px}
+hr{border:0;height:3px;background:linear-gradient(90deg,#f5a623,#c2185b,#8e0f45);margin:20px 0}
+.badge{display:inline-block;background:#f9e4ee;color:#8e0f45;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:800}
+h1{color:#5a1738;margin:10px 0 5px}
+p{color:#76656c}
+.campos{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-top:18px}
+label{display:block;font-weight:700;font-size:14px}
+select,input[type=date]{display:block;width:100%;padding:13px;border:1px solid #dbcbd3;border-radius:10px;margin-top:6px;font:inherit;background:#fff}
+select:focus,input:focus{outline:2px solid #c2185b33;border-color:#c2185b}
+.check{display:flex;align-items:center;gap:9px;margin-top:14px;font-weight:600;cursor:pointer}
+.check input{accent-color:#c2185b;width:17px;height:17px}
+#status{display:block;margin-top:12px;color:#8a777f;font-size:13px}
+#status.erro{color:#c62828;font-weight:700}
+#status.ok{color:#2e7d32;font-weight:700}
+.buttons{display:flex;gap:10px;margin-top:18px}
+.buttons button{flex:1;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;cursor:pointer;color:#fff;background:#4caf50}
+.buttons button:disabled{opacity:.45;cursor:not-allowed}
+.buttons button:focus-visible{outline:3px solid #f5a623;outline-offset:2px}
+
+/* pré-visualização (espelha a lista em PDF) */
+#previa{margin-top:22px;border-top:1px solid #eadbe3;padding-top:18px}
+.previa-topo{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-family:"Times New Roman",serif;font-size:15px;margin-bottom:10px}
+.tabela{max-height:55vh;overflow:auto;border:1px solid #000}
+table{width:100%;border-collapse:collapse;font-family:"Times New Roman",serif;font-size:14px}
+th{position:sticky;top:0;background:#4f6228;color:#fff;text-align:left;padding:6px 8px;border:1px solid #000}
+td{border:1px solid #000;padding:4px 8px;height:26px}
+td.n{text-align:center;width:44px}
+th.c,td.v{text-align:center;width:90px}
+
+a.voltar{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
+footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
+@media(max-width:600px){body{padding:8px}.card{padding:20px 15px}.campos{grid-template-columns:1fr}.buttons{flex-direction:column}th.c,td.v{width:56px}}
+</style>
+</head>
+<body>
+<main>
+<section class="card">
+  <img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil" class="logo">
+  <hr>
+  <span class="badge">LISTA DE PRESENÇA</span>
+  <h1>Gerar Lista de Presença</h1>
+  <p>Escolha o curso. O sistema busca as alunas cadastradas, monta a lista e deixa você baixar em PDF.</p>
+
+  <div class="campos">
+    <label>Curso
+      <select id="curso"><option value="">Carregando cursos...</option></select>
+    </label>
+    <label>Data da aula (opcional)
+      <input type="date" id="data">
+    </label>
+  </div>
+  <label style="margin-top:14px">Total de linhas da lista
+    <select id="totalLinhas">
+      <option value="0">Somente as alunas cadastradas</option>
+      <option value="40" selected>Completar com linhas em branco até 40</option>
+      <option value="60">Completar com linhas em branco até 60</option>
+      <option value="80">Completar com linhas em branco até 80</option>
+    </select>
+  </label>
+  <small id="status"></small>
+
+  <div id="previa" hidden>
+    <div class="previa-topo"><span>Curso: <strong id="pCurso"></strong></span><span id="pData">Data: ____/____/____</span></div>
+    <div class="tabela">
+      <table>
+        <thead><tr><th class="c" style="width:44px">Nº</th><th>Nome</th><th class="c">1ª aula</th><th class="c">2ª aula</th><th class="c">3ª aula</th></tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+    <div class="buttons">
+      <button type="button" id="btnPdf">⬇️ Baixar lista em PDF</button>
+    </div>
+  </div>
+
+  <a class="voltar" href="painel.html">← Voltar para a Tela Inicial</a>
+  <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</section>
+</main>
+
+<script type="module">
+import { auth, db } from "./Assets/js/firebase-config.js";
+import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { carregarCursos } from "./Assets/js/cursos.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+let cursos = {}, alunasDb = {}, linhas = [], cursoId = "";
+
+function aviso(t, tipo) { $("status").textContent = t || ""; $("status").className = tipo || ""; }
+function msgErro(e) {
+  return String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION")
+    ? "Sem permissão no banco de dados. Verifique o login e as regras do Realtime Database."
+    : "Não foi possível carregar os dados. Verifique a conexão e tente novamente.";
+}
+const dataBR = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d + "/" + m + "/" + y; };
+const textoData = () => $("data").value ? dataBR($("data").value) : "____/____/____";
+
+/* ---------- carregamento dos cursos ---------- */
+async function iniciar() {
+  try { await auth.authStateReady(); } catch (_) {}
+  try {
+    const [todos, snap] = await Promise.all([carregarCursos(true), get(ref(db, "alunas"))]);
+    alunasDb = snap.val() || {};
+    const total = (id) => Object.values(alunasDb[id] || {}).filter((a) => a && a.nome).length;
+    // cursos do banco + cursos padrão que já tenham alunas
+    cursos = {};
+    Object.entries(todos).forEach(([id, nome]) => { cursos[id] = nome; });
+    const ids = Object.keys(cursos).sort((a, b) => cursos[a].localeCompare(cursos[b], "pt-BR"));
+    if (!ids.length) { $("curso").innerHTML = '<option value="">Nenhum curso cadastrado</option>'; aviso("Cadastre um curso em 'Cadastro de Cursos' primeiro.", "erro"); return; }
+    $("curso").innerHTML = '<option value="">Selecione o curso</option>' +
+      ids.map((id) => `<option value="${esc(id)}">${esc(cursos[id])} (${total(id)} aluna(s))</option>`).join("");
+  } catch (e) {
+    console.error(e);
+    $("curso").innerHTML = '<option value="">Erro ao carregar</option>';
+    aviso(msgErro(e), "erro");
+  }
+}
+
+/* ---------- monta a lista do curso escolhido ---------- */
+function montar() {
+  cursoId = $("curso").value;
+  if (!cursoId) { $("previa").hidden = true; aviso(""); return; }
+
+  linhas = Object.entries(alunasDb[cursoId] || {})
+    .map(([k, a]) => a && a.nome ? { n: Number(a.chamada ?? k), nome: String(a.nome) } : null)
+    .filter(Boolean).sort((a, b) => a.n - b.n);
+
+  if (!linhas.length) {
+    $("previa").hidden = true;
+    aviso("Este curso ainda não tem alunas cadastradas. Use 'Importar alunas de planilha' no Cadastro de Alunas.", "erro");
+    return;
+  }
+  const reais = linhas.length;
+  const minLinhas = Number($("totalLinhas").value) || 0;
+  if (minLinhas) {
+    let prox = Math.max(...linhas.map((l) => l.n)) + 1;
+    while (linhas.length < minLinhas) linhas.push({ n: prox++, nome: "" });
+  }
+  $("pCurso").textContent = cursos[cursoId];
+  $("pData").textContent = "Data: " + textoData();
+  $("corpo").innerHTML = linhas.map((l) =>
+    `<tr><td class="n">${esc(l.n)}</td><td>${esc(l.nome)}</td><td class="v"></td><td class="v"></td><td class="v"></td></tr>`).join("");
+  $("previa").hidden = false;
+  aviso(reais + " aluna(s) carregada(s) do banco.", "ok");
+}
+
+/* ---------- PDF ---------- */
+async function imagem(src) {
+  try {
+    const r = await fetch(src, { cache: "no-store" });
+    const b = await r.blob();
+    if (!r.ok || !b.type.startsWith("image")) return null;
+    const url = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); });
+    const dim = await new Promise((res) => { const i = new Image(); i.onload = () => res([i.naturalWidth, i.naturalHeight]); i.onerror = () => res(null); i.src = url; });
+    return dim ? { url, w: dim[0], h: dim[1], fmt: b.type.includes("png") ? "PNG" : "JPEG" } : null;
+  } catch (_) { return null; }
+}
+
+function colocar(doc, img, xRef, y, alturaMax, larguraMax, alinharDireita) {
+  if (!img) return;
+  let h = alturaMax, w = h * img.w / img.h;
+  if (w > larguraMax) { w = larguraMax; h = w * img.h / img.w; }
+  const x = alinharDireita ? xRef - w : xRef;
+  try { doc.addImage(img.url, img.fmt, x, y + (alturaMax - h) / 2, w, h); } catch (_) {}
+}
+
+async function baixarPdf() {
+  if (!linhas.length) return;
+  $("btnPdf").disabled = true; aviso("Gerando PDF...");
+  try {
+    const [logoIf, logoMm] = await Promise.all([imagem("if.png"), imagem("Logo-Mulheres-Mil.jpg")]);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const ML = 40, W = 515;
+
+    // caixa do cabeçalho: logo do IF | título | logo Mulheres Mil
+    doc.setLineWidth(.8); doc.setDrawColor(0);
+    doc.rect(ML, 30, W, 72);
+    colocar(doc, logoIf, ML + 10, 38, 56, 120, false);
+    colocar(doc, logoMm, ML + W - 10, 38, 56, 150, true);
+    doc.setFont("times", "bold"); doc.setFontSize(21); doc.setTextColor(0);
+    doc.text("Lista de Presença", ML + W / 2, 73, { align: "center" });
+
+    // curso e data
+    doc.setFont("times", "normal"); doc.setFontSize(12);
+    doc.text("Curso: " + cursos[cursoId], ML + 8, 124);
+    doc.text("Data: " + textoData(), ML + W - 8, 124, { align: "right" });
+
+    doc.autoTable({
+      startY: 136,
+      margin: { left: ML, right: ML, top: 40, bottom: 30 },
+      head: [["Nº", "Nome", "1ª aula", "2ª aula", "3ª aula"]],
+      body: linhas.map((l) => [l.n, l.nome, "", "", ""]),
+      theme: "grid",
+      styles: { font: "times", fontSize: 11, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 }, minCellHeight: 16, lineColor: [0, 0, 0], lineWidth: .5, textColor: 0, valign: "middle" },
+      headStyles: { fillColor: [79, 98, 40], textColor: 255, fontStyle: "bold", fontSize: 11.5 },
+      alternateRowStyles: { fillColor: 255 },
+      columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 80 }, 3: { cellWidth: 80 }, 4: { cellWidth: 80 } },
+      didParseCell: (d) => { if (d.section === "head" && d.column.index >= 2) d.cell.styles.halign = "center"; }
+    });
+
+    const paginas = doc.internal.getNumberOfPages();
+    if (paginas > 1) {
+      for (let p = 1; p <= paginas; p++) {
+        doc.setPage(p); doc.setFont("times", "normal"); doc.setFontSize(9); doc.setTextColor(110);
+        doc.text("Página " + p + " de " + paginas, ML + W, 825, { align: "right" });
+      }
+    }
+    doc.save("lista_presenca_" + cursoId + ".pdf");
+    aviso("✓ PDF gerado.", "ok");
+  } catch (e) {
+    console.error(e);
+    aviso("Não foi possível gerar o PDF.", "erro");
+  } finally { $("btnPdf").disabled = false; }
+}
+
+$("curso").onchange = montar;
+$("totalLinhas").onchange = montar;
+$("data").onchange = () => { if (cursoId) $("pData").textContent = "Data: " + textoData(); };
+$("btnPdf").onclick = baixarPdf;
+iniciar();
+</script>
+</body>
+</html>
