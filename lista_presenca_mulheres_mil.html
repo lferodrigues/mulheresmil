@@ -3,750 +3,409 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lista de Presença — Mulheres Mil</title>
+<title>Lista de Presença — Sistema Mulheres Mil</title>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 <script src="./Assets/js/script.js"></script>
 <link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-  :root{
-    --laranja: #f5a623;
-    --laranja-escuro: #e07b1a;
-    --verde: #4caf50;
-    --vermelho: #e04b3a;
-    --teal: #2fa8a0;
-    --texto: #2c2620;
-    --bg: #fdf6ec;
-    --card: #ffffff;
-    --borda: #eadfcd;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--texto);
-    padding-bottom: 40px;
-  }
-  header{
-    background: linear-gradient(120deg,#f5a623,#e8871e 60%,#e04b3a);
-    padding: 18px 24px;
-    display:flex;
-    align-items:center;
-    gap:18px;
-    flex-wrap:wrap;
-    box-shadow: 0 3px 10px rgba(0,0,0,.15);
-  }
-  header img{
-    height:56px;
-    border-radius:6px;
-    background:#fff;
-    padding:4px 8px;
-  }
-  header .titulos h1{
-    margin:0;
-    font-size:1.3rem;
-    color:#fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,.25);
-  }
-  header .titulos p{
-    margin:2px 0 0;
-    color:#fff8ec;
-    font-size:.9rem;
-  }
-  main{
-    max-width: 1050px;
-    margin: 22px auto;
-    padding: 0 16px;
-  }
-  .tabs{
-    display:flex;
-    gap:8px;
-    margin-bottom:18px;
-    flex-wrap:wrap;
-  }
-  .tab-btn{
-    background:#fff;
-    border:2px solid var(--borda);
-    color: var(--texto);
-    padding:10px 18px;
-    border-radius: 10px 10px 0 0;
-    cursor:pointer;
-    font-weight:600;
-    font-size:.95rem;
-  }
-  .tab-btn.active{
-    background: var(--laranja);
-    border-color: var(--laranja-escuro);
-    color:#fff;
-  }
-  .card{
-    background: var(--card);
-    border: 1px solid var(--borda);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05);
-  }
-  .toolbar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
-    margin-bottom:16px;
-  }
-  select, input[type=text], input[type=date]{
-    padding:8px 10px;
-    border-radius:8px;
-    border:1px solid var(--borda);
-    font-size:.9rem;
-    font-family:inherit;
-  }
-  .btn{
-    border:none;
-    border-radius:8px;
-    padding:9px 16px;
-    font-size:.9rem;
-    font-weight:600;
-    cursor:pointer;
-    color:#fff;
-    transition: transform .08s ease, filter .15s ease;
-    white-space:nowrap;
-  }
-  .btn:hover{ filter:brightness(1.08); }
-  .btn:active{ transform: scale(.97); }
-  .btn-laranja{ background: var(--laranja-escuro); }
-  .btn-verde{ background: var(--verde); }
-  .btn-vermelho{ background: var(--vermelho); }
-  .btn-teal{ background: var(--teal); }
-  .btn-cinza{ background: #8a7a63; }
-  .btn:disabled{ opacity:.6; cursor:wait; }
-  #statusBanco.ok{ color:#2e7d32; font-weight:600; }
-  #statusBanco.erro{ color:#c62828; font-weight:600; }
-  .btn-ghost{
-    background:#fff;
-    color: var(--vermelho);
-    border:1px solid var(--vermelho);
-  }
-  .lista-meta{
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
-    align-items:center;
-    margin-bottom:14px;
-    font-size:.9rem;
-  }
-  .lista-meta label{ font-weight:600; margin-right:6px; }
-  table{
-    width:100%;
-    border-collapse: collapse;
-    font-size:.88rem;
-  }
-  thead th{
-    background: #fbe7c6;
-    color:#5a3d10;
-    text-align:left;
-    padding:10px 8px;
-    border-bottom:2px solid var(--laranja);
-    position:sticky;
-    top:0;
-  }
-  tbody td{
-    padding:8px;
-    border-bottom:1px solid var(--borda);
-    vertical-align:middle;
-  }
-  tbody tr:nth-child(even){ background:#fffaf1; }
-  .col-num{ width:36px; color:#999; text-align:center;}
-  .col-nome{ min-width:220px; }
-  .aula-cell{ display:flex; gap:6px; justify-content:center; }
-  .pa-btn{
-    width:34px;
-    height:30px;
-    border-radius:6px;
-    border:1.5px solid #ccc;
-    background:#fff;
-    cursor:pointer;
-    font-weight:700;
-    font-size:.85rem;
-    color:#888;
-  }
-  .pa-btn.p-btn.selected{
-    background: var(--verde);
-    border-color: var(--verde);
-    color:#fff;
-  }
-  .pa-btn.a-btn.selected{
-    background: var(--vermelho);
-    border-color: var(--vermelho);
-    color:#fff;
-  }
-  .resumo-total{
-    font-weight:700;
-    text-align:center;
-  }
-  .resumo-total.alerta{ color: var(--vermelho); }
-  .vazio{
-    text-align:center;
-    color:#999;
-    padding:30px 0;
-  }
-  .badge{
-    display:inline-block;
-    background:#fff2dd;
-    color:#a05a00;
-    border-radius:20px;
-    padding:2px 10px;
-    font-size:.78rem;
-    font-weight:600;
-  }
-  footer{
-    text-align:center;
-    color:#a99;
-    font-size:.78rem;
-    margin-top:30px;
-  }
-  @media (max-width:600px){
-    header{ flex-direction:column; align-items:flex-start; }
-    .col-nome{ min-width:130px; }
-    table{ font-size:.78rem; }
-    .pa-btn{ width:28px; height:26px; font-size:.75rem;}
-  }
+:root{--laranja:#f5a623;--laranja-escuro:#e07b1a;--verde:#4caf50;--vermelho:#e04b3a;--teal:#2fa8a0;--texto:#2c2620;--bg:#fdf6ec;--borda:#eadfcd}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--texto);padding-bottom:40px}
+header{background:linear-gradient(120deg,#f5a623,#e8871e 60%,#e04b3a);padding:18px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 3px 10px rgba(0,0,0,.15)}
+header img{height:56px;border-radius:6px;background:#fff;padding:4px 8px}
+header h1{margin:0;font-size:1.3rem;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+header p{margin:2px 0 0;color:#fff8ec;font-size:.9rem}
+.btn-trocar{margin-left:auto;border:2px solid #fff;background:rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}
+.btn-trocar:hover{background:rgba(255,255,255,.3)}
+main{max-width:1050px;margin:22px auto;padding:0 16px}
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tab-btn{background:#fff;border:2px solid var(--borda);color:var(--texto);padding:10px 18px;border-radius:10px 10px 0 0;cursor:pointer;font-weight:600;font-size:.95rem}
+.tab-btn.active{background:var(--laranja);border-color:var(--laranja-escuro);color:#fff}
+.card{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+select,input[type=text],input[type=date]{padding:8px 10px;border-radius:8px;border:1px solid var(--borda);font:inherit;font-size:.9rem}
+.btn{border:none;border-radius:8px;padding:9px 16px;font-size:.9rem;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.6;cursor:wait}
+.btn-laranja{background:var(--laranja-escuro)}.btn-verde{background:var(--verde)}.btn-teal{background:var(--teal)}.btn-cinza{background:#8a7a63}
+.btn-ghost{background:#fff;color:var(--vermelho);border:1px solid var(--vermelho)}
+.lista-meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:.9rem}
+.lista-meta label{font-weight:600;margin-right:6px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+thead th{background:#fbe7c6;color:#5a3d10;text-align:left;padding:10px 8px;border-bottom:2px solid var(--laranja);position:sticky;top:0}
+tbody td{padding:8px;border-bottom:1px solid var(--borda);vertical-align:middle}
+tbody tr:nth-child(even){background:#fffaf1}
+.col-num{width:36px;color:#999;text-align:center}.col-nome{min-width:220px}
+.aula-cell{display:flex;gap:6px;justify-content:center}
+.pa-btn{width:34px;height:30px;border-radius:6px;border:1.5px solid #ccc;background:#fff;cursor:pointer;font-weight:700;font-size:.85rem;color:#888}
+.pa-btn.p-btn.selected{background:var(--verde);border-color:var(--verde);color:#fff}
+.pa-btn.a-btn.selected{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+.resumo-total{font-weight:700;text-align:center}.resumo-total.alerta{color:var(--vermelho)}
+.vazio{text-align:center;color:#999;padding:30px 0}
+.badge{display:inline-block;background:#fff2dd;color:#a05a00;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:600}
+#statusBanco.ok{color:#2e7d32;font-weight:600}#statusBanco.erro{color:#c62828;font-weight:600}
+.voltar{display:block;text-align:center;margin-top:8px;color:#8e0f45;font-weight:700;text-decoration:none}
+footer{text-align:center;color:#a99;font-size:.78rem;margin-top:30px}
+
+/* Pop-up de escolha do curso */
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(47,16,39,.5);backdrop-filter:blur(4px)}
+.modal-box{width:min(480px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(47,16,39,.35);text-align:center;animation:entra .2s ease}
+@keyframes entra{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.modal-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#fdf3e3;font-size:28px}
+.modal-box h2{margin:0 0 6px;font-size:1.35rem;color:#5a1738}
+.modal-box>p{margin:0 0 18px;color:#76656c;font-size:.92rem;line-height:1.5}
+.mc-lista{display:grid;gap:10px;text-align:left}
+.mc-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;border:1.5px solid var(--borda);border-radius:14px;background:#fff;font:inherit;color:var(--texto);cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.mc-item:hover,.mc-item:focus-visible{border-color:var(--laranja-escuro);background:#fff8ee;outline:0;transform:translateY(-1px)}
+.mc-item.atual{border-color:var(--laranja-escuro);background:#fdf3e3}
+.mc-item strong{display:block;font-size:1rem;color:#5a1738}
+.mc-item small{color:#8a777f}
+.mc-item .seta{font-size:22px;color:var(--laranja-escuro)}
+.mc-vazio{padding:16px;border-radius:12px;background:#fff4dc;border:1px solid #f1d9a2;color:#8a5a00;font-size:.9rem;line-height:1.5}
+.mc-vazio a{color:#8e0f45;font-weight:700}
+.mc-cancelar{width:100%;margin-top:16px;border:0;border-radius:10px;padding:12px;background:#eee5e9;color:#5a1738;font:inherit;font-weight:700;cursor:pointer}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start}.btn-trocar{margin-left:0}.col-nome{min-width:130px}table{font-size:.78rem}.pa-btn{width:28px;height:26px;font-size:.75rem}.modal-box{padding:22px 16px}}
 </style>
 </head>
 <body>
 
 <header>
   <img src="Logo-Mulheres-Mil.jpg" alt="Logo Mulheres Mil">
-  <div class="titulos">
+  <div>
     <h1>Lista de Presença — Mulheres Mil</h1>
-    <p>Curso: Operadora de Computador · Educação, Cidadania e Desenvolvimento Sustentável</p>
+    <p>Curso: <strong id="nomeCurso">nenhum selecionado</strong> · Educação, Cidadania e Desenvolvimento Sustentável</p>
   </div>
+  <button type="button" class="btn-trocar" id="btnTrocar">🎓 Trocar curso</button>
 </header>
 
 <main>
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="listas" onclick="mudarAba('listas')">📋 Listas de Presença</button>
-    <button class="tab-btn" data-tab="resumo" onclick="mudarAba('resumo')">📊 Resumo de Faltas</button>
+  <div id="conteudo" hidden>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="listas">📋 Listas de Presença</button>
+      <button class="tab-btn" data-tab="resumo">📊 Resumo de Faltas</button>
+    </div>
+
+    <section id="tab-listas" class="card">
+      <div class="toolbar">
+        <label style="font-weight:600">Lista atual:</label>
+        <select id="seletorLista"></select>
+        <button class="btn btn-laranja" id="btnNova">➕ Inserir nova lista</button>
+        <button class="btn btn-ghost" id="btnExcluir">🗑️ Excluir esta lista</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-verde" id="btnSalvarBanco">💾 Salvar lista de chamada</button>
+        <button class="btn btn-cinza" id="btnCarregarBanco">☁️ Carregar do banco</button>
+        <button class="btn btn-teal" id="btnPdf">⬇️ Baixar todas as listas em PDF</button>
+      </div>
+      <div class="lista-meta">
+        <span><label>Data da lista:</label><input type="date" id="dataLista"></span>
+        <span><label>Observação/Turma:</label><input type="text" id="obsLista" placeholder="ex: Turma A - manhã"></span>
+        <span class="badge" id="badgeContagem"></span>
+        <span id="statusBanco" style="font-size:.85rem;color:#76656c"></span>
+      </div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th class="col-num">Nº</th><th class="col-nome">Nome da Aluna</th>
+        <th style="text-align:center">1ª aula</th><th style="text-align:center">2ª aula</th><th style="text-align:center">3ª aula</th></tr></thead>
+        <tbody id="corpoTabela"></tbody>
+      </table></div>
+    </section>
+
+    <section id="tab-resumo" class="card" style="display:none">
+      <div class="toolbar">
+        <div style="font-weight:600">Total de faltas (A) por aluna, somando todas as listas preenchidas.</div>
+        <span style="flex:1"></span>
+        <button class="btn btn-teal" id="btnPdfResumo">⬇️ Baixar resumo em PDF</button>
+      </div>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th class="col-num">Nº</th><th class="col-nome">Nome da Aluna</th>
+        <th style="text-align:center">Total de Aulas Registradas</th><th style="text-align:center">Total de Faltas (A)</th><th style="text-align:center">Total de Presenças (P)</th></tr></thead>
+        <tbody id="corpoResumo"></tbody>
+      </table></div>
+    </section>
   </div>
 
-  <!-- ABA LISTAS -->
-  <section id="tab-listas" class="card">
-    <div class="toolbar">
-      <label style="font-weight:600;">Lista atual:</label>
-      <select id="seletorLista" onchange="selecionarLista(this.value)"></select>
-      <button class="btn btn-laranja" onclick="novaLista()">➕ Inserir nova lista</button>
-      <button class="btn btn-ghost" onclick="excluirLista()">🗑️ Excluir esta lista</button>
-      <span style="flex:1"></span>
-      <button class="btn btn-verde" id="btnSalvarBanco" onclick="salvarNoBanco()">💾 Salvar lista de chamada</button>
-      <button class="btn btn-cinza" id="btnCarregarBanco" onclick="carregarDoBanco()">☁️ Carregar do banco</button>
-      <button class="btn btn-teal" onclick="baixarTodasPDF()">⬇️ Baixar todas as listas em PDF</button>
-    </div>
-
-    <div class="lista-meta">
-      <span><label>Data da lista:</label><input type="date" id="dataLista" onchange="atualizarMetaLista()"></span>
-      <span><label>Observação/Turma:</label><input type="text" id="obsLista" placeholder="ex: Turma A - manhã" onchange="atualizarMetaLista()"></span>
-      <span class="badge" id="badgeContagem"></span>
-      <span id="statusBanco" style="font-size:.85rem;color:#76656c;"></span>
-    </div>
-
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th class="col-num">Nº</th>
-            <th class="col-nome">Nome da Aluna</th>
-            <th style="text-align:center;">1ª aula</th>
-            <th style="text-align:center;">2ª aula</th>
-            <th style="text-align:center;">3ª aula</th>
-          </tr>
-        </thead>
-        <tbody id="corpoTabela"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ABA RESUMO -->
-  <section id="tab-resumo" class="card" style="display:none;">
-    <div class="toolbar">
-      <div style="font-weight:600;">Total de faltas (A) por aluna, somando todas as listas preenchidas.</div>
-      <span style="flex:1"></span>
-      <button class="btn btn-teal" onclick="baixarResumoPDF()">⬇️ Baixar resumo em PDF</button>
-    </div>
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th class="col-num">Nº</th>
-            <th class="col-nome">Nome da Aluna</th>
-            <th style="text-align:center;">Total de Aulas Registradas</th>
-            <th style="text-align:center;">Total de Faltas (A)</th>
-            <th style="text-align:center;">Total de Presenças (P)</th>
-          </tr>
-        </thead>
-        <tbody id="corpoResumo"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <p class="vazio" id="avisoVazio" style="display:none;">Nenhuma lista cadastrada. Clique em "Inserir nova lista" para começar.</p>
+  <a class="voltar" href="menu.html">← Voltar para o menu</a>
 </main>
 
 <footer>Mulheres Mil — Educação, Cidadania e Desenvolvimento Sustentável</footer>
 
-<script>
-let ALUNAS = [];            // [{ chamada, nome }] vindo do Firebase (alunas/operadora)
-let alunasCarregadas = false;
-let erroCarga = "";
-const CURSO = "Operadora de Computador";
-const STORAGE_KEY = "mulheresMil_presenca_v1";
+<!-- Pop-up: escolha do curso -->
+<div id="modalCurso" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mcTitulo">
+    <div class="modal-icon">🎓</div>
+    <h2 id="mcTitulo">Escolha o curso</h2>
+    <p>Selecione o curso para lançar a presença. As alunas cadastradas nele serão carregadas.</p>
+    <div id="mcLista" class="mc-lista"></div>
+    <button type="button" class="mc-cancelar" id="mcCancelar">Voltar ao menu</button>
+  </div>
+</div>
 
-// Logo usada nos PDFs: carregada do arquivo do site (Logo-Mulheres-Mil.jpg)
-let LOGO_B64 = null;
-fetch("Logo-Mulheres-Mil.jpg")
-  .then(r => r.blob())
-  .then(b => new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }))
-  .then(d => { LOGO_B64 = d; })
-  .catch(() => {});
-
-const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-
-let dados = carregarDados();
-let listaAtualId = dados.listas.length ? dados.listas[0].id : null;
-
-// Converte o formato antigo (array por posição) para objeto por nº da chamada
-function migrarPresencas(l){
-  if(Array.isArray(l.presencas)){
-    const obj = {};
-    l.presencas.forEach((p, i) => { obj[i + 1] = p; });
-    l.presencas = obj;
-  } else if(!l.presencas){
-    l.presencas = {};
-  }
-}
-
-function carregarDados(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    try{
-      const parsed = JSON.parse(raw);
-      if(parsed && Array.isArray(parsed.listas)){
-        parsed.listas.forEach(migrarPresencas);
-        return parsed;
-      }
-    }catch(e){}
-  }
-  const inicial = { listas: [], proximoId: 1 };
-  inicial.listas.push(criarListaObjeto(inicial, ""));
-  return inicial;
-}
-
-function criarListaObjeto(estado, obs){
-  const id = estado.proximoId++;
-  return { id, titulo: "Lista " + id, data: "", obs: obs || "", presencas: {} };
-}
-
-function salvar(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(dados)); }
-function getListaAtual(){ return dados.listas.find(l => l.id === listaAtualId); }
-
-// Usados pelo módulo que conversa com o banco
-window.getDadosPresenca = () => dados;
-window.setDadosPresenca = function(novo){
-  novo.listas.forEach(migrarPresencas);
-  dados = novo;
-  listaAtualId = dados.listas.length ? dados.listas[0].id : null;
-  salvar();
-  popularSeletorListas();
-  renderizarListaAtual();
-  if(document.getElementById('tab-resumo').style.display !== 'none') renderizarResumo();
-};
-function getPres(l, chamada){ return (l.presencas && l.presencas[chamada]) || ["", "", ""]; }
-
-/* ---------- chamados pelo módulo que lê o banco ---------- */
-window.definirAlunas = function(lista){
-  ALUNAS = lista;
-  alunasCarregadas = true;
-  erroCarga = "";
-  renderizarListaAtual();
-  if(document.getElementById('tab-resumo').style.display !== 'none') renderizarResumo();
-};
-window.erroAlunas = function(e){
-  alunasCarregadas = true;
-  const perm = String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION");
-  erroCarga = perm
-    ? "Sem permissão para ler as alunas. Faça login e confira as regras do Realtime Database."
-    : "Não foi possível carregar as alunas do banco de dados.";
-  renderizarListaAtual();
-};
-
-function mudarAba(nome){
-  document.getElementById('tab-listas').style.display = nome === 'listas' ? 'block' : 'none';
-  document.getElementById('tab-resumo').style.display = nome === 'resumo' ? 'block' : 'none';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === nome));
-  if(nome === 'resumo') renderizarResumo();
-}
-
-function popularSeletorListas(){
-  const sel = document.getElementById('seletorLista');
-  sel.innerHTML = "";
-  dados.listas.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l.id;
-    let label = l.titulo;
-    if(l.data) label += " — " + formatarDataBR(l.data);
-    opt.textContent = label;
-    if(l.id === listaAtualId) opt.selected = true;
-    sel.appendChild(opt);
-  });
-}
-
-function formatarDataBR(iso){
-  if(!iso) return "";
-  const [y,m,d] = iso.split("-");
-  return d + "/" + m + "/" + y;
-}
-
-function selecionarLista(id){ listaAtualId = parseInt(id); renderizarListaAtual(); }
-
-function novaLista(){
-  const nova = criarListaObjeto(dados, "");
-  dados.listas.push(nova);
-  listaAtualId = nova.id;
-  salvar();
-  popularSeletorListas();
-  renderizarListaAtual();
-}
-
-function excluirLista(){
-  if(dados.listas.length <= 1){ alert("É necessário manter ao menos uma lista."); return; }
-  if(!confirm("Tem certeza que deseja excluir esta lista? Essa ação não pode ser desfeita.")) return;
-  dados.listas = dados.listas.filter(l => l.id !== listaAtualId);
-  listaAtualId = dados.listas[0].id;
-  salvar();
-  popularSeletorListas();
-  renderizarListaAtual();
-}
-
-function atualizarMetaLista(){
-  const l = getListaAtual();
-  if(!l) return;
-  l.data = document.getElementById('dataLista').value;
-  l.obs = document.getElementById('obsLista').value;
-  salvar();
-  popularSeletorListas();
-}
-
-function marcar(chamada, aulaIdx, valor){
-  const l = getListaAtual();
-  if(!l) return;
-  if(!l.presencas[chamada]) l.presencas[chamada] = ["", "", ""];
-  const atual = l.presencas[chamada][aulaIdx];
-  l.presencas[chamada][aulaIdx] = (atual === valor) ? "" : valor;
-  salvar();
-  renderizarListaAtual();
-}
-
-function renderizarListaAtual(){
-  const l = getListaAtual();
-  const aviso = document.getElementById('avisoVazio');
-  const cardListas = document.getElementById('tab-listas');
-  if(!l){
-    aviso.style.display = 'block';
-    cardListas.style.display = 'none';
-    return;
-  }
-  aviso.style.display = 'none';
-  if(document.getElementById('tab-resumo').style.display === 'none') cardListas.style.display = 'block';
-
-  document.getElementById('dataLista').value = l.data || "";
-  document.getElementById('obsLista').value = l.obs || "";
-  popularSeletorListas();
-
-  let preenchidas = 0, total = 0;
-  const corpo = document.getElementById('corpoTabela');
-  corpo.innerHTML = "";
-
-  if(!ALUNAS.length){
-    const msg = erroCarga
-      || (alunasCarregadas
-        ? 'Nenhuma aluna cadastrada para este curso. Use "Importar alunas" na Biblioteca.'
-        : "Carregando alunas do banco de dados...");
-    corpo.innerHTML = '<tr><td colspan="5" class="vazio">' + esc(msg) + '</td></tr>';
-    document.getElementById('badgeContagem').textContent = "";
-    return;
-  }
-
-  ALUNAS.forEach(aluna => {
-    const tr = document.createElement('tr');
-    const tdNum = document.createElement('td');
-    tdNum.className = 'col-num';
-    tdNum.textContent = aluna.chamada;
-    const tdNome = document.createElement('td');
-    tdNome.className = 'col-nome';
-    tdNome.textContent = aluna.nome;
-    tr.appendChild(tdNum);
-    tr.appendChild(tdNome);
-
-    const pres = getPres(l, aluna.chamada);
-    for(let a = 0; a < 3; a++){
-      const td = document.createElement('td');
-      const wrap = document.createElement('div');
-      wrap.className = 'aula-cell';
-      const valor = pres[a];
-      total++;
-      if(valor) preenchidas++;
-
-      const btnP = document.createElement('button');
-      btnP.className = 'pa-btn p-btn' + (valor === 'P' ? ' selected' : '');
-      btnP.textContent = 'P';
-      btnP.title = 'Presente';
-      btnP.onclick = () => marcar(aluna.chamada, a, 'P');
-
-      const btnA = document.createElement('button');
-      btnA.className = 'pa-btn a-btn' + (valor === 'A' ? ' selected' : '');
-      btnA.textContent = 'A';
-      btnA.title = 'Ausente';
-      btnA.onclick = () => marcar(aluna.chamada, a, 'A');
-
-      wrap.appendChild(btnP);
-      wrap.appendChild(btnA);
-      td.appendChild(wrap);
-      tr.appendChild(td);
-    }
-    corpo.appendChild(tr);
-  });
-
-  document.getElementById('badgeContagem').textContent = preenchidas + " de " + total + " campos preenchidos";
-}
-
-function calcularResumo(){
-  return ALUNAS.map(aluna => {
-    let faltas = 0, presencas = 0, registradas = 0;
-    dados.listas.forEach(l => {
-      getPres(l, aluna.chamada).forEach(v => {
-        if(v === 'A'){ faltas++; registradas++; }
-        else if(v === 'P'){ presencas++; registradas++; }
-      });
-    });
-    return { chamada: aluna.chamada, nome: aluna.nome, faltas, presencas, registradas };
-  });
-}
-
-function renderizarResumo(){
-  const resumo = calcularResumo();
-  const corpo = document.getElementById('corpoResumo');
-  corpo.innerHTML = "";
-  resumo.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td class="col-num">' + esc(r.chamada) + '</td>' +
-      '<td class="col-nome">' + esc(r.nome) + '</td>' +
-      '<td style="text-align:center;">' + r.registradas + '</td>' +
-      '<td class="resumo-total' + (r.faltas > 0 ? ' alerta' : '') + '">' + r.faltas + '</td>' +
-      '<td style="text-align:center;">' + r.presencas + '</td>';
-    corpo.appendChild(tr);
-  });
-}
-
-// ---------- PDF ----------
-function cabecalhoPDF(doc, subtitulo){
-  if(LOGO_B64){
-    try{ doc.addImage(LOGO_B64, 'JPEG', 40, 25, 130, 35); }catch(e){}
-  }
-  doc.setFontSize(14);
-  doc.setTextColor(60,40,10);
-  doc.text("Lista de Presença — Mulheres Mil", 185, 38);
-  doc.setFontSize(10);
-  doc.setTextColor(90,90,90);
-  doc.text("Curso: " + CURSO, 185, 54);
-  if(subtitulo) doc.text(subtitulo, 185, 68);
-}
-
-function baixarTodasPDF(){
-  if(!dados.listas.length){ alert("Não há listas para exportar."); return; }
-  if(!ALUNAS.length){ alert("As alunas ainda não foram carregadas."); return; }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-  dados.listas.forEach((l, idx) => {
-    if(idx > 0) doc.addPage();
-    const sub = l.titulo + (l.data ? " — Data: " + formatarDataBR(l.data) : "") + (l.obs ? " — " + l.obs : "");
-    cabecalhoPDF(doc, sub);
-
-    const body = ALUNAS.map(aluna => {
-      const p = getPres(l, aluna.chamada);
-      return [aluna.chamada, aluna.nome, p[0] || "-", p[1] || "-", p[2] || "-"];
-    });
-
-    doc.autoTable({
-      startY: 90,
-      head: [["Nº", "Nome da Aluna", "1ª aula", "2ª aula", "3ª aula"]],
-      body: body,
-      styles: { fontSize: 9, cellPadding: 4 },
-      headStyles: { fillColor: [245, 166, 35], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 55, halign: 'center' },
-        3: { cellWidth: 55, halign: 'center' },
-        4: { cellWidth: 55, halign: 'center' },
-      },
-      didParseCell: function(data){
-        if(data.section === 'body' && [2,3,4].includes(data.column.index)){
-          if(data.cell.raw === 'A'){
-            data.cell.styles.textColor = [224, 75, 58];
-            data.cell.styles.fontStyle = 'bold';
-          } else if(data.cell.raw === 'P'){
-            data.cell.styles.textColor = [76, 175, 80];
-            data.cell.styles.fontStyle = 'bold';
-          }
-        }
-      }
-    });
-  });
-
-  doc.save("listas_presenca_mulheres_mil.pdf");
-}
-
-function baixarResumoPDF(){
-  if(!ALUNAS.length){ alert("As alunas ainda não foram carregadas."); return; }
-  const resumo = calcularResumo();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  cabecalhoPDF(doc, "Resumo de Faltas — " + dados.listas.length + " lista(s) registradas");
-
-  const body = resumo.map(r => [r.chamada, r.nome, r.registradas, r.faltas, r.presencas]);
-
-  doc.autoTable({
-    startY: 90,
-    head: [["Nº", "Nome da Aluna", "Aulas Registradas", "Faltas (A)", "Presenças (P)"]],
-    body: body,
-    styles: { fontSize: 9, cellPadding: 4 },
-    headStyles: { fillColor: [245, 166, 35], textColor: 255 },
-    columnStyles: {
-      0: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 90, halign: 'center' },
-      3: { cellWidth: 70, halign: 'center' },
-      4: { cellWidth: 90, halign: 'center' },
-    },
-    didParseCell: function(data){
-      if(data.section === 'body' && data.column.index === 3 && data.cell.raw > 0){
-        data.cell.styles.textColor = [224, 75, 58];
-        data.cell.styles.fontStyle = 'bold';
-      }
-    }
-  });
-
-  doc.save("resumo_faltas_mulheres_mil.pdf");
-}
-
-// Inicialização (as alunas chegam do banco logo depois)
-salvar();
-popularSeletorListas();
-renderizarListaAtual();
-</script>
-
-<!-- Busca as alunas no Realtime Database (em tempo real) -->
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, onValue, get, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { carregarCursos } from "./Assets/js/cursos.js";
 
-const PATH_PRESENCA = "presenca/operadora";
 const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-function aviso(texto, tipo){
-  $("statusBanco").textContent = texto || "";
-  $("statusBanco").className = tipo || "";
+/* ---------- estado (muda a cada curso escolhido) ---------- */
+let CURSO_ID = "", CURSO = "";
+let ALUNAS = [], carregadas = false, erroCarga = "";
+let dados = { listas: [], proximoId: 1 };
+let listaAtualId = null;
+let cancelarAlunas = null;
+
+const storageKey = () => "mulheresMil_presenca_" + CURSO_ID + "_v1";
+const pathPresenca = () => "presenca/" + CURSO_ID;
+
+let LOGO_B64 = null;
+fetch("Logo-Mulheres-Mil.jpg").then((r) => r.blob())
+  .then((b) => new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }))
+  .then((d) => { LOGO_B64 = d; }).catch(() => {});
+
+function novaListaObj(est) { const id = est.proximoId++; return { id, titulo: "Lista " + id, data: "", obs: "", presencas: {} }; }
+function carregarDadosLocais() {
+  try {
+    const p = JSON.parse(localStorage.getItem(storageKey()) || "null");
+    if (p && Array.isArray(p.listas) && p.listas.length) return p;
+  } catch (_) {}
+  const i = { listas: [], proximoId: 1 }; i.listas.push(novaListaObj(i)); return i;
 }
-function mensagemErro(e){
-  const perm = String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION");
-  return perm
+const salvarLocal = () => { if (!CURSO_ID) return; try { localStorage.setItem(storageKey(), JSON.stringify(dados)); } catch (_) {} };
+const listaAtual = () => dados.listas.find((l) => l.id === listaAtualId);
+const getPres = (l, n) => (l.presencas && l.presencas[n]) || ["", "", ""];
+const dataBR = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d + "/" + m + "/" + y; };
+
+function aviso(t, tipo) { $("statusBanco").textContent = t || ""; $("statusBanco").className = tipo || ""; }
+function msgErro(e) {
+  return String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION")
     ? "Sem permissão no banco de dados. Verifique o login e as regras do Realtime Database."
     : "Não foi possível concluir. Verifique a conexão e tente novamente.";
 }
-function ocupado(sim){
-  $("btnSalvarBanco").disabled = sim;
-  $("btnCarregarBanco").disabled = sim;
+
+/* ---------- tela ---------- */
+function popularSeletor() {
+  $("seletorLista").innerHTML = dados.listas.map((l) =>
+    `<option value="${l.id}"${l.id === listaAtualId ? " selected" : ""}>${esc(l.titulo + (l.data ? " — " + dataBR(l.data) : ""))}</option>`).join("");
 }
 
-// Salva TODAS as listas deste curso em presenca/operadora
-window.salvarNoBanco = async function(){
-  if(!auth.currentUser){ aviso("Faça login para salvar.", "erro"); return; }
-  const d = window.getDadosPresenca();
-  if(!confirm("Salvar " + d.listas.length + " lista(s) no banco de dados?\nIsso substitui o que já estava salvo para este curso.")) return;
+function renderLista() {
+  const l = listaAtual(); if (!l) return;
+  $("dataLista").value = l.data || ""; $("obsLista").value = l.obs || "";
+  popularSeletor();
+  const corpo = $("corpoTabela"); corpo.innerHTML = "";
+  if (!ALUNAS.length) {
+    const m = erroCarga || (carregadas
+      ? 'Nenhuma aluna cadastrada neste curso. Use "Importar alunas" na Biblioteca.'
+      : "Carregando alunas do banco de dados...");
+    corpo.innerHTML = `<tr><td colspan="5" class="vazio">${esc(m)}</td></tr>`;
+    $("badgeContagem").textContent = ""; return;
+  }
+  let pre = 0, total = 0;
+  ALUNAS.forEach((al) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="col-num">${esc(al.chamada)}</td><td class="col-nome">${esc(al.nome)}</td>`;
+    const pres = getPres(l, al.chamada);
+    for (let a = 0; a < 3; a++) {
+      const v = pres[a]; total++; if (v) pre++;
+      const td = document.createElement("td"), w = document.createElement("div"); w.className = "aula-cell";
+      [["P", "Presente"], ["A", "Ausente"]].forEach(([k, t]) => {
+        const b = document.createElement("button");
+        b.className = "pa-btn " + k.toLowerCase() + "-btn" + (v === k ? " selected" : "");
+        b.textContent = k; b.title = t; b.onclick = () => marcar(al.chamada, a, k);
+        w.appendChild(b);
+      });
+      td.appendChild(w); tr.appendChild(td);
+    }
+    corpo.appendChild(tr);
+  });
+  $("badgeContagem").textContent = pre + " de " + total + " campos preenchidos";
+}
 
-  ocupado(true);
-  aviso("Salvando...");
-  try{
-    const listas = {};
-    d.listas.forEach((l) => {
-      listas[l.id] = { id: l.id, titulo: l.titulo || "", data: l.data || "", obs: l.obs || "", presencas: l.presencas || {} };
-    });
-    await set(ref(db, PATH_PRESENCA), {
-      proximoId: d.proximoId,
-      listas,
-      atualizadoEm: serverTimestamp(),
-      atualizadoPor: auth.currentUser.email || ""
-    });
-    aviso("✓ Salvo no banco de dados em " + new Date().toLocaleString("pt-BR"), "ok");
-  }catch(e){
-    console.error(e);
-    aviso(mensagemErro(e), "erro");
-  }finally{
-    ocupado(false);
+function marcar(n, aula, v) {
+  const l = listaAtual(); if (!l) return;
+  if (!l.presencas[n]) l.presencas[n] = ["", "", ""];
+  l.presencas[n][aula] = l.presencas[n][aula] === v ? "" : v;
+  salvarLocal(); renderLista();
+}
+
+function resumo() {
+  return ALUNAS.map((al) => {
+    let f = 0, p = 0;
+    dados.listas.forEach((l) => getPres(l, al.chamada).forEach((v) => { if (v === "A") f++; else if (v === "P") p++; }));
+    return { chamada: al.chamada, nome: al.nome, faltas: f, presencas: p, registradas: f + p };
+  });
+}
+function renderResumo() {
+  $("corpoResumo").innerHTML = resumo().map((r) =>
+    `<tr><td class="col-num">${esc(r.chamada)}</td><td class="col-nome">${esc(r.nome)}</td><td style="text-align:center">${r.registradas}</td>` +
+    `<td class="resumo-total${r.faltas > 0 ? " alerta" : ""}">${r.faltas}</td><td style="text-align:center">${r.presencas}</td></tr>`).join("");
+}
+
+function aba(nome) {
+  $("tab-listas").style.display = nome === "listas" ? "block" : "none";
+  $("tab-resumo").style.display = nome === "resumo" ? "block" : "none";
+  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === nome));
+  if (nome === "resumo") renderResumo();
+}
+
+/* ---------- PDF ---------- */
+function cabecalho(doc, sub) {
+  if (LOGO_B64) { try { doc.addImage(LOGO_B64, "JPEG", 40, 25, 130, 35); } catch (_) {} }
+  doc.setFontSize(14); doc.setTextColor(60, 40, 10); doc.text("Lista de Presença — Mulheres Mil", 185, 38);
+  doc.setFontSize(10); doc.setTextColor(90, 90, 90); doc.text("Curso: " + CURSO, 185, 54);
+  if (sub) doc.text(sub, 185, 68);
+}
+const corCelula = (d) => {
+  if (d.section === "body" && [2, 3, 4].includes(d.column.index)) {
+    if (d.cell.raw === "A") { d.cell.styles.textColor = [224, 75, 58]; d.cell.styles.fontStyle = "bold"; }
+    else if (d.cell.raw === "P") { d.cell.styles.textColor = [76, 175, 80]; d.cell.styles.fontStyle = "bold"; }
   }
 };
+function pdfListas() {
+  if (!ALUNAS.length) return alert("As alunas ainda não foram carregadas.");
+  const doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
+  dados.listas.forEach((l, i) => {
+    if (i) doc.addPage();
+    cabecalho(doc, l.titulo + (l.data ? " — Data: " + dataBR(l.data) : "") + (l.obs ? " — " + l.obs : ""));
+    doc.autoTable({ startY: 90, head: [["Nº", "Nome da Aluna", "1ª aula", "2ª aula", "3ª aula"]],
+      body: ALUNAS.map((al) => { const p = getPres(l, al.chamada); return [al.chamada, al.nome, p[0] || "-", p[1] || "-", p[2] || "-"]; }),
+      styles: { fontSize: 9, cellPadding: 4 }, headStyles: { fillColor: [245, 166, 35], textColor: 255 },
+      columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 55, halign: "center" }, 3: { cellWidth: 55, halign: "center" }, 4: { cellWidth: 55, halign: "center" } },
+      didParseCell: corCelula });
+  });
+  doc.save("listas_presenca_" + CURSO_ID + ".pdf");
+}
+function pdfResumo() {
+  if (!ALUNAS.length) return alert("As alunas ainda não foram carregadas.");
+  const doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
+  cabecalho(doc, "Resumo de Faltas — " + dados.listas.length + " lista(s) registradas");
+  doc.autoTable({ startY: 90, head: [["Nº", "Nome da Aluna", "Aulas Registradas", "Faltas (A)", "Presenças (P)"]],
+    body: resumo().map((r) => [r.chamada, r.nome, r.registradas, r.faltas, r.presencas]),
+    styles: { fontSize: 9, cellPadding: 4 }, headStyles: { fillColor: [245, 166, 35], textColor: 255 },
+    columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 90, halign: "center" }, 3: { cellWidth: 70, halign: "center" }, 4: { cellWidth: 90, halign: "center" } },
+    didParseCell: (d) => { if (d.section === "body" && d.column.index === 3 && d.cell.raw > 0) { d.cell.styles.textColor = [224, 75, 58]; d.cell.styles.fontStyle = "bold"; } } });
+  doc.save("resumo_faltas_" + CURSO_ID + ".pdf");
+}
 
-// Traz do banco as listas salvas e substitui as que estão neste navegador
-window.carregarDoBanco = async function(){
-  if(!auth.currentUser){ aviso("Faça login para carregar.", "erro"); return; }
-  ocupado(true);
-  aviso("Buscando no banco de dados...");
-  try{
-    const snap = await get(ref(db, PATH_PRESENCA));
-    const v = snap.val();
+/* ---------- banco (presença) ---------- */
+function ocupado(s) { $("btnSalvarBanco").disabled = s; $("btnCarregarBanco").disabled = s; }
+async function salvarBanco() {
+  if (!auth.currentUser) return aviso("Faça login para salvar.", "erro");
+  if (!confirm("Salvar " + dados.listas.length + " lista(s) no banco de dados?\nIsso substitui o que já estava salvo para este curso.")) return;
+  ocupado(true); aviso("Salvando...");
+  try {
+    const listas = {};
+    dados.listas.forEach((l) => { listas[l.id] = { id: l.id, titulo: l.titulo || "", data: l.data || "", obs: l.obs || "", presencas: l.presencas || {} }; });
+    await set(ref(db, pathPresenca()), { proximoId: dados.proximoId, listas, atualizadoEm: serverTimestamp(), atualizadoPor: auth.currentUser.email || "" });
+    aviso("✓ Salvo no banco de dados em " + new Date().toLocaleString("pt-BR"), "ok");
+  } catch (e) { console.error(e); aviso(msgErro(e), "erro"); } finally { ocupado(false); }
+}
+async function carregarBanco() {
+  if (!auth.currentUser) return aviso("Faça login para carregar.", "erro");
+  ocupado(true); aviso("Buscando no banco de dados...");
+  try {
+    const v = (await get(ref(db, pathPresenca()))).val();
     const listas = Object.values((v && v.listas) || {}).filter(Boolean).map((l) => {
       const presencas = {};
-      // o Firebase pode devolver array ou objeto; Object.entries cobre os dois
-      Object.entries(l.presencas || {}).forEach(([chamada, p]) => {
-        if(!p) return;
-        presencas[chamada] = [0, 1, 2].map((i) => (p[i] === "P" || p[i] === "A") ? p[i] : "");
-      });
+      Object.entries(l.presencas || {}).forEach(([n, p]) => { if (p) presencas[n] = [0, 1, 2].map((i) => (p[i] === "P" || p[i] === "A") ? p[i] : ""); });
       return { id: Number(l.id), titulo: l.titulo || ("Lista " + l.id), data: l.data || "", obs: l.obs || "", presencas };
     }).sort((a, b) => a.id - b.id);
+    if (!listas.length) return aviso("Ainda não há listas salvas no banco para este curso.");
+    if (!confirm("Carregar " + listas.length + " lista(s) do banco?\nIsso substitui as listas que estão neste navegador.")) return aviso("");
+    dados = { listas, proximoId: Number(v.proximoId) || (Math.max(...listas.map((l) => l.id)) + 1) };
+    listaAtualId = dados.listas[0].id; salvarLocal(); renderLista();
+    if ($("tab-resumo").style.display !== "none") renderResumo();
+    aviso("✓ Carregado do banco" + (v.atualizadoEm ? " (salvo em " + new Date(v.atualizadoEm).toLocaleString("pt-BR") + ")" : ""), "ok");
+  } catch (e) { console.error(e); aviso(msgErro(e), "erro"); } finally { ocupado(false); }
+}
 
-    if(!listas.length){
-      aviso("Ainda não há listas salvas no banco para este curso.");
+/* ---------- escolha do curso (pop-up) ---------- */
+async function abrirModalCurso() {
+  $("mcCancelar").textContent = CURSO_ID ? "Cancelar" : "Voltar ao menu";
+  $("mcLista").innerHTML = '<div class="mc-vazio" style="background:#faf5f7;border-color:#eadbe3;color:#76656c">Carregando cursos...</div>';
+  $("modalCurso").hidden = false;
+  try {
+    const [cursos, snap] = await Promise.all([carregarCursos(false), get(ref(db, "alunas")).catch(() => null)]);
+    const porCurso = (snap && snap.val()) || {};
+    const ids = Object.keys(cursos).sort((a, b) => cursos[a].localeCompare(cursos[b], "pt-BR"));
+    if (!ids.length) {
+      $("mcLista").innerHTML = '<div class="mc-vazio">Nenhum curso cadastrado ainda. <a href="cadastro_cursos.html">Cadastre um curso</a> para lançar a presença.</div>';
       return;
     }
-    if(!confirm("Carregar " + listas.length + " lista(s) do banco?\nIsso substitui as listas que estão neste navegador.")){
-      aviso("");
-      return;
-    }
-    const proximoId = Number(v.proximoId) || (Math.max(...listas.map((l) => l.id)) + 1);
-    window.setDadosPresenca({ listas, proximoId });
-    const quando = v.atualizadoEm ? new Date(v.atualizadoEm).toLocaleString("pt-BR") : "";
-    aviso("✓ Carregado do banco" + (quando ? " (salvo em " + quando + ")" : ""), "ok");
-  }catch(e){
+    $("mcLista").innerHTML = ids.map((id) => {
+      const n = Object.values(porCurso[id] || {}).filter((a) => a && a.nome).length;
+      return `<button type="button" class="mc-item${id === CURSO_ID ? " atual" : ""}" data-id="${esc(id)}">
+        <span><strong>${esc(cursos[id])}</strong><small>${n} aluna(s) cadastrada(s)</small></span><span class="seta">→</span></button>`;
+    }).join("");
+    $("mcLista").querySelectorAll(".mc-item").forEach((b) => b.onclick = () => escolherCurso(b.dataset.id, cursos[b.dataset.id]));
+    const primeiro = $("mcLista").querySelector(".mc-item"); if (primeiro) primeiro.focus();
+  } catch (e) {
     console.error(e);
-    aviso(mensagemErro(e), "erro");
-  }finally{
-    ocupado(false);
+    $("mcLista").innerHTML = `<div class="mc-vazio">${esc(msgErro(e))}</div>`;
   }
-};
+}
+function fecharModalCurso() {
+  if (!CURSO_ID) { location.href = "menu.html"; return; }
+  $("modalCurso").hidden = true;
+}
 
-try { await auth.authStateReady(); } catch (_) {}
+function escolherCurso(id, nome) {
+  if (cancelarAlunas) { cancelarAlunas(); cancelarAlunas = null; }
+  CURSO_ID = id; CURSO = nome || id;
+  ALUNAS = []; carregadas = false; erroCarga = "";
+  dados = carregarDadosLocais();
+  listaAtualId = dados.listas[0].id;
+  salvarLocal();
 
-if (auth.currentUser) {
-  onValue(ref(db, "alunas/operadora"), (snap) => {
+  $("nomeCurso").textContent = CURSO;
+  document.title = "Lista de Presença — " + CURSO;
+  $("conteudo").hidden = false;
+  $("modalCurso").hidden = true;
+  aviso("");
+  aba("listas");
+  popularSeletor(); renderLista();
+  try { history.replaceState(null, "", "?curso=" + encodeURIComponent(id)); } catch (_) {}
+
+  // alunas cadastradas neste curso (tempo real)
+  cancelarAlunas = onValue(ref(db, "alunas/" + id), (snap) => {
     const lista = [];
-    snap.forEach((c) => {
-      const a = c.val();
-      if (a && a.nome) lista.push({ chamada: Number(a.chamada ?? c.key), nome: String(a.nome) });
-    });
-    lista.sort((x, y) => x.chamada - y.chamada);
-    window.definirAlunas(lista);
-  }, (e) => { console.error(e); window.erroAlunas(e); });
+    snap.forEach((c) => { const a = c.val(); if (a && a.nome) lista.push({ chamada: Number(a.chamada ?? c.key), nome: String(a.nome) }); });
+    ALUNAS = lista.sort((x, y) => x.chamada - y.chamada); carregadas = true; erroCarga = "";
+    renderLista(); if ($("tab-resumo").style.display !== "none") renderResumo();
+  }, (e) => { console.error(e); carregadas = true; erroCarga = msgErro(e); renderLista(); });
+}
+
+/* ---------- eventos ---------- */
+document.querySelectorAll(".tab-btn").forEach((b) => b.onclick = () => aba(b.dataset.tab));
+$("seletorLista").onchange = (e) => { listaAtualId = parseInt(e.target.value); renderLista(); };
+$("btnNova").onclick = () => { const n = novaListaObj(dados); dados.listas.push(n); listaAtualId = n.id; salvarLocal(); renderLista(); };
+$("btnExcluir").onclick = () => {
+  if (dados.listas.length <= 1) return alert("É necessário manter ao menos uma lista.");
+  if (!confirm("Tem certeza que deseja excluir esta lista? Essa ação não pode ser desfeita.")) return;
+  dados.listas = dados.listas.filter((l) => l.id !== listaAtualId); listaAtualId = dados.listas[0].id; salvarLocal(); renderLista();
+};
+const meta = () => { const l = listaAtual(); if (!l) return; l.data = $("dataLista").value; l.obs = $("obsLista").value; salvarLocal(); popularSeletor(); };
+$("dataLista").onchange = meta; $("obsLista").onchange = meta;
+$("btnSalvarBanco").onclick = salvarBanco; $("btnCarregarBanco").onclick = carregarBanco;
+$("btnPdf").onclick = pdfListas; $("btnPdfResumo").onclick = pdfResumo;
+$("btnTrocar").onclick = abrirModalCurso;
+$("mcCancelar").onclick = fecharModalCurso;
+$("modalCurso").addEventListener("click", (e) => { if (e.target === $("modalCurso") && CURSO_ID) fecharModalCurso(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modalCurso").hidden && CURSO_ID) fecharModalCurso(); });
+
+/* ---------- início: sempre pergunta o curso ao abrir ---------- */
+try { await auth.authStateReady(); } catch (_) {}
+if (auth.currentUser) {
+  const pedido = new URLSearchParams(location.search).get("curso");
+  if (pedido) {
+    // veio de um link com ?curso=ID: abre direto, se o curso existir no banco
+    const cursos = await carregarCursos(false);
+    if (cursos[pedido]) escolherCurso(pedido, cursos[pedido]); else abrirModalCurso();
+  } else {
+    abrirModalCurso();
+  }
 }
 </script>
 </body>
