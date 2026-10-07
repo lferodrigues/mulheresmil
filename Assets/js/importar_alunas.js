@@ -1,14 +1,16 @@
 /* Importar Alunas — Biblioteca Itinerante (Firebase Realtime Database)
    Lê planilhas de lista de presença (.xlsx/.xls/.csv) e grava as alunas em:
      alunas/{curso}/{nº da chamada} = { curso, nome, chamada, whatsapp, atualizadoEm }
+   - os cursos vêm do banco (cursos/), cadastrados em "Cadastro de Cursos";
    - alunas novas entram com WhatsApp vazio (preenchido depois em "Cadastro de Alunas");
    - alunas que já existem NUNCA perdem o WhatsApp (só o nome é atualizado, se você permitir). */
 import { db } from "./firebase-config.js";
 import { ref, get, update } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { carregarCursos } from "./cursos.js";
 
 const $ = (id) => document.getElementById(id);
-const CURSOS = { operadora: "Operadora de Computador", assistente: "Assistente Escolar" };
 
+let CURSOS = {};       // { id: nome } — vem do banco
 let arquivos = [];     // { nome, curso, alunas:[{chamada,nome,status,atual}], erro }
 let existentes = {};   // alunas/ do banco
 
@@ -29,11 +31,21 @@ function erro(e) {
     : "Não foi possível concluir a operação. Verifique a conexão e tente novamente.", "erro");
 }
 
+// Descobre o curso pelo texto "Curso: ..." da planilha, comparando com os cursos cadastrados
 function detectarCurso(texto) {
   const t = norm(texto);
-  if (t.includes("operadora") || t.includes("computador")) return "operadora";
-  if (t.includes("assistente") || t.includes("escolar")) return "assistente";
-  return "";
+  if (!t) return "";
+  const achados = Object.entries(CURSOS).filter(([, nome]) => {
+    const n = norm(nome);
+    return n && (t.includes(n) || n.includes(t));
+  });
+  // se mais de um combinar, fica com o nome mais longo (mais específico)
+  achados.sort((a, b) => b[1].length - a[1].length);
+  return achados.length ? achados[0][0] : "";
+}
+
+function opcoesCurso() {
+  return Object.entries(CURSOS).sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
 }
 
 /* ---------- leitura da planilha ---------- */
@@ -95,6 +107,7 @@ async function adicionarArquivos(lista) {
   const novos = [...lista];
   if (!novos.length) return;
   msg("Lendo planilhas...");
+  await cursosPronto;     // garante que os cursos do banco já foram carregados
   for (const f of novos) {
     try {
       const r = lerPlanilha(await f.arrayBuffer());
@@ -147,7 +160,7 @@ function render() {
     const c = { nova: 0, igual: 0, diferente: 0 };
     arq.alunas.forEach((a) => { if (c[a.status] !== undefined) c[a.status]++; });
     const opcoes = '<option value="">Selecione o curso</option>' +
-      Object.entries(CURSOS).map(([k, v]) => `<option value="${k}"${arq.curso === k ? " selected" : ""}>${v}</option>`).join("");
+      opcoesCurso().map(([k, v]) => `<option value="${esc(k)}"${arq.curso === k ? " selected" : ""}>${esc(v)}</option>`).join("");
     const corpo = arq.erro
       ? `<div class="arq-erro">${esc(arq.erro)}</div>`
       : `<div class="arq-info">${arq.alunas.length} aluna(s) encontrada(s) · ${c.nova} nova(s) · ${c.igual} já cadastrada(s) · ${c.diferente} com nome diferente</div>
@@ -196,7 +209,7 @@ function abrirConfirmacao() {
   }));
   $("modalResumo").innerHTML = Object.entries(porCurso)
     .filter(([k, p]) => k && (p.nova || p.diferente))
-    .map(([k, p]) => `<div><span>${esc(CURSOS[k])}</span><strong>${p.nova} aluna(s) nova(s)` +
+    .map(([k, p]) => `<div><span>${esc(CURSOS[k] || k)}</span><strong>${p.nova} aluna(s) nova(s)` +
       `${p.diferente ? ` · ${p.diferente} nome(s) atualizado(s)` : ""}</strong></div>`).join("");
   $("modal").hidden = false;
 }
@@ -269,9 +282,17 @@ $("limpar").onclick = () => { limparTudo(); msg(""); };
 $("modalVoltar").onclick = fecharModal;
 $("modalConfirmar").onclick = confirmarSalvar;
 
-carregarExistentes()
+/* ---------- início: cursos do banco + alunas existentes ---------- */
+const cursosPronto = carregarCursos(false).then((c) => { CURSOS = c; render(); }).catch(erro);
+
+Promise.all([cursosPronto, carregarExistentes()])
   .then(() => {
+    const ids = Object.keys(CURSOS);
+    if (!ids.length) {
+      msg("Nenhum curso cadastrado ainda. Cadastre em 'Cadastro de Cursos' antes de importar.", "erro");
+      return;
+    }
     const n = (c) => Object.values(existentes?.[c] || {}).filter(Boolean).length;
-    msg(`No banco: ${n("operadora")} aluna(s) de Operadora de Computador e ${n("assistente")} de Assistente Escolar.`);
+    msg("No banco: " + ids.map((id) => `${n(id)} aluna(s) de ${CURSOS[id]}`).join(" · ") + ".");
   })
   .catch(erro);
