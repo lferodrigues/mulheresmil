@@ -18,8 +18,9 @@ h1{font-size:clamp(30px,5vw,44px);margin-bottom:14px}
 .course-button:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.14)}
 .operator{background:linear-gradient(135deg,var(--orange),var(--orange-dark))}
 .assistant{background:linear-gradient(135deg,var(--green),var(--green-dark))}
+.inclusive{background:linear-gradient(135deg,#7652c9,#5a3ba9)}
 .icon{width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:13px;background:rgba(255,255,255,.20);font-size:25px}
-.course-button strong{display:block;font-size:17px;margin-bottom:5px}
+.course-button strong{display:block;font-size:17px;margin-bottom:5px;line-height:1.3}
 .course-button small{display:block;font-size:13px;opacity:.88}
 .arrow{font-size:27px;text-align:right}
 .footer{margin-top:30px;color:#96999c;font-size:12px;line-height:1.5}
