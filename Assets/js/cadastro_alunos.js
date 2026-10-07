@@ -33,7 +33,7 @@ function formatarWhatsapp(texto){
 async function montarCursos(){
   const sel = $("curso");
   sel.innerHTML = '<option value="">Carregando cursos...</option>';
-  cursos = await carregarCursos();
+  cursos = await carregarCursos(false);   // só os cursos cadastrados no banco
   const ordenados = Object.entries(cursos).sort((a,b) => a[1].localeCompare(b[1],"pt-BR"));
   sel.innerHTML = '<option value="">Selecione</option>' +
     ordenados.map(([id,nome]) => `<option value="${esc(id)}">${esc(nome)}</option>`).join("");
