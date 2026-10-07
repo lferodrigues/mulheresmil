@@ -1,10 +1,11 @@
 /* Rastreamento de visitantes — página pública (index.html)
-   Registra, sem exigir login, cada visita: IP, dispositivo, cliques e tempo em tela.
+   Registra, sem exigir login, cada visita: IP, ID do aparelho, dispositivo, cliques e tempo em tela.
    Grava em visitasSite/{id} (Realtime Database) pela API REST, um evento por vez:
      tipo "visita"  -> ip, dispositivo, sistema, navegador, tela, idioma, fuso, origem
      tipo "clique"  -> acao (o que foi clicado) e t (segundos desde que a página abriu)
      tipo "saida"   -> tempo (segundos em que a página ficou visível na tela)
    Todos os eventos de uma abertura de página compartilham o mesmo "vid".
+   O campo "did" é um ID persistente do aparelho/navegador (o endereço MAC não é acessível por páginas web).
    Privacidade: nunca lê nem grava texto digitado em campos.
    Nunca interrompe a página: se algo falhar, só avisa no console. */
 (function () {
@@ -24,6 +25,15 @@
     sessao = aleatorio();
     try { sessionStorage.setItem("mm_sessao_publica", sessao); } catch (e) {}
   }
+
+  /* ---------- ID persistente do aparelho (substitui o MAC, que o navegador não fornece) ---------- */
+  var did = "";
+  try { did = localStorage.getItem("mm_device_id") || ""; } catch (e) {}
+  if (!did) {
+    did = "D-" + aleatorio().toUpperCase();
+    try { localStorage.setItem("mm_device_id", did); } catch (e) {}
+  }
+
   var pagina = (location.pathname.split("/").pop() || "index.html").slice(0, 60);
 
   function limpar(t, n) { return String(t || "").replace(/\s+/g, " ").trim().slice(0, n); }
@@ -80,6 +90,7 @@
   function enviar(obj, saindo) {
     obj.vid = vid;
     obj.sessao = sessao;
+    obj.did = did;
     obj.pagina = pagina;
     obj.quando = Date.now();
     obj.data = { ".sv": "timestamp" };
