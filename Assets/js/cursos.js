@@ -15,9 +15,9 @@ export function gerarId(nome) {
     .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-// Retorna { id: nome } com os cursos padrão + os cadastrados no banco
-export async function carregarCursos() {
-  const resultado = { ...CURSOS_PADRAO };
+// Retorna { id: nome } com os cadastrados no banco (+ os padrão, se incluirPadrao for true)
+export async function carregarCursos(incluirPadrao = true) {
+  const resultado = incluirPadrao ? { ...CURSOS_PADRAO } : {};
   try {
     const snap = await get(ref(db, "cursos"));
     Object.entries(snap.val() || {}).forEach(([id, c]) => {
