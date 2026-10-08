@@ -150,7 +150,7 @@ $("nascimento").max = new Date().toISOString().slice(0, 10);
 
 /* ---------- cursos (vêm do banco) ---------- */
 let CURSOS = {};
-carregarCursos(true).then((c) => {
+carregarCursos(true, db).then((c) => {
   CURSOS = c;
   const ids = Object.keys(c).sort((a, b) => c[a].localeCompare(c[b], "pt-BR"));
   $("curso").innerHTML = '<option value="">Selecione o curso</option>' +
