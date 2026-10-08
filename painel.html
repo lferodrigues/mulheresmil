@@ -10,157 +10,119 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* Paleta retirada do logo do IF: verde #048A28, vermelho #DD0C11, texto #24160D */
 :root{
-  --side:#17324f;
-  --side-2:#1d3d5e;
-  --side-hover:#22476d;
-  --side-active:#0f2640;
-  --side-text:#d6e0ea;
-  --side-muted:#8fa5bb;
-  --accent:#2f9e41;          /* verde IF */
-  --accent-dark:#237a32;
-  --red:#c8191e;             /* vermelho IF */
-  --amber:#b7791f;
-  --bg:#f3f5f8;
-  --surface:#ffffff;
-  --border:#dfe4ea;
-  --border-soft:#eceff3;
-  --text:#24303d;
-  --text-2:#5b6775;
-  --muted:#8a95a2;
-  --bar:#3a6ea5;
+  --verde:#048a28;
+  --verde-escuro:#05601f;
+  --verde-fundo:#064a1a;
+  --verde-sub:#075421;
+  --verde-hover:#0a6a27;
+  --vermelho:#dd0c11;
+  --vermelho-escuro:#b80a0e;
+  --side-text:#e3efe6;
+  --side-muted:#a9c7b1;
+  --text:#24160d;
+  --text-2:#5f5650;
+  --border:#e4e7e5;
   --side-w:264px;
   --top-h:60px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:"Open Sans",Arial,Helvetica,sans-serif;font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:"Open Sans",Arial,Helvetica,sans-serif;font-size:14px;color:var(--text);background:#fff;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* ---------- Sidebar ---------- */
-.sidebar{position:fixed;inset:0 auto 0 0;width:var(--side-w);background:var(--side);color:var(--side-text);display:flex;flex-direction:column;z-index:40;transition:transform .22s ease}
-.side-title{background:var(--side-active);color:#fff;text-align:center;font-size:15px;font-weight:600;padding:12px 40px;position:relative;letter-spacing:.2px}
-.side-close{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;display:grid;place-items:center;border-radius:4px;color:#fff;opacity:.85}
-.side-close:hover{background:rgba(255,255,255,.1);opacity:1}
-.brand{background:#fff;padding:14px 18px;display:flex;justify-content:center;align-items:center;border-bottom:1px solid var(--side-active)}
-.brand img{display:block;width:100%;max-width:210px;height:auto}
-.side-tools{padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
-.search{display:flex;align-items:center;gap:8px;background:#fff;border-radius:4px;padding:0 10px;height:34px;color:#6b7785}
+/* ---------- Menu lateral ---------- */
+.sidebar{position:fixed;inset:0 auto 0 0;width:var(--side-w);background:var(--verde-escuro);color:var(--side-text);display:flex;flex-direction:column;z-index:40;transition:transform .22s ease}
+.side-title{background:var(--verde-fundo);color:#fff;text-align:center;font-size:15px;font-weight:600;height:var(--top-h);display:flex;align-items:center;justify-content:center;padding:0 44px;position:relative;letter-spacing:.2px;border-bottom:3px solid var(--vermelho)}
+.side-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:30px;height:30px;display:grid;place-items:center;border-radius:4px;color:#fff;opacity:.85}
+.side-close:hover{background:rgba(255,255,255,.12);opacity:1}
+.side-tools{padding:16px 16px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border-radius:4px;padding:0 10px;height:34px;color:#7b8a7f}
 .search input{border:0;outline:0;flex:1;min-width:0;font:inherit;font-size:13px;color:var(--text);background:transparent}
-.search input::placeholder{color:#9aa4af}
+.search input::placeholder{color:#99a59c}
 .tool-row{display:flex;gap:8px;margin-top:10px}
 .tool-row button{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;height:28px;border:1px solid rgba(255,255,255,.55);border-radius:4px;color:#fff;font-size:12px;font-weight:600}
-.tool-row button:hover{background:rgba(255,255,255,.08)}
+.tool-row button:hover{background:rgba(255,255,255,.1)}
 .tool-row svg.i{width:13px;height:13px;stroke-width:2.4}
 
-.nav{flex:1;overflow-y:auto;padding:6px 0 10px;scrollbar-width:thin;scrollbar-color:#35577a transparent}
+.nav{flex:1;overflow-y:auto;padding:6px 0 10px;scrollbar-width:thin;scrollbar-color:#2c7d43 transparent}
 .nav-link,.group-btn{display:flex;align-items:center;gap:12px;width:100%;padding:11px 18px;font-size:13.5px;color:var(--side-text);text-align:left;border-left:3px solid transparent}
-.nav-link:hover,.group-btn:hover{background:var(--side-hover);color:#fff}
-.nav-link.active{background:var(--side-active);color:#fff;border-left-color:var(--accent);font-weight:600}
+.nav-link:hover,.group-btn:hover{background:var(--verde-hover);color:#fff}
+.nav-link.active{background:var(--verde-fundo);color:#fff;border-left-color:var(--vermelho);font-weight:600}
 .group-btn .chev{margin-left:auto;width:14px;height:14px;transition:transform .2s}
 .group.open>.group-btn .chev{transform:rotate(180deg)}
-.group.open>.group-btn{color:#fff}
-.sub{display:none;background:var(--side-2);padding:4px 0}
+.group.open>.group-btn{color:#fff;background:var(--verde-hover)}
+.sub{display:none;background:var(--verde-sub);padding:4px 0}
 .group.open>.sub{display:block}
 .sub a{display:block;padding:8px 18px 8px 48px;font-size:13px;color:var(--side-muted);position:relative}
-.sub a::before{content:"";position:absolute;left:31px;top:50%;width:5px;height:5px;border-radius:50%;background:currentColor;transform:translateY(-50%);opacity:.6}
-.sub a:hover{color:#fff;background:var(--side-hover)}
+.sub a::before{content:"";position:absolute;left:31px;top:50%;width:5px;height:5px;border-radius:50%;background:currentColor;transform:translateY(-50%);opacity:.7}
+.sub a:hover{color:#fff;background:var(--verde-hover)}
 .nav-empty{display:none;padding:14px 18px;font-size:13px;color:var(--side-muted)}
-.side-foot{border-top:1px solid rgba(255,255,255,.1)}
-.side-foot a{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;font-size:13.5px;font-weight:600;color:#f0b44c}
-.side-foot a:hover{background:var(--side-hover)}
+.side-foot{border-top:1px solid rgba(255,255,255,.12)}
+.side-foot a{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;font-size:13.5px;font-weight:600;color:#fff}
+.side-foot a:hover{background:var(--verde-hover)}
 
 /* ---------- Topo ---------- */
 .main{margin-left:var(--side-w);min-height:100vh;display:flex;flex-direction:column;transition:margin-left .22s ease}
-.topbar{position:sticky;top:0;z-index:20;height:var(--top-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;box-shadow:0 1px 3px rgba(20,30,45,.04)}
-.burger{width:38px;height:38px;display:none;place-items:center;border-radius:4px;color:var(--side)}
-.burger:hover{background:var(--bg)}
+.topbar{position:sticky;top:0;z-index:20;height:var(--top-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px}
+.burger{width:38px;height:38px;display:none;place-items:center;border-radius:4px;color:var(--verde-escuro)}
+.burger:hover{background:#f1f6f2}
 .burger svg.i{width:24px;height:24px;stroke-width:2}
-.top-right{margin-left:auto;display:flex;align-items:center;gap:6px}
-.icon-btn{width:36px;height:36px;display:grid;place-items:center;border-radius:4px;color:var(--text-2)}
-.icon-btn:hover{background:var(--bg);color:var(--text)}
-.user{position:relative}
-.user-btn{display:flex;align-items:center;gap:9px;padding:4px 8px 4px 4px;border-radius:4px}
-.user-btn:hover{background:var(--bg)}
-.avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--accent);color:var(--accent-dark);display:grid;place-items:center;font-size:12px;font-weight:700;background:#f1f8f2}
-.user-name{font-size:13.5px;color:var(--text);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.user-btn svg.i{width:14px;height:14px;color:var(--text-2)}
-.menu-user{position:absolute;right:0;top:calc(100% + 6px);min-width:220px;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 8px 24px rgba(20,30,45,.12);padding:6px 0;display:none}
-.user.open .menu-user{display:block}
-.menu-user .who{padding:8px 14px 10px;border-bottom:1px solid var(--border-soft);margin-bottom:4px}
-.menu-user .who b{display:block;font-size:13px}
-.menu-user .who span{font-size:12px;color:var(--muted);word-break:break-all}
-.menu-user a{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:var(--text)}
-.menu-user a:hover{background:var(--bg)}
-.menu-user a.sair{color:var(--red)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.user-name{font-size:13.5px;color:var(--text-2);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-name b{color:var(--text);font-weight:600}
+.btn-sair{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--vermelho);color:var(--vermelho);background:#fff;transition:background .15s,color .15s}
+.btn-sair:hover,.btn-sair:focus-visible{background:var(--vermelho);color:#fff;outline:none}
+.btn-sair svg.i{width:20px;height:20px;stroke-width:2}
 
-/* ---------- Conteúdo ---------- */
-.content{padding:22px 28px 40px;flex:1}
-.crumb{font-size:12px;color:var(--muted)}
-.page-head{display:flex;align-items:center;gap:10px;margin:6px 0 20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.page-head h1{font-size:24px;font-weight:600;color:var(--side)}
+/* ---------- Tela inicial ---------- */
+.inicio{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 32px;background:#fff}
+.inicio img{display:block;width:100%;max-width:620px;height:auto;user-select:none;-webkit-user-drag:none;mix-blend-mode:multiply;filter:brightness(1.03) contrast(1.04)}
 
-.secao{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:18px 20px 20px;margin-bottom:18px}
-.secao-titulo{font-size:15px;font-weight:600;color:var(--side);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-soft)}
-.atalhos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.atalho{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--border);border-radius:4px;background:#fff;transition:border-color .15s,background .15s}
-.atalho:hover{border-color:#b9c7d6;background:#f8fafc}
-.atalho .ico{width:36px;height:36px;border-radius:4px;display:grid;place-items:center;background:#eef3f8;color:var(--side);flex:none}
-.atalho .ico svg.i{width:17px;height:17px}
-.atalho b{display:block;font-size:13px;font-weight:600;color:var(--text)}
-.atalho span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.foot{padding:14px 28px;font-size:12px;color:#8a8079;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
-.foot{padding:16px 28px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);background:var(--surface);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-
-/* menu fechado (desktop) */
+/* menu fechado (computador) */
 body.side-off .sidebar{transform:translateX(-100%)}
 body.side-off .main{margin-left:0}
 body.side-off .burger{display:grid}
 .overlay{display:none}
 
-@media (max-width:1180px){
-  .atalhos{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
 @media (max-width:860px){
-  .sidebar{transform:translateX(-100%);box-shadow:none}
+  .sidebar{transform:translateX(-100%)}
   .main{margin-left:0}
   .burger{display:grid}
   body.side-on .sidebar{transform:none;box-shadow:4px 0 24px rgba(0,0,0,.25)}
-  body.side-on .overlay{display:block;position:fixed;inset:0;background:rgba(15,25,40,.45);z-index:30}
-  .content{padding:18px 16px 32px}
+  body.side-on .overlay{display:block;position:fixed;inset:0;background:rgba(20,15,10,.45);z-index:30}
   .topbar{padding:0 12px}
+  .inicio{padding:32px 20px}
   .foot{padding:14px 16px}
-  .user-name{display:none}
 }
-@media (max-width:560px){
-  .atalhos{grid-template-columns:minmax(0,1fr)}
+@media (max-width:480px){
+  .user-name{display:none}
 }
 </style>
 </head>
 <body>
 
-<!-- Ícones -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
-  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
-  <symbol id="i-dash" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="8" rx="1"/><rect x="13" y="4" width="7" height="5" rx="1"/><rect x="13" y="11" width="7" height="9" rx="1"/><rect x="4" y="14" width="7" height="6" rx="1"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19.5h11V9.5"/><path d="M10 19.5v-5h4v5"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5"/><path d="M8 9.5l2 2 4-4M8 16h8"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 19.5c.6-3.3 3.3-5.5 6.5-5.5s5.9 2.2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.3c1.8.8 3.1 2.6 3.5 5.2"/></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3.5H6.5A1.5 1.5 0 005 5v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5z"/><path d="M14 3.5v5h5M8.5 13h7M8.5 16.5h5"/></symbol>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></symbol>
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
-  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M14 4h4.5A1.5 1.5 0 0120 5.5v13a1.5 1.5 0 01-1.5 1.5H14M10 16l-4-4 4-4M6 12h10"/></symbol>
-  <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V3.5h10V8M7 17H5a1.5 1.5 0 01-1.5-1.5v-6A1.5 1.5 0 015 8h14a1.5 1.5 0 011.5 1.5v6A1.5 1.5 0 0119 17h-2"/><rect x="7" y="13.5" width="10" height="7"/></symbol>
-  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3.5 9L12 4l8.5 5zM5.5 9v8M10 9v8M14 9v8M18.5 9v8M3.5 20h17"/></symbol>
-  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+  <!-- porta de saída -->
+  <symbol id="i-porta" viewBox="0 0 24 24"><path d="M13 20.5H5.5a1 1 0 01-1-1v-15a1 1 0 011-1H13"/><path d="M13 3.5v4M13 16.5v4"/><path d="M10 12h.01"/><path d="M14 12h7M18 9l3 3-3 3"/></symbol>
 </svg>
 
 <!-- ============ MENU LATERAL ============ -->
@@ -169,7 +131,6 @@ body.side-off .burger{display:grid}
     Painel de Controle
     <button class="side-close" id="btnFechar" type="button" title="Fechar menu" aria-label="Fechar menu"><svg class="i"><use href="#i-x"/></svg></button>
   </div>
-  <div class="brand"><img src="if-sjn.png" alt="Instituto Federal Sudeste MG - Campus São João Nepomuceno"></div>
 
   <div class="side-tools">
     <label class="search">
@@ -183,7 +144,7 @@ body.side-off .burger{display:grid}
   </div>
 
   <nav class="nav" id="nav">
-    <a class="nav-link active" href="./painel.html"><svg class="i"><use href="#i-dash"/></svg>Página inicial</a>
+    <a class="nav-link active" href="./painel.html"><svg class="i"><use href="#i-home"/></svg>Início</a>
 
     <div class="group">
       <button class="group-btn" type="button"><svg class="i"><use href="#i-check"/></svg>Frequência<svg class="i chev"><use href="#i-down"/></svg></button>
@@ -243,61 +204,14 @@ body.side-off .burger{display:grid}
 <div class="main">
   <header class="topbar">
     <button class="burger" id="btnMenu" type="button" title="Abrir menu" aria-label="Abrir menu" aria-controls="sidebar"><svg class="i"><use href="#i-menu"/></svg></button>
-
     <div class="top-right">
-      <div class="user" id="user">
-        <button class="user-btn" id="btnUser" type="button" aria-haspopup="true" aria-expanded="false">
-          <span class="avatar" id="avatar">··</span>
-          <span class="user-name" id="userName">Carregando…</span>
-          <svg class="i"><use href="#i-down"/></svg>
-        </button>
-        <div class="menu-user" role="menu">
-          <div class="who"><b id="userFull">—</b><span id="userEmail"></span></div>
-          <a href="./controle_usuarios.html" role="menuitem"><svg class="i"><use href="#i-users"/></svg>Controle de usuários</a>
-          <a href="./admin.html" class="sair" id="btnSair" role="menuitem"><svg class="i"><use href="#i-exit"/></svg>Sair do sistema</a>
-        </div>
-      </div>
+      <span class="user-name" id="userName"></span>
+      <a class="btn-sair" href="./admin.html" id="btnSair" title="Sair do sistema" aria-label="Sair do sistema"><svg class="i"><use href="#i-porta"/></svg></a>
     </div>
   </header>
 
-  <main class="content">
-    <p class="crumb">Página inicial</p>
-    <div class="page-head">
-      <h1>Painel de Controle</h1>
-    </div>
-
-    <section class="secao">
-      <h2 class="secao-titulo">Frequência</h2>
-      <div class="atalhos">
-        <a class="atalho" href="./lista_presenca_mulheres_mil.html"><div class="ico"><svg class="i"><use href="#i-check"/></svg></div><div><b>Lançamento de frequência</b><span>Lista de presença dos cursos</span></div></a>
-        <a class="atalho" href="./gerar_lista_presenca.html"><div class="ico"><svg class="i"><use href="#i-print"/></svg></div><div><b>Gerar lista de presença</b><span>Escolha o curso e baixe em PDF</span></div></a>
-      </div>
-    </section>
-
-    <section class="secao">
-      <h2 class="secao-titulo">Alunas e Inscrições</h2>
-      <div class="atalhos">
-        <a class="atalho" href="./cadastro_alunos.html"><div class="ico"><svg class="i"><use href="#i-users"/></svg></div><div><b>Cadastro de alunas</b><span>Alunas, cursos e importação</span></div></a>
-        <a class="atalho" href="./inscricao.html"><div class="ico"><svg class="i"><use href="#i-form"/></svg></div><div><b>Inscrição de alunas</b><span>Ficha, curso e dados bancários</span></div></a>
-        <a class="atalho" href="./download_inscricoes.html"><div class="ico"><svg class="i"><use href="#i-download"/></svg></div><div><b>Download das inscrições</b><span>PDF separado por curso</span></div></a>
-        <a class="atalho" href="./conferencia_bancaria.html"><div class="ico"><svg class="i"><use href="#i-bank"/></svg></div><div><b>Conferência bancária</b><span>Consultar, editar e baixar PDF</span></div></a>
-      </div>
-    </section>
-
-    <section class="secao">
-      <h2 class="secao-titulo">Biblioteca Itinerante</h2>
-      <div class="atalhos">
-        <a class="atalho" href="./biblioteca.html"><div class="ico"><svg class="i"><use href="#i-book"/></svg></div><div><b>Biblioteca</b><span>Livros, reservas e devoluções</span></div></a>
-      </div>
-    </section>
-
-    <section class="secao">
-      <h2 class="secao-titulo">Administração</h2>
-      <div class="atalhos">
-        <a class="atalho" href="./controle_usuarios.html"><div class="ico"><svg class="i"><use href="#i-users"/></svg></div><div><b>Controle de usuários</b><span>Área restrita: editar e excluir</span></div></a>
-        <a class="atalho" href="./logs_acesso.html"><div class="ico"><svg class="i"><use href="#i-shield"/></svg></div><div><b>Logs de acesso</b><span>Área restrita: histórico de acessos</span></div></a>
-      </div>
-    </section>
+  <main class="inicio">
+    <img src="if-sjn.png" alt="Instituto Federal Sudeste de Minas Gerais - Campus São João Nepomuceno" draggable="false">
   </main>
 
   <footer class="foot">
@@ -306,14 +220,12 @@ body.side-off .burger{display:grid}
   </footer>
 </div>
 
-<!-- ============ Interface: menu, busca, usuário ============ -->
 <script>
 (function () {
   const body = document.body;
   const mobile = () => window.matchMedia("(max-width:860px)").matches;
   const grupos = [...document.querySelectorAll(".group")];
 
-  // estado do menu no desktop
   try { if (localStorage.getItem("mm_menu_fechado") === "1") body.classList.add("side-off"); } catch (e) {}
   const salvar = (v) => { try { localStorage.setItem("mm_menu_fechado", v ? "1" : "0"); } catch (e) {} };
 
@@ -326,6 +238,7 @@ body.side-off .burger{display:grid}
     else { body.classList.remove("side-off"); salvar(false); }
   };
   document.getElementById("overlay").onclick = () => body.classList.remove("side-on");
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") body.classList.remove("side-on"); });
 
   grupos.forEach((g) => g.querySelector(".group-btn").onclick = () => g.classList.toggle("open"));
   document.getElementById("btnExpandir").onclick = () => grupos.forEach((g) => g.classList.add("open"));
@@ -348,45 +261,30 @@ body.side-off .burger{display:grid}
       g.classList.toggle("open", !!q && n > 0);
       achou += n;
     });
-    const dash = document.querySelector(".nav-link");
-    const dashOk = !q || norm(dash.textContent).includes(q);
-    dash.style.display = dashOk ? "" : "none";
-    document.getElementById("navVazio").style.display = (achou || dashOk) ? "none" : "block";
+    const inicio = document.querySelector(".nav-link");
+    const inicioOk = !q || norm(inicio.textContent).includes(q);
+    inicio.style.display = inicioOk ? "" : "none";
+    document.getElementById("navVazio").style.display = (achou || inicioOk) ? "none" : "block";
   });
-
-  // menu do usuário
-  const user = document.getElementById("user");
-  document.getElementById("btnUser").onclick = (e) => {
-    e.stopPropagation();
-    const aberto = user.classList.toggle("open");
-    e.currentTarget.setAttribute("aria-expanded", aberto);
-  };
-  document.addEventListener("click", (e) => { if (!user.contains(e.target)) user.classList.remove("open"); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { user.classList.remove("open"); body.classList.remove("side-on"); } });
 })();
 </script>
 
-<!-- ============ Usuário logado (Firebase) ============ -->
+<!-- nome do usuário logado -->
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-
-const $ = (id) => document.getElementById(id);
 
 (async () => {
   await auth.authStateReady();
   const u = auth.currentUser;
   if (!u) return;
-  let nome = "", sobrenome = "";
-  try {
-    const p = (await get(ref(db, "usuarios/" + u.uid))).val() || {};
-    nome = p.nome || ""; sobrenome = p.sobrenome || "";
-  } catch (e) { /* sem perfil: usa o e-mail */ }
-  const primeiro = nome || (u.email || "Usuário").split("@")[0];
-  $("userName").textContent = primeiro;
-  $("avatar").textContent = ((nome[0] || primeiro[0] || "U") + (sobrenome[0] || "")).toUpperCase();
-  $("userFull").textContent = [nome, sobrenome].filter(Boolean).join(" ") || primeiro;
-  $("userEmail").textContent = u.email || "";
+  let nome = "";
+  try { nome = ((await get(ref(db, "usuarios/" + u.uid))).val() || {}).nome || ""; } catch (e) {}
+  const el = document.getElementById("userName");
+  el.textContent = "Olá, ";
+  const b = document.createElement("b");
+  b.textContent = nome || (u.email || "").split("@")[0];
+  el.appendChild(b);
 })();
 </script>
 <script src="./Assets/js/script.js"></script>
