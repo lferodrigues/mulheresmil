@@ -81,4 +81,91 @@ export async function vincularAluna(db, { curso, nome, whatsapp = "", origem = "
       // soPreencherZap: só grava o WhatsApp se a aluna ainda não tiver um (não sobrescreve correções manuais)
       const mudaZap = whatsapp && whatsapp !== (existente.whatsapp || "") && !(soPreencherZap && existente.whatsapp);
       resultado = { situacao: mudaZap ? "atualizada" : "sem-mudanca", chamada: existente.chamada, nome: existente.nome };
-      if (!mudaZap) return;                       // nada
+      if (!mudaZap) return;                       // nada a gravar: aborta sem escrever
+      lista[chave] = { ...lista[chave], curso, chamada: existente.chamada, whatsapp, atualizadoEm: agora };
+      return lista;
+    }
+
+    const chamada = proximaChamada(lista);
+    lista[String(chamada)] = { curso, nome, chamada, whatsapp, origem, criadoEm: agora, atualizadoEm: agora };
+    resultado = { situacao: "nova", chamada, nome };
+    return lista;
+  });
+
+  return resultado;
+}
+
+/* ---------- inscrições (inscricao.html) -> alunas ---------- */
+
+// Descobre o código do curso da inscrição entre os cursos cadastrados ({ id: nome }).
+// Usa o código gravado; se ele não existir mais, compara pelo nome do curso.
+export function cursoDaInscricao(inscricao, cursos) {
+  const id = String(inscricao?.curso || "").trim();
+  if (id && cursos[id]) return id;
+  const nomes = [inscricao?.cursoNome, cursos[id], id].map(chaveNome).filter(Boolean);
+  for (const [cid, cnome] of Object.entries(cursos)) {
+    if (nomes.includes(chaveNome(cnome))) return cid;
+  }
+  return "";
+}
+
+let sincronizando = null;   // evita rodar duas vezes ao mesmo tempo na mesma página
+
+/**
+ * Inclui em alunas/{curso} as inscritas que ainda não estão na lista do curso
+ * e completa o WhatsApp de quem está sem. Não mexe em quem já tem WhatsApp.
+ * Inscrições marcadas com vinculoRemovido (aluna removida no Cadastro de Alunas) são ignoradas.
+ * @param db      instância do Realtime Database
+ * @param cursos  { id: nome } dos cursos cadastrados (carregarCursos)
+ * @returns { novas, atualizadas, semCurso }
+ */
+export function sincronizarInscricoes(db, cursos) {
+  if (!sincronizando) {
+    sincronizando = executarSincronizacao(db, cursos || {}).finally(() => { sincronizando = null; });
+  }
+  return sincronizando;
+}
+
+async function executarSincronizacao(db, cursos) {
+  const resumo = { novas: 0, atualizadas: 0, semCurso: 0 };
+  if (!Object.keys(cursos).length) return resumo;
+
+  const [insSnap, alSnap] = await Promise.all([get(ref(db, "inscricoes")), get(ref(db, ALUNAS_PATH))]);
+  const inscricoes = insSnap.val() || {};
+  const alunas = alSnap.val() || {};
+
+  const pendentes = [];
+  for (const v of Object.values(inscricoes)) {
+    const nome = limparNome(v?.identificacao?.nome);
+    if (!nome) continue;
+    const curso = cursoDaInscricao(v.inscricao, cursos);
+    if (!curso) { resumo.semCurso++; continue; }
+    if (v.vinculoRemovido && v.vinculoRemovido === curso) continue;
+    const zap = v.identificacao?.whatsapp ? formatarWhatsapp(v.identificacao.whatsapp) : "";
+    const existente = acharPorNome(alunas[curso], nome);
+    if (existente && (existente.whatsapp || !zap)) continue;   // já está completa
+    pendentes.push({ curso, nome, whatsapp: zap });
+  }
+
+  for (const p of pendentes) {
+    const r = await vincularAluna(db, { ...p, origem: "inscricao", soPreencherZap: true });
+    if (r?.situacao === "nova") resumo.novas++;
+    else if (r?.situacao === "atualizada") resumo.atualizadas++;
+  }
+  return resumo;
+}
+
+/* Ao remover uma aluna do curso, marca as inscrições dela para a sincronização
+   não trazê-la de volta. (Se a inscrição for salva de novo em inscricao.html, a marca some.) */
+export async function marcarRemocaoNasInscricoes(db, curso, nome, cursos) {
+  const alvo = chaveNome(nome);
+  const inscricoes = (await get(ref(db, "inscricoes"))).val() || {};
+  const mudancas = {};
+  for (const [id, v] of Object.entries(inscricoes)) {
+    if (chaveNome(v?.identificacao?.nome) === alvo && cursoDaInscricao(v?.inscricao, cursos) === curso) {
+      mudancas[`inscricoes/${id}/vinculoRemovido`] = curso;
+    }
+  }
+  if (Object.keys(mudancas).length) await update(ref(db), mudancas);
+  return Object.keys(mudancas).length;
+}
