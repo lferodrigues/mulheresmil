@@ -16,10 +16,10 @@ export function gerarId(nome) {
 }
 
 // Retorna { id: nome } com os cadastrados no banco (+ os padrão, se incluirPadrao for true)
-export async function carregarCursos(incluirPadrao = true) {
+export async function carregarCursos(incluirPadrao = true, banco = db) {
   const resultado = incluirPadrao ? { ...CURSOS_PADRAO } : {};
   try {
-    const snap = await get(ref(db, "cursos"));
+    const snap = await get(ref(banco, "cursos"));
     Object.entries(snap.val() || {}).forEach(([id, c]) => {
       if (c && c.nome) resultado[id] = String(c.nome);
     });
