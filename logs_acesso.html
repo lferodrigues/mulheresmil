@@ -67,6 +67,12 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 .olho{position:absolute;right:6px;top:50%;transform:translateY(-34%);border:0;background:transparent;font-size:18px;cursor:pointer;padding:6px}
 .msg{margin-top:12px;padding:9px 12px;border-radius:8px;background:#fdeceb;color:#c62828;border:1px solid #f4b8b0;font-size:13px}
 .acoes{display:flex;gap:10px;margin-top:18px}.acoes .btn{flex:1;padding:12px}
+.btn.verm{background:#c62828}
+.dados{display:grid;gap:9px}
+.dados div{padding:11px 13px;background:#faf5f7;border:1px solid #eadbe3;border-radius:10px}
+.dados span{display:block;color:#8a777f;font-size:11px;margin-bottom:3px}
+.dados strong{display:block;overflow-wrap:anywhere}
+.aviso-bloq{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff4dc;border:1px solid #f1d9a2;font-size:13px;line-height:1.45;color:#8a5a00}
 @media(max-width:700px){body{padding:8px}.card{padding:20px 15px}.filtros{grid-template-columns:1fr}.status-bar{flex-direction:column}.acoes{flex-direction:column-reverse}}
 </style>
 </head>
@@ -158,6 +164,24 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
         <button type="submit" class="btn" id="aEntrar">Liberar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Pop-up: confirmar bloqueio do aparelho -->
+<div id="modalBloq" class="modal" hidden>
+  <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="tBloq">
+    <div class="modal-icon" style="background:#fdeceb">🚫</div>
+    <h2 id="tBloq">Bloquear este aparelho?</h2>
+    <p>Você tem certeza que deseja bloquear o acesso deste aparelho ao site por <strong>30 minutos</strong>?</p>
+    <div class="dados">
+      <div><span>ID do aparelho</span><strong id="bDid"></strong></div>
+      <div><span>IP</span><strong id="bIp"></strong></div>
+    </div>
+    <div class="aviso-bloq">A tela do visitante será bloqueada na hora, com uma contagem regressiva. Você pode desbloquear a qualquer momento.</div>
+    <div class="acoes">
+      <button type="button" class="btn cinza" id="bCancelar">Não, cancelar</button>
+      <button type="button" class="btn verm" id="bConfirmar">Sim, bloquear</button>
+    </div>
   </div>
 </div>
 
@@ -362,11 +386,32 @@ function erroBloqueio(e) {
     : "Não foi possível concluir. Verifique a conexão e tente novamente.", "erro");
 }
 
-async function bloquearAparelho(did, ip, botao) {
+let bloqPendente = null;   // { did, ip } aguardando confirmação no pop-up
+
+function pedirBloqueio(did, ip) {
   if (!did) return;
-  if (!confirm("Bloquear este aparelho por " + BLOQUEIO_MIN + " minutos?\n\nID: " + did + (ip ? "\nIP: " + ip : "") +
-    "\n\nEle não conseguirá usar o site (index.html) até o bloqueio acabar ou ser desfeito.")) return;
-  botao.disabled = true;
+  bloqPendente = { did, ip };
+  $("bDid").textContent = did;
+  $("bIp").textContent = ip || "—";
+  $("bConfirmar").disabled = false;
+  $("modalBloq").hidden = false;
+  $("bCancelar").focus();
+}
+function fecharBloqueio() { bloqPendente = null; $("modalBloq").hidden = true; }
+
+$("bCancelar").onclick = fecharBloqueio;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modalBloq").hidden) fecharBloqueio(); });
+$("modalBloq").addEventListener("click", (e) => { if (e.target === $("modalBloq")) fecharBloqueio(); });
+$("bConfirmar").onclick = async () => {
+  if (!bloqPendente) return;
+  const { did, ip } = bloqPendente;
+  $("bConfirmar").disabled = true;
+  await bloquearAparelho(did, ip);
+  fecharBloqueio();
+};
+
+async function bloquearAparelho(did, ip) {
+  if (!did) return;
   try {
     const agora = Date.now();
     const dados = {
@@ -468,7 +513,7 @@ setInterval(() => { if (atualizarContagem()) filtrarVisitas(); }, 1000);
 
 $("vCorpo").addEventListener("click", (e) => {
   const bloq = e.target.closest(".b-bloq");
-  if (bloq) return bloquearAparelho(bloq.dataset.did, bloq.dataset.ip, bloq);
+  if (bloq) return pedirBloqueio(bloq.dataset.did, bloq.dataset.ip);
   const desb = e.target.closest(".b-desbloq");
   if (desb) return desbloquearAparelho(desb.dataset.did, desb);
 });
