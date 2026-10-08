@@ -23,6 +23,7 @@ a.btn-importar+a.btn-importar{margin-top:10px}
 label.sem-margem{margin:0}
 .aviso-nome{display:block;margin-top:8px;color:#b26a00;font-weight:600}
 .aviso-nome:empty{display:none}
+.aviso-inscricoes{margin:14px 0 0;padding:10px 12px;border-radius:10px;background:#e8f5e9;border:1px solid #c8e6c9;color:#2e7d32;font-size:13px;font-weight:600}
 #lista .sem-zap{color:#b26a00;font-weight:600;font-size:13px}
 </style>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
@@ -36,6 +37,7 @@ label.sem-margem{margin:0}
 <p>Selecione o curso e pesquise a aluna. Se ela ainda não estiver na lista, cadastre como nova aluna: ela passa a aparecer na frequência, na lista de presença e na biblioteca.</p>
 <a class="btn-importar" href="cadastro_cursos.html">🎓 Cadastrar novo curso</a>
 <a class="btn-importar" href="importar_alunas.html">📄 Importar alunas de planilha</a>
+<p id="avisoInscricoes" class="aviso-inscricoes" hidden></p>
 <label>Curso<select id="curso"><option value="">Carregando cursos...</option></select></label>
 <div id="area" hidden>
 <label class="campo-pesquisa">Pesquisar aluna<input id="pesquisa" type="search" placeholder="Digite o nome..." autocomplete="off">
