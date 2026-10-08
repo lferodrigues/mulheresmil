@@ -3,144 +3,288 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lista de Presença — Sistema Mulheres Mil</title>
+<title>Lançamento de Frequência | Mulheres Mil - IF Sudeste MG</title>
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 <script src="./Assets/js/script.js"></script>
-<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./Assets/css/painel-layout.css">
 <style>
-:root{--laranja:#f5a623;--laranja-escuro:#e07b1a;--verde:#4caf50;--vermelho:#e04b3a;--teal:#2fa8a0;--texto:#2c2620;--bg:#fdf6ec;--borda:#eadfcd}
-*{box-sizing:border-box}
+/* ---------- Lançamento de Frequência (complementa painel-layout.css) ---------- */
 [hidden]{display:none!important}
-body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--texto);padding-bottom:40px}
-header{background:linear-gradient(120deg,#f5a623,#e8871e 60%,#e04b3a);padding:18px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 3px 10px rgba(0,0,0,.15)}
-header img{height:56px;border-radius:6px;background:#fff;padding:4px 8px}
-header h1{margin:0;font-size:1.3rem;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
-header p{margin:2px 0 0;color:#fff8ec;font-size:.9rem}
-.btn-trocar{margin-left:auto;border:2px solid #fff;background:rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}
-.btn-trocar:hover{background:rgba(255,255,255,.3)}
-main{max-width:1050px;margin:22px auto;padding:0 16px}
-.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-.tab-btn{background:#fff;border:2px solid var(--borda);color:var(--texto);padding:10px 18px;border-radius:10px 10px 0 0;cursor:pointer;font-weight:600;font-size:.95rem}
-.tab-btn.active{background:var(--laranja);border-color:var(--laranja-escuro);color:#fff}
-.card{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-select,input[type=text],input[type=date]{padding:8px 10px;border-radius:8px;border:1px solid var(--borda);font:inherit;font-size:.9rem}
-.btn{border:none;border-radius:8px;padding:9px 16px;font-size:.9rem;font-weight:600;cursor:pointer;color:#fff;white-space:nowrap}
-.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.6;cursor:wait}
-.btn-laranja{background:var(--laranja-escuro)}.btn-verde{background:var(--verde)}.btn-teal{background:var(--teal)}.btn-cinza{background:#8a7a63}
-.btn-ghost{background:#fff;color:var(--vermelho);border:1px solid var(--vermelho)}
-.lista-meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:.9rem}
-.lista-meta label{font-weight:600;margin-right:6px}
-table{width:100%;border-collapse:collapse;font-size:.88rem}
-thead th{background:#fbe7c6;color:#5a3d10;text-align:left;padding:10px 8px;border-bottom:2px solid var(--laranja);position:sticky;top:0}
-tbody td{padding:8px;border-bottom:1px solid var(--borda);vertical-align:middle}
-tbody tr:nth-child(even){background:#fffaf1}
-.col-num{width:36px;color:#999;text-align:center}.col-nome{min-width:220px}
+.content{flex:1;padding:22px 28px 36px;background:#f6f8f6}
+.crumb{font-size:12px;color:#8a8079}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:4px 0 18px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.page-head h1{font-size:22px;font-weight:600;color:var(--verde-escuro)}
+.page-head .curso-atual{font-size:13.5px;color:var(--text-2);margin-top:3px}
+.page-head .curso-atual strong{color:var(--text)}
+.btn-trocar{margin-left:auto;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border:1px solid var(--verde);border-radius:4px;background:#fff;color:var(--verde-escuro);font-size:13px;font-weight:600}
+.btn-trocar:hover{background:#eef7f0}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:-1px}
+.tab-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;font-size:13.5px;font-weight:600;color:var(--text-2);border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;background:transparent}
+.tab-btn:hover{color:var(--verde-escuro)}
+.tab-btn.active{background:#fff;color:var(--verde-escuro);border-color:var(--border);box-shadow:inset 0 3px 0 var(--verde)}
+.card{background:#fff;border:1px solid var(--border);border-radius:0 4px 4px 4px;padding:18px 20px;margin-bottom:20px}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar .rotulo{font-size:13px;font-weight:600;color:var(--text)}
+.toolbar .espaco{flex:1}
+select,input[type=text],input[type=date]{height:36px;padding:0 10px;border:1px solid #cfd6d1;border-radius:4px;font:inherit;font-size:13px;color:var(--text);background:#fff}
+select:focus,input:focus{outline:2px solid rgba(4,138,40,.18);border-color:var(--verde)}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:4px;font-size:13px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.btn svg.i{width:16px;height:16px}
+.btn:disabled{opacity:.55;cursor:wait}
+.btn-primaria{background:var(--verde);color:#fff}.btn-primaria:hover{background:var(--verde-escuro)}
+.btn-contorno{background:#fff;color:var(--verde-escuro);border-color:#b9d8c1}.btn-contorno:hover{background:#eef7f0}
+.btn-perigo{background:#fff;color:var(--vermelho);border-color:#f0b9ba}.btn-perigo:hover{background:#fdeeee}
+
+.lista-meta{display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:12px 14px;margin-bottom:14px;background:#f6f8f6;border:1px solid var(--border);border-radius:4px;font-size:13px}
+.lista-meta label{font-weight:600;margin-right:8px}
+.badge{display:inline-block;background:#eef7f0;color:var(--verde-escuro);border-radius:3px;padding:3px 9px;font-size:12px;font-weight:600}
+.badge:empty{display:none}
+#statusBanco{font-size:12.5px;color:var(--text-2)}
+#statusBanco.ok{color:var(--verde-escuro);font-weight:600}#statusBanco.erro{color:var(--vermelho);font-weight:600}
+
+.tabela-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:#f3f6f4;color:var(--text);text-align:left;font-weight:600;padding:10px;border-bottom:2px solid #d5ddd7;position:sticky;top:0;white-space:nowrap}
+tbody td{padding:7px 10px;border-bottom:1px solid #eef1ef;vertical-align:middle;color:var(--text-2)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:#fafcfa}
+.col-num{width:48px;text-align:center;color:#9a928c;font-variant-numeric:tabular-nums}
+.col-nome{min-width:220px;color:var(--text)!important}
 .aula-cell{display:flex;gap:6px;justify-content:center}
-.pa-btn{width:34px;height:30px;border-radius:6px;border:1.5px solid #ccc;background:#fff;cursor:pointer;font-weight:700;font-size:.85rem;color:#888}
+.pa-btn{width:34px;height:30px;border-radius:4px;border:1px solid #cfd6d1;background:#fff;font-weight:700;font-size:12.5px;color:#9a928c}
+.pa-btn:hover{border-color:#9fb3a5;color:var(--text)}
 .pa-btn.p-btn.selected{background:var(--verde);border-color:var(--verde);color:#fff}
 .pa-btn.a-btn.selected{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
-.resumo-total{font-weight:700;text-align:center}.resumo-total.alerta{color:var(--vermelho)}
-.vazio{text-align:center;color:#999;padding:30px 0}
-.badge{display:inline-block;background:#fff2dd;color:#a05a00;border-radius:20px;padding:2px 10px;font-size:.78rem;font-weight:600}
-#statusBanco.ok{color:#2e7d32;font-weight:600}#statusBanco.erro{color:#c62828;font-weight:600}
-.voltar{display:block;text-align:center;margin-top:8px;color:#8e0f45;font-weight:700;text-decoration:none}
-footer{text-align:center;color:#a99;font-size:.78rem;margin-top:30px}
+.resumo-total{font-weight:700;text-align:center;color:var(--text)}.resumo-total.alerta{color:var(--vermelho)}
+.centro{text-align:center!important}
+.vazio{text-align:center;color:#9a928c;padding:30px 0!important}
 
-/* Pop-up de escolha do curso */
-.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(47,16,39,.5);backdrop-filter:blur(4px)}
-.modal-box{width:min(480px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(47,16,39,.35);text-align:center;animation:entra .2s ease}
-@keyframes entra{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
-.modal-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#fdf3e3;font-size:28px}
-.modal-box h2{margin:0 0 6px;font-size:1.35rem;color:#5a1738}
-.modal-box>p{margin:0 0 18px;color:#76656c;font-size:.92rem;line-height:1.5}
-.mc-lista{display:grid;gap:10px;text-align:left}
-.mc-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 16px;border:1.5px solid var(--borda);border-radius:14px;background:#fff;font:inherit;color:var(--texto);cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
-.mc-item:hover,.mc-item:focus-visible{border-color:var(--laranja-escuro);background:#fff8ee;outline:0;transform:translateY(-1px)}
-.mc-item.atual{border-color:var(--laranja-escuro);background:#fdf3e3}
-.mc-item strong{display:block;font-size:1rem;color:#5a1738}
-.mc-item small{color:#8a777f}
-.mc-item .seta{font-size:22px;color:var(--laranja-escuro)}
-.mc-vazio{padding:16px;border-radius:12px;background:#fff4dc;border:1px solid #f1d9a2;color:#8a5a00;font-size:.9rem;line-height:1.5}
-.mc-vazio a{color:#8e0f45;font-weight:700}
-.mc-cancelar{width:100%;margin-top:16px;border:0;border-radius:10px;padding:12px;background:#eee5e9;color:#5a1738;font:inherit;font-weight:700;cursor:pointer}
-@media(max-width:600px){header{flex-direction:column;align-items:flex-start}.btn-trocar{margin-left:0}.col-nome{min-width:130px}table{font-size:.78rem}.pa-btn{width:28px;height:26px;font-size:.75rem}.modal-box{padding:22px 16px}}
+/* pop-up: escolha do curso */
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(20,30,22,.5)}
+.modal-box{width:min(460px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.25);border-top:4px solid var(--verde)}
+.modal-head{padding:18px 22px 6px}
+.modal-box h2{font-size:17px;font-weight:600;color:var(--verde-escuro)}
+.modal-box p{margin-top:4px;color:var(--text-2);font-size:13px;line-height:1.5}
+.mc-lista{display:grid;gap:8px;padding:12px 22px}
+.mc-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:4px;background:#fff;text-align:left}
+.mc-item:hover,.mc-item:focus-visible{border-color:var(--verde);background:#f3faf5;outline:0}
+.mc-item.atual{border-color:var(--verde);box-shadow:inset 3px 0 0 var(--verde)}
+.mc-item strong{display:block;font-size:14px;color:var(--text);font-weight:600}
+.mc-item small{font-size:12px;color:#8a8079}
+.mc-item .seta{color:var(--verde)}
+.mc-item .seta svg.i{width:16px;height:16px}
+.mc-vazio{padding:14px;border-radius:4px;background:#fff8e6;border:1px solid #f0dca8;color:#7a5a00;font-size:13px;line-height:1.5}
+.mc-vazio a{color:var(--verde-escuro);font-weight:700;text-decoration:underline}
+.modal-foot{padding:6px 22px 18px;display:flex;justify-content:flex-end}
+.mc-cancelar{height:36px;padding:0 16px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text-2);font-weight:600;font-size:13px}
+.mc-cancelar:hover{background:#f3f5f4}
+
+@media (max-width:860px){.content{padding:16px 12px 28px}.card{padding:14px 12px}}
+@media (max-width:600px){
+  .page-head{align-items:flex-start;flex-direction:column}.btn-trocar{margin-left:0}
+  .col-nome{min-width:140px}.pa-btn{width:28px;height:28px;font-size:11.5px}
+  .toolbar .espaco{display:none}.toolbar .btn{flex:1 1 auto;justify-content:center}
+}
 </style>
 </head>
 <body>
+<script>try{if(localStorage.getItem("mm_menu_fechado")==="1")document.body.classList.add("side-off")}catch(e){}</script>
 
-<header>
-  <img src="if-sjn.png" alt="Logo Mulheres Mil">
-  <div>
-    <h1>Lista de Presença </h1>
-    <p>Curso: <strong id="nomeCurso">nenhum selecionado</strong> · Educação, Cidadania e Desenvolvimento Sustentável</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19.5h11V9.5"/><path d="M10 19.5v-5h4v5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5"/><path d="M8 9.5l2 2 4-4M8 16h8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 19.5c.6-3.3 3.3-5.5 6.5-5.5s5.9 2.2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.3c1.8.8 3.1 2.6 3.5 5.2"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3.5H6.5A1.5 1.5 0 005 5v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5z"/><path d="M14 3.5v5h5M8.5 13h7M8.5 16.5h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
+  <!-- porta de saída -->
+  <symbol id="i-porta" viewBox="0 0 24 24"><path d="M13 20.5H5.5a1 1 0 01-1-1v-15a1 1 0 011-1H13"/><path d="M13 3.5v4M13 16.5v4"/><path d="M10 12h.01"/><path d="M14 12h7M18 9l3 3-3 3"/></symbol>
+  <symbol id="i-seta" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-plus2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-lixo" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6.5 7l1 12.5a1.5 1.5 0 001.5 1.4h6a1.5 1.5 0 001.5-1.4l1-12.5M9 7V4.5h6V7"/></symbol>
+  <symbol id="i-salvar" viewBox="0 0 24 24"><path d="M5 4h11l3 3v12a1 1 0 01-1 1H6a1 1 0 01-1-1z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-nuvem" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 01-.6-9 6 6 0 0111.5 1.6A3.8 3.8 0 0117.5 18.5z"/><path d="M12 11v6M9.5 14.5L12 17l2.5-2.5"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+  <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+  <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/></symbol>
+  <symbol id="i-curso" viewBox="0 0 24 24"><path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v5c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4v-5"/></symbol>
+</svg>
+
+<!-- ============ MENU LATERAL ============ -->
+<aside class="sidebar" id="sidebar" aria-label="Menu principal">
+  <div class="side-title">
+    Painel de Controle
+    <button class="side-close" id="btnFechar" type="button" title="Fechar menu" aria-label="Fechar menu"><svg class="i"><use href="#i-x"/></svg></button>
   </div>
-  <button type="button" class="btn-trocar" id="btnTrocar">🎓 Trocar curso</button>
-</header>
 
-<main>
-  <div id="conteudo" hidden>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="listas">📋 Listas de Presença</button>
-      <button class="tab-btn" data-tab="resumo">📊 Resumo de Faltas</button>
+  <div class="side-tools">
+    <label class="search">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="busca" type="search" placeholder="Encontrar opção" autocomplete="off" aria-label="Encontrar opção no menu">
+    </label>
+    <div class="tool-row">
+      <button type="button" id="btnExpandir"><svg class="i"><use href="#i-plus"/></svg>Expandir</button>
+      <button type="button" id="btnRecolher"><svg class="i"><use href="#i-minus"/></svg>Recolher</button>
+    </div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <a class="nav-link" href="./painel.html"><svg class="i"><use href="#i-home"/></svg>Início</a>
+
+    <div class="group open">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-check"/></svg>Frequência<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./lista_presenca_mulheres_mil.html" class="active" aria-current="page">Lançamento de frequência</a>
+        <a href="./gerar_lista_presenca.html">Gerar lista de presença (PDF)</a>
+      </div>
     </div>
 
-    <section id="tab-listas" class="card">
-      <div class="toolbar">
-        <label style="font-weight:600">Lista atual:</label>
-        <select id="seletorLista"></select>
-        <button class="btn btn-laranja" id="btnNova">➕ Inserir nova lista</button>
-        <button class="btn btn-ghost" id="btnExcluir">🗑️ Excluir esta lista</button>
-        <span style="flex:1"></span>
-        <button class="btn btn-verde" id="btnSalvarBanco">💾 Salvar lista de chamada</button>
-        <button class="btn btn-cinza" id="btnCarregarBanco">☁️ Carregar do banco</button>
-        <button class="btn btn-teal" id="btnPdf">⬇️ Baixar todas as listas em PDF</button>
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-users"/></svg>Alunas e Cursos<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./cadastro_alunos.html">Cadastro de alunas</a>
+        <a href="./importar_alunas.html">Importar alunas de planilha</a>
+        <a href="./cadastro_cursos.html">Cadastro de cursos</a>
       </div>
-      <div class="lista-meta">
-        <span><label>Data da lista:</label><input type="date" id="dataLista"></span>
-        <span><label>Observação/Turma:</label><input type="text" id="obsLista" placeholder="ex: Turma A - manhã"></span>
-        <span class="badge" id="badgeContagem"></span>
-        <span id="statusBanco" style="font-size:.85rem;color:#76656c"></span>
-      </div>
-      <div style="overflow-x:auto"><table>
-        <thead><tr><th class="col-num">Nº</th><th class="col-nome">Nome da Aluna</th>
-        <th style="text-align:center">1ª aula</th><th style="text-align:center">2ª aula</th><th style="text-align:center">3ª aula</th></tr></thead>
-        <tbody id="corpoTabela"></tbody>
-      </table></div>
-    </section>
+    </div>
 
-    <section id="tab-resumo" class="card" style="display:none">
-      <div class="toolbar">
-        <div style="font-weight:600">Total de faltas (A) por aluna, somando todas as listas preenchidas.</div>
-        <span style="flex:1"></span>
-        <button class="btn btn-teal" id="btnPdfResumo">⬇️ Baixar resumo em PDF</button>
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-form"/></svg>Inscrições<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./inscricao.html">Inscrição de alunas</a>
+        <a href="./download_inscricoes.html">Download das inscrições</a>
+        <a href="./conferencia_bancaria.html">Conferência de dados bancários</a>
       </div>
-      <div style="overflow-x:auto"><table>
-        <thead><tr><th class="col-num">Nº</th><th class="col-nome">Nome da Aluna</th>
-        <th style="text-align:center">Total de Aulas Registradas</th><th style="text-align:center">Total de Faltas (A)</th><th style="text-align:center">Total de Presenças (P)</th></tr></thead>
-        <tbody id="corpoResumo"></tbody>
-      </table></div>
-    </section>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-book"/></svg>Biblioteca Itinerante<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./biblioteca.html">Visão geral</a>
+        <a href="./cadastro_livros.html">Cadastro de livros</a>
+        <a href="./reserva_livros.html">Reserva de livros</a>
+        <a href="./consulta-livros.html">Consulta de livros</a>
+        <a href="./devolucao_livros.html">Devolução de livros</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-shield"/></svg>Administração<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./controle_usuarios.html">Controle de usuários</a>
+        <a href="./logs_acesso.html">Logs de acesso</a>
+      </div>
+    </div>
+
+    <p class="nav-empty" id="navVazio">Nenhuma opção encontrada.</p>
+  </nav>
+
+  <div class="side-foot">
+    <a href="./index.html" target="_blank" rel="noopener"><svg class="i"><use href="#i-globe"/></svg>Visitar site</a>
   </div>
+</aside>
+<div class="overlay" id="overlay"></div>
 
-  <a class="voltar" href="painel.html">← Voltar para o menu</a>
-</main>
+<!-- ============ ÁREA PRINCIPAL ============ -->
+<div class="main">
+  <header class="topbar">
+    <button class="burger" id="btnMenu" type="button" title="Abrir menu" aria-label="Abrir menu" aria-controls="sidebar"><svg class="i"><use href="#i-menu"/></svg></button>
+    <span class="page-title">Frequência</span>
+    <div class="top-right">
+      <span class="user-name" id="userName"></span>
+      <a class="btn-sair" href="./admin.html" id="btnSair" title="Sair do sistema" aria-label="Sair do sistema"><svg class="i"><use href="#i-porta"/></svg></a>
+    </div>
+  </header>
 
-<footer>Mulheres Mil — Educação, Cidadania e Desenvolvimento Sustentável</footer>
+  <main class="content">
+    <p class="crumb">Página inicial / Frequência</p>
+    <div class="page-head">
+      <div>
+        <h1>Lançamento de Frequência</h1>
+        <p class="curso-atual">Curso: <strong id="nomeCurso">nenhum selecionado</strong></p>
+      </div>
+      <button type="button" class="btn-trocar" id="btnTrocar"><svg class="i"><use href="#i-curso"/></svg>Trocar curso</button>
+    </div>
+
+    <div id="conteudo" hidden>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="listas" type="button"><svg class="i"><use href="#i-lista"/></svg>Listas de presença</button>
+        <button class="tab-btn" data-tab="resumo" type="button"><svg class="i"><use href="#i-grafico"/></svg>Resumo de faltas</button>
+      </div>
+
+      <section id="tab-listas" class="card">
+        <div class="toolbar">
+          <label class="rotulo" for="seletorLista">Lista atual</label>
+          <select id="seletorLista"></select>
+          <button class="btn btn-contorno" id="btnNova" type="button"><svg class="i"><use href="#i-plus2"/></svg>Nova lista</button>
+          <button class="btn btn-perigo" id="btnExcluir" type="button"><svg class="i"><use href="#i-lixo"/></svg>Excluir lista</button>
+          <span class="espaco"></span>
+          <button class="btn btn-primaria" id="btnSalvarBanco" type="button"><svg class="i"><use href="#i-salvar"/></svg>Salvar chamada</button>
+          <button class="btn btn-contorno" id="btnCarregarBanco" type="button"><svg class="i"><use href="#i-nuvem"/></svg>Carregar do banco</button>
+          <button class="btn btn-contorno" id="btnPdf" type="button"><svg class="i"><use href="#i-pdf"/></svg>Baixar PDF</button>
+        </div>
+        <div class="lista-meta">
+          <span><label for="dataLista">Data da lista</label><input type="date" id="dataLista"></span>
+          <span><label for="obsLista">Observação / turma</label><input type="text" id="obsLista" placeholder="ex.: Turma A - manhã"></span>
+          <span class="badge" id="badgeContagem"></span>
+          <span id="statusBanco"></span>
+        </div>
+        <div class="tabela-wrap"><table>
+          <thead><tr><th class="col-num">Nº</th><th class="col-nome">Nome da aluna</th>
+          <th class="centro">1ª aula</th><th class="centro">2ª aula</th><th class="centro">3ª aula</th></tr></thead>
+          <tbody id="corpoTabela"></tbody>
+        </table></div>
+      </section>
+
+      <section id="tab-resumo" class="card" style="display:none">
+        <div class="toolbar">
+          <span class="rotulo">Total de faltas (A) por aluna, somando todas as listas preenchidas.</span>
+          <span class="espaco"></span>
+          <button class="btn btn-contorno" id="btnPdfResumo" type="button"><svg class="i"><use href="#i-pdf"/></svg>Baixar resumo em PDF</button>
+        </div>
+        <div class="tabela-wrap"><table>
+          <thead><tr><th class="col-num">Nº</th><th class="col-nome">Nome da aluna</th>
+          <th class="centro">Aulas registradas</th><th class="centro">Faltas (A)</th><th class="centro">Presenças (P)</th></tr></thead>
+          <tbody id="corpoResumo"></tbody>
+        </table></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>Programa Mulheres Mil · IF Sudeste MG – Campus São João Nepomuceno</span>
+    <span>Educação, Cidadania e Desenvolvimento Sustentável</span>
+  </footer>
+</div>
 
 <!-- Pop-up: escolha do curso -->
 <div id="modalCurso" class="modal" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mcTitulo">
-    <div class="modal-icon">🎓</div>
-    <h2 id="mcTitulo">Escolha o curso</h2>
-    <p>Selecione o curso para lançar a presença. As alunas cadastradas nele serão carregadas.</p>
+    <div class="modal-head">
+      <h2 id="mcTitulo">Escolha o curso</h2>
+      <p>Selecione o curso para lançar a presença. As alunas cadastradas nele serão carregadas.</p>
+    </div>
     <div id="mcLista" class="mc-lista"></div>
-    <button type="button" class="mc-cancelar" id="mcCancelar">Voltar ao menu</button>
+    <div class="modal-foot"><button type="button" class="mc-cancelar" id="mcCancelar">Voltar ao painel</button></div>
   </div>
 </div>
 
+<script type="module" src="./Assets/js/painel-layout.js"></script>
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, onValue, get, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
@@ -323,7 +467,7 @@ async function carregarBanco() {
 
 /* ---------- escolha do curso (pop-up) ---------- */
 async function abrirModalCurso() {
-  $("mcCancelar").textContent = CURSO_ID ? "Cancelar" : "Voltar ao menu";
+  $("mcCancelar").textContent = CURSO_ID ? "Cancelar" : "Voltar ao painel";
   $("mcLista").innerHTML = '<div class="mc-vazio" style="background:#faf5f7;border-color:#eadbe3;color:#76656c">Carregando cursos...</div>';
   $("modalCurso").hidden = false;
   try {
@@ -337,7 +481,7 @@ async function abrirModalCurso() {
     $("mcLista").innerHTML = ids.map((id) => {
       const n = Object.values(porCurso[id] || {}).filter((a) => a && a.nome).length;
       return `<button type="button" class="mc-item${id === CURSO_ID ? " atual" : ""}" data-id="${esc(id)}">
-        <span><strong>${esc(cursos[id])}</strong><small>${n} aluna(s) cadastrada(s)</small></span><span class="seta">→</span></button>`;
+        <span><strong>${esc(cursos[id])}</strong><small>${n} aluna(s) cadastrada(s)</small></span><span class="seta"><svg class="i"><use href="#i-seta"/></svg></span></button>`;
     }).join("");
     $("mcLista").querySelectorAll(".mc-item").forEach((b) => b.onclick = () => escolherCurso(b.dataset.id, cursos[b.dataset.id]));
     const primeiro = $("mcLista").querySelector(".mc-item"); if (primeiro) primeiro.focus();
@@ -347,7 +491,7 @@ async function abrirModalCurso() {
   }
 }
 function fecharModalCurso() {
-  if (!CURSO_ID) { location.href = "menu.html"; return; }
+  if (!CURSO_ID) { location.href = "painel.html"; return; }
   $("modalCurso").hidden = true;
 }
 
