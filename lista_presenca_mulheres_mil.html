@@ -289,6 +289,7 @@ tbody tr:hover td{background:#fafcfa}
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, onValue, get, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./Assets/js/cursos.js";
+import { sincronizarInscricoes } from "./Assets/js/alunas.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -471,7 +472,10 @@ async function abrirModalCurso() {
   $("mcLista").innerHTML = '<div class="mc-vazio" style="background:#faf5f7;border-color:#eadbe3;color:#76656c">Carregando cursos...</div>';
   $("modalCurso").hidden = false;
   try {
-    const [cursos, snap] = await Promise.all([carregarCursos(false), get(ref(db, "alunas")).catch(() => null)]);
+    const cursos = await carregarCursos(false);
+    // traz para a lista quem foi inscrita em inscricao.html e ainda não está no curso
+    try { await sincronizarInscricoes(db, cursos); } catch (e) { console.error("[frequencia] sincronizar inscrições:", e); }
+    const snap = await get(ref(db, "alunas")).catch(() => null);
     const porCurso = (snap && snap.val()) || {};
     const ids = Object.keys(cursos).sort((a, b) => cursos[a].localeCompare(cursos[b], "pt-BR"));
     if (!ids.length) {
