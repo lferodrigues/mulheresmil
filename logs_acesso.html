@@ -37,6 +37,7 @@ td{padding:9px 12px;border-top:1px solid #f0e6ea;vertical-align:top}
 .tag.login{background:#e8f5e9;color:#2e7d32}.tag.logout{background:#eef0f2;color:#6b6f73}.tag.cadastro{background:#fff4dc;color:#b7791f}.tag.pagina{background:#e3f2fd;color:#1565c0}.tag.clique{background:#f3e5f5;color:#7b1fa2}.tag.selecao{background:#e0f7fa;color:#00838f}td small{color:#8a777f;word-break:break-word}
 .vazio{text-align:center;padding:30px;color:#8a777f}
 .erro{color:#c62828;font-weight:700}
+.ok{color:#2e7d32;font-weight:700}
 .did{font-family:Consolas,monospace;font-size:12px;white-space:nowrap}
 /* abas */
 .abas{display:flex;gap:6px;margin-top:20px;border-bottom:2px solid #eadbe3;flex-wrap:wrap}
@@ -46,6 +47,13 @@ td{padding:9px 12px;border-top:1px solid #f0e6ea;vertical-align:top}
 .filtros.v{grid-template-columns:1fr auto}
 details summary{cursor:pointer;color:#8e0f45;font-weight:700}
 details small{display:block;margin-top:3px}
+/* bloqueio de visitantes */
+.b-bloq,.b-desbloq{border:0;border-radius:9px;padding:8px 12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+.b-bloq{background:#fdeceb;color:#c62828}.b-bloq:hover{background:#f9d5d2}
+.b-desbloq{background:#e8f5e9;color:#2e7d32;margin-top:6px}.b-desbloq:hover{background:#d4ecd6}
+.b-bloq:disabled,.b-desbloq:disabled{opacity:.5;cursor:wait}
+.tag-bloq{display:inline-block;font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px;background:#fdeceb;color:#c62828;white-space:nowrap}
+tr.linha-bloqueada{background:#fff8f7}
 @media(max-width:700px){.filtros.v{grid-template-columns:1fr}}
 a.voltar{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
 footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
@@ -109,7 +117,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 
     <!-- aba: visitas à página pública (index.html) -->
     <div id="painelVisitas" hidden>
-      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, ID do aparelho, dispositivo, cliques e tempo em tela.</p>
+      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, ID do aparelho, dispositivo, cliques e tempo em tela. Use <strong>Bloquear 30 min</strong> para impedir temporariamente o acesso de um aparelho.</p>
       <div class="filtros v">
         <label>Buscar (IP, ID do aparelho, dispositivo, sistema ou clique)<input id="vBusca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
         <button type="button" class="btn cinza" id="vAtualizar">↻ Atualizar</button>
@@ -117,7 +125,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
       <div class="status-bar"><span id="vStatus">Carregando...</span><span id="vContador">0 visitas</span></div>
       <div class="tabela">
         <table>
-          <thead><tr><th>Data/hora</th><th>IP</th><th>ID do aparelho</th><th>Dispositivo</th><th>Página</th><th>Cliques</th><th>Tempo em tela</th></tr></thead>
+          <thead><tr><th>Data/hora</th><th>IP</th><th>ID do aparelho</th><th>Dispositivo</th><th>Página</th><th>Cliques</th><th>Tempo em tela</th><th>Acesso</th></tr></thead>
           <tbody id="vCorpo"></tbody>
         </table>
         <div id="vVazio" class="vazio" hidden>Nenhuma visita registrada.</div>
@@ -154,8 +162,8 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 </div>
 
 <script type="module">
-import { db } from "./Assets/js/firebase-config.js";
-import { ref, get, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { auth, db } from "./Assets/js/firebase-config.js";
+import { ref, get, set, remove, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -179,8 +187,11 @@ document.addEventListener("click", (e) => {
 const SAL = "mm-logs-v1";
 const HASH = "8795b37d00310c22034ac0f66108d28716737b7c814ab602db0f2b175b522dca";
 
+const BLOQUEIO_MIN = 30;   // duração do bloqueio de um aparelho
+
 let logs = [], filtrados = [], tentativas = 0, bloqueadoAte = 0;
 let visitas = [], visFiltradas = [], visCarregado = false;
+let bloqueios = {};        // bloqueios/{chave} = { ate, ip, did, por, criadoEm }
 
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const norm = (t) => String(t || "").trim().toLocaleLowerCase("pt-BR");
@@ -318,6 +329,70 @@ function agruparVisitas(eventos) {
   return lista.sort((a, b) => b.quando - a.quando);
 }
 
+/* ---------- bloqueio de aparelhos ---------- */
+// Mesma chave usada por bloqueio-site.js nas páginas públicas: "d_" + ID do aparelho
+const chaveDid = (did) => "d_" + String(did).replace(/[.#$\[\]\/\s]/g, "_");
+const bloqueioAtivo = (did) => {
+  const b = did ? bloqueios[chaveDid(did)] : null;
+  return b && Number(b.ate) > Date.now() ? b : null;
+};
+function fmtRestante(seg) {
+  seg = Math.max(0, seg);
+  return String(Math.floor(seg / 60)).padStart(2, "0") + ":" + String(seg % 60).padStart(2, "0");
+}
+
+async function carregarBloqueios() {
+  try {
+    const snap = await get(ref(db, "bloqueios"));
+    bloqueios = snap.val() || {};
+  } catch (e) {
+    console.error("[bloqueios] erro ao ler:", e);
+    bloqueios = {};
+  }
+}
+
+function msgBloqueio(texto, tipo) {
+  $("vStatus").className = tipo || ""; $("vStatus").textContent = texto;
+}
+function erroBloqueio(e) {
+  console.error(e);
+  const perm = String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION");
+  msgBloqueio(perm
+    ? "Sem permissão para gravar em 'bloqueios'. Confira as regras do Realtime Database (veja as instruções) e se você está logado."
+    : "Não foi possível concluir. Verifique a conexão e tente novamente.", "erro");
+}
+
+async function bloquearAparelho(did, ip, botao) {
+  if (!did) return;
+  if (!confirm("Bloquear este aparelho por " + BLOQUEIO_MIN + " minutos?\n\nID: " + did + (ip ? "\nIP: " + ip : "") +
+    "\n\nEle não conseguirá usar o site (index.html) até o bloqueio acabar ou ser desfeito.")) return;
+  botao.disabled = true;
+  try {
+    const agora = Date.now();
+    const dados = {
+      ate: agora + BLOQUEIO_MIN * 60 * 1000,
+      did, ip: ip || "",
+      por: (auth.currentUser && auth.currentUser.email) || "",
+      criadoEm: agora
+    };
+    await set(ref(db, "bloqueios/" + chaveDid(did)), dados);
+    bloqueios[chaveDid(did)] = dados;
+    msgBloqueio("🚫 Aparelho " + did + " bloqueado por " + BLOQUEIO_MIN + " minutos.", "ok");
+  } catch (e) { erroBloqueio(e); }
+  filtrarVisitas();
+}
+
+async function desbloquearAparelho(did, botao) {
+  if (!did) return;
+  botao.disabled = true;
+  try {
+    await remove(ref(db, "bloqueios/" + chaveDid(did)));
+    delete bloqueios[chaveDid(did)];
+    msgBloqueio("✓ Aparelho " + did + " desbloqueado.", "ok");
+  } catch (e) { erroBloqueio(e); }
+  filtrarVisitas();
+}
+
 async function carregarVisitas() {
   $("vStatus").className = ""; $("vStatus").textContent = "Carregando visitas...";
   try {
@@ -334,6 +409,7 @@ async function carregarVisitas() {
       : "Não foi possível carregar as visitas (" + (e.code || e.message) + ").";
     visitas = [];
   }
+  await carregarBloqueios();
   filtrarVisitas();
 }
 
@@ -357,16 +433,45 @@ function filtrarVisitas() {
         v.cliques.map((c) => `<small>${esc(c.acao)} <em>(aos ${esc(fmtTempo(c.t))})</em></small>`).join("") +
         `</details>`
       : "—";
-    return `<tr>
+
+    const b = bloqueioAtivo(v.did);
+    let acesso;
+    if (!v.did) acesso = "—";
+    else if (b) acesso = `<span class="tag-bloq">🚫 Bloqueado · <span data-ate="${Number(b.ate)}"></span></span><br>` +
+      `<button type="button" class="b-desbloq" data-did="${esc(v.did)}">🔓 Desbloquear</button>`;
+    else acesso = `<button type="button" class="b-bloq" data-did="${esc(v.did)}" data-ip="${esc(v.ip)}">🚫 Bloquear ${BLOQUEIO_MIN} min</button>`;
+
+    return `<tr${b ? ' class="linha-bloqueada"' : ""}>
       <td>${esc(fmtData(v.quando))}</td>
       <td>${esc(v.ip || "—")}</td>
       <td class="did">${esc(v.did || "—")}</td>
       <td>${esc(v.dispositivo || "—")}${detalhes ? `<br><small>${esc(detalhes)}</small>` : ""}${v.origem ? `<br><small>Veio de: ${esc(v.origem)}</small>` : ""}</td>
       <td>${esc(v.pagina || "")}</td>
       <td>${cliques}</td>
-      <td>${v.temSaida ? esc(fmtTempo(v.tempo)) : "—"}</td></tr>`;
+      <td>${v.temSaida ? esc(fmtTempo(v.tempo)) : "—"}</td>
+      <td>${acesso}</td></tr>`;
   }).join("");
+  atualizarContagem();
 }
+
+// Atualiza a contagem regressiva dos bloqueios; quando um termina, a linha volta a mostrar "Bloquear"
+function atualizarContagem() {
+  let expirou = false;
+  document.querySelectorAll("[data-ate]").forEach((el) => {
+    const resta = Math.ceil((Number(el.dataset.ate) - Date.now()) / 1000);
+    if (resta <= 0) expirou = true;
+    el.textContent = fmtRestante(resta);
+  });
+  return expirou;
+}
+setInterval(() => { if (atualizarContagem()) filtrarVisitas(); }, 1000);
+
+$("vCorpo").addEventListener("click", (e) => {
+  const bloq = e.target.closest(".b-bloq");
+  if (bloq) return bloquearAparelho(bloq.dataset.did, bloq.dataset.ip, bloq);
+  const desb = e.target.closest(".b-desbloq");
+  if (desb) return desbloquearAparelho(desb.dataset.did, desb);
+});
 
 $("vBusca").oninput = filtrarVisitas;
 $("vAtualizar").onclick = carregarVisitas;
