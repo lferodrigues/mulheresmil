@@ -123,7 +123,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 
     <!-- aba: visitas à página pública (index.html) -->
     <div id="painelVisitas" hidden>
-      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, ID do aparelho, dispositivo, cliques e tempo em tela. Use <strong>Bloquear 30 min</strong> para impedir temporariamente o acesso de um aparelho.</p>
+      <p style="margin:14px 0 0">Visitantes da página inicial (<strong>index.html</strong>): IP, ID do aparelho, dispositivo, cliques e tempo em tela. Use <strong>Bloquear acesso</strong> para impedir o acesso de um aparelho. O bloqueio é <strong>definitivo</strong> e só termina quando você clicar em <strong>Desbloquear</strong>.</p>
       <div class="filtros v">
         <label>Buscar (IP, ID do aparelho, dispositivo, sistema ou clique)<input id="vBusca" type="search" placeholder="Digite para filtrar" autocomplete="off"></label>
         <button type="button" class="btn cinza" id="vAtualizar">↻ Atualizar</button>
@@ -172,7 +172,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
   <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="tBloq">
     <div class="modal-icon" style="background:#fdeceb">🚫</div>
     <h2 id="tBloq">Bloquear este aparelho?</h2>
-    <p>Você tem certeza que deseja bloquear o acesso deste aparelho ao site por <strong>30 minutos</strong>?</p>
+    <p>Você tem certeza que deseja bloquear o acesso deste aparelho ao site? O bloqueio será <strong>definitivo</strong>, até que um administrador o desbloqueie.</p>
     <div class="dados">
       <div><span>ID do aparelho</span><strong id="bDid"></strong></div>
       <div><span>IP</span><strong id="bIp"></strong></div>
@@ -211,7 +211,8 @@ document.addEventListener("click", (e) => {
 const SAL = "mm-logs-v1";
 const HASH = "8795b37d00310c22034ac0f66108d28716737b7c814ab602db0f2b175b522dca";
 
-const BLOQUEIO_MIN = 30;   // duração do bloqueio de um aparelho
+const BLOQUEIO_PERMANENTE = 9000000000000;   // 'ate' gigante (ano 2255): bloqueio sem prazo
+const ehPermanente = (b) => Number(b && b.ate) >= 4000000000000;
 
 let logs = [], filtrados = [], tentativas = 0, bloqueadoAte = 0;
 let visitas = [], visFiltradas = [], visCarregado = false;
@@ -423,14 +424,15 @@ async function bloquearAparelho(did, ip) {
   try {
     const agora = Date.now();
     const dados = {
-      ate: agora + BLOQUEIO_MIN * 60 * 1000,
+      ate: BLOQUEIO_PERMANENTE,
+      permanente: true,
       did, ip: ip || "",
       por: (auth.currentUser && auth.currentUser.email) || "",
       criadoEm: agora
     };
     await set(ref(db, "bloqueios/" + chaveDid(did)), dados);
     bloqueios[chaveDid(did)] = dados;
-    msgBloqueio("🚫 Aparelho " + did + " bloqueado por " + BLOQUEIO_MIN + " minutos.", "ok");
+    msgBloqueio("🚫 Aparelho " + did + " bloqueado até ser desbloqueado.", "ok");
   } catch (e) { erroBloqueio(e); }
   filtrarVisitas();
 }
@@ -497,9 +499,9 @@ function filtrarVisitas() {
     const b = bloqueioAtivo(v.did);
     let acesso;
     if (!v.did) acesso = "—";
-    else if (b) acesso = `<span class="tag-bloq">🚫 Bloqueado · <span data-ate="${Number(b.ate)}"></span></span><br>` +
+    else if (b) acesso = `<span class="tag-bloq">🚫 Bloqueado${ehPermanente(b) ? " · até desbloquear" : ` · <span data-ate="${Number(b.ate)}"></span>`}</span><br>` +
       `<button type="button" class="b-desbloq" data-did="${esc(v.did)}">🔓 Desbloquear</button>`;
-    else acesso = `<button type="button" class="b-bloq" data-did="${esc(v.did)}" data-ip="${esc(v.ip)}">🚫 Bloquear ${BLOQUEIO_MIN} min</button>`;
+    else acesso = `<button type="button" class="b-bloq" data-did="${esc(v.did)}" data-ip="${esc(v.ip)}">🚫 Bloquear acesso</button>`;
 
     return `<tr${b ? ' class="linha-bloqueada"' : ""}>
       <td>${esc(fmtData(v.quando))}</td>
