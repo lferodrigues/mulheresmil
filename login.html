@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
+<title>Login da Inscrição — Mulheres Mil</title>
+<style>
+:root{--laranja:#f5a623;--laranja-escuro:#e07b1a;--vermelho:#e04b3a;--texto:#2c2620;--borda:#eadfcd}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--texto);background:linear-gradient(135deg,#f5a623,#e8871e 55%,#e04b3a);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border-radius:16px;box-shadow:0 10px 35px rgba(0,0,0,.25);padding:36px 32px;width:100%;max-width:380px;text-align:center}.login-card img{max-width:220px;margin-bottom:18px}.login-card h1{font-size:1.15rem;margin:0 0 4px}.subtitulo{margin:0 0 22px;font-size:.85rem;color:#8a7a63}.campo{text-align:left;margin-bottom:14px}.campo label{display:block;font-size:.82rem;font-weight:600;margin-bottom:5px;color:#5a4a30}.campo input{width:100%;padding:11px 12px;border-radius:8px;border:1.5px solid var(--borda);font-size:.95rem;font-family:inherit}.campo input:focus{outline:none;border-color:var(--laranja)}.btn-entrar{width:100%;margin-top:8px;padding:12px;border:0;border-radius:8px;background:var(--laranja-escuro);color:#fff;font-weight:700;font-size:.95rem;cursor:pointer}.btn-entrar:disabled{opacity:.65;cursor:wait}.erro{margin-top:14px;background:#fdeceb;color:var(--vermelho);border:1px solid #f4b8b0;padding:9px 12px;border-radius:8px;font-size:.85rem;display:none}footer{margin-top:22px;font-size:.72rem;color:#b7a689}
+.campo-senha{position:relative}.campo-senha input{padding-right:44px}
+.btn-olho{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:#8a7a63;cursor:pointer}
+.btn-olho:hover{background:#fdf3e3;color:var(--laranja-escuro)}
+.btn-olho svg{width:20px;height:20px;display:block}
+.btn-olho .icone-oculto{display:none}
+.btn-olho.ativo .icone-visivel{display:none}
+.btn-olho.ativo .icone-oculto{display:block}
+</style>
+</head>
+<body>
+<div class="login-card">
+<img src="if-sjn.png" alt="Logo Mulheres Mil">
+<h1>Acesso à Inscrição de Alunas</h1>
+<p class="subtitulo">Educação, Cidadania e Desenvolvimento Sustentável</p>
+<form id="formLogin">
+<div class="campo"><label for="usuario">E-mail</label><input type="email" id="usuario" autocomplete="username" placeholder="seu@email.com" required></div>
+<div class="campo">
+  <label for="senha">Senha</label>
+  <div class="campo-senha">
+    <input type="password" id="senha" autocomplete="current-password" placeholder="••••••••" required>
+    <button type="button" class="btn-olho" id="btnOlho" aria-label="Mostrar senha" title="Mostrar senha">
+      <svg class="icone-visivel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg class="icone-oculto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 5.06-5.94"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a19.82 19.82 0 0 1-3.17 4.19"/><path d="M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    </button>
+  </div>
+</div>
+<button type="submit" class="btn-entrar" id="btnEntrar">Entrar</button>
+<div class="erro" id="msgErro"></div>
+</form>
+<footer>Mulheres Mil — Acesso restrito à inscrição</footer>
+</div>
+
+<script type="module">
+import { auth } from "./Assets/js/firebase-config-inscricao.js";
+import { signInWithEmailAndPassword, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+const $ = (id) => document.getElementById(id);
+const DESTINO = "inscricao_alunas.html";
+
+const MENSAGENS = {
+  "auth/invalid-credential": "E-mail ou senha incorretos.",
+  "auth/invalid-email": "E-mail inválido.",
+  "auth/user-disabled": "Este usuário está desativado.",
+  "auth/too-many-requests": "Muitas tentativas. Aguarde alguns minutos.",
+  "auth/network-request-failed": "Sem conexão com a internet.",
+  "auth/unauthorized-domain": "Este domínio não está autorizado no Firebase (Authentication > Settings > Authorized domains).",
+  "auth/operation-not-allowed": "Login por e-mail/senha não está ativado no Firebase."
+};
+
+$("btnOlho").addEventListener("click", () => {
+  const mostrar = $("senha").type === "password";
+  $("senha").type = mostrar ? "text" : "password";
+  $("btnOlho").classList.toggle("ativo", mostrar);
+  $("btnOlho").title = mostrar ? "Ocultar senha" : "Mostrar senha";
+  $("senha").focus();
+});
+
+// já logado na inscrição? vai direto para o formulário
+let entrando = false;
+onAuthStateChanged(auth, (user) => { if (user && !entrando) location.replace(DESTINO); });
+
+$("formLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("msgErro").style.display = "none";
+  $("btnEntrar").disabled = true;
+  entrando = true;
+  try {
+    await signInWithEmailAndPassword(auth, $("usuario").value.trim(), $("senha").value);
+    location.replace(DESTINO);
+  } catch (err) {
+    entrando = false;
+    console.error(err);
+    $("msgErro").textContent = MENSAGENS[err.code] || ("Não foi possível entrar (" + (err.code || err.message) + ").");
+    $("msgErro").style.display = "block";
+    $("btnEntrar").disabled = false;
+  }
+});
+</script>
+<script src="./Assets/js/script.js"></script>
+</body>
+</html>
