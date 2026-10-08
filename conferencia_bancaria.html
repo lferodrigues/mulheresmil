@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="Logo-Mulheres-Mil.jpg">
+<title>Conferência de Dados Bancários | Mulheres Mil</title>
+<script type="module" src="./Assets/js/auth-guard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#fff7f0;font-family:"Segoe UI",Arial,sans-serif;color:#3b2931}
+main{min-height:95vh;display:grid;place-items:center}
+[hidden]{display:none!important}
+.card{width:min(820px,100%);background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px #4b14251a;border:1px solid #eadbe3}
+.logo{display:block;width:180px;max-width:70%;margin:auto;border-radius:8px}
+hr{border:0;height:3px;background:linear-gradient(90deg,#f5a623,#c2185b,#8e0f45);margin:20px 0}
+.badge{display:inline-block;background:#f9e4ee;color:#8e0f45;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:800}
+h1{color:#5a1738;margin:10px 0 5px}
+p{color:#76656c}
+small{color:#8a777f}
+label{display:block;font-weight:700;font-size:14px}
+input,select{display:block;width:100%;padding:12px;border:1px solid #dbcbd3;border-radius:10px;margin-top:6px;font:inherit;font-weight:400;background:#fff}
+input:focus,select:focus{outline:2px solid #c2185b33;border-color:#c2185b}
+input[readonly]{background:#faf5f7;color:#8a777f}
+.invalido{border-color:#c62828!important;background:#fdeceb!important}
+.req::after{content:" *";color:#c62828}
+.campo-pesquisa{position:relative;margin-top:18px}
+.lista-sugestoes{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:1px solid #dbcbd3;border-radius:0 0 10px 10px;box-shadow:0 10px 22px #4b14251a;max-height:280px;overflow:auto;margin-top:-6px}
+.sug{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:0;border-bottom:1px solid #eadbe3;background:#fff;color:#3b2931;text-align:left;font:inherit;cursor:pointer}
+.sug:hover,.sug:focus{background:#f9e4ee;outline:0}
+.sug strong{color:#5a1738}
+.sug span{color:#8a777f;font-size:12px;white-space:nowrap}
+.sem-resultado{padding:12px 14px;color:#8a777f;font-size:13px}
+#status{display:block;margin-top:12px;font-size:13px}
+#status.ok{color:#2e7d32;font-weight:700}
+#status.erro{color:#c62828;font-weight:700}
+.resumo-aluna{margin-top:18px;padding:14px;background:#faf5f7;border:1px solid #eadbe3;border-radius:12px;display:grid;grid-template-columns:1fr auto;gap:10px}
+.resumo-aluna span{display:block;color:#8a777f;font-size:11px;margin-bottom:3px}
+.situacao{align-self:center;font-size:12px;font-weight:800;padding:5px 12px;border-radius:20px;white-space:nowrap}
+.situacao.ok{background:#e8f5e9;color:#2e7d32}.situacao.sem{background:#fff4dc;color:#b7791f}
+.grade{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.full{grid-column:1/-1}
+.buttons{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.buttons button,.modal-actions button{flex:1;min-width:130px;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;cursor:pointer;color:#fff}
+.buttons button:disabled,.modal-actions button:disabled{opacity:.45;cursor:not-allowed}
+#salvar,#modalConfirmar{background:#4caf50}
+#excluir{background:#c62828}
+#pdfAluna{background:#8e0f45}
+#pdfTodas{display:block;width:100%;margin-top:22px;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;cursor:pointer;color:#fff;background:#5d6b7a}
+#pdfTodas:disabled{opacity:.45;cursor:not-allowed}
+#fechar{background:#eee5e9;color:#5a1738}
+a.voltar{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
+footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:#2f102766;backdrop-filter:blur(4px)}
+.modal-box{width:min(500px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px #2f102655}
+.modal-icon{width:52px;height:52px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#e8f5e9;color:#2e7d32;font-size:26px;font-weight:800}
+.modal-box h2{text-align:center;margin:0 0 8px;font-size:24px;color:#5a1738}
+.modal-box>p{text-align:center;margin:0 0 20px}
+.modal-data{display:grid;gap:9px}
+.modal-data div{padding:11px 13px;background:#faf5f7;border:1px solid #eadbe3;border-radius:10px}
+.modal-data span{display:block;color:#8a777f;font-size:11px;margin-bottom:3px}
+.modal-data strong{display:block;overflow-wrap:anywhere}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+#modalVoltar{background:#eee5e9;color:#5a1738}
+@media(max-width:650px){body{padding:8px}.card{padding:20px 15px}.grade{grid-template-columns:1fr}.resumo-aluna{grid-template-columns:1fr}.buttons,.modal-actions{flex-direction:column}}
+</style>
+</head>
+<body>
+<main>
+<section class="card">
+  <img src="if-sjn.png" alt="Mulheres Mil" class="logo">
+  <hr>
+  <span class="badge">PAINEL DO ADMINISTRADOR(A)</span>
+  <h1>Conferência de Dados Bancários</h1>
+  <p>Digite o nome ou o CPF da aluna para conferir, acrescentar, editar ou excluir os dados bancários. Depois, baixe em PDF.</p>
+
+  <label class="campo-pesquisa">Buscar aluna (nome ou CPF)
+    <input id="busca" type="search" placeholder="Digite o nome ou o CPF..." autocomplete="off">
+    <div id="sug" class="lista-sugestoes" hidden></div>
+  </label>
+  <small id="status"></small>
+
+  <div id="area" hidden>
+    <div class="resumo-aluna">
+      <div><span>Nome da aluna</span><strong id="rNome"></strong>
+        <div style="margin-top:8px"><span>CPF</span><strong id="rCpf"></strong></div></div>
+      <div class="situacao" id="rSit"></div>
+    </div>
+
+    <div class="grade">
+      <label class="full"><span class="req">Nome do titular da conta</span><input id="titular" maxlength="100" autocomplete="off"></label>
+      <label><span class="req">Banco</span><input id="banco" maxlength="60" placeholder="Ex.: Caixa Econômica Federal" autocomplete="off"></label>
+      <label><span class="req">Tipo de conta</span>
+        <select id="tipoConta"><option value="">Selecione</option><option>Conta corrente</option><option>Conta poupança</option><option>Poupança social digital</option></select></label>
+      <label><span class="req">Agência</span><input id="agencia" maxlength="10" autocomplete="off"></label>
+      <label><span class="req">Conta (com dígito)</span><input id="conta" maxlength="20" autocomplete="off"></label>
+      <label class="full">Chave PIX (opcional)<input id="pix" maxlength="80" autocomplete="off"></label>
+    </div>
+
+    <div class="buttons">
+      <button id="salvar" type="button">Salvar</button>
+      <button id="excluir" type="button">Excluir dados</button>
+      <button id="pdfAluna" type="button">⬇️ PDF desta aluna</button>
+      <button id="fechar" type="button">Nova busca</button>
+    </div>
+  </div>
+
+  <button id="pdfTodas" type="button" disabled>⬇️ Baixar PDF de todas as alunas (nome, CPF e dados bancários)</button>
+
+  <a class="voltar" href="painel.html">← Voltar para a Tela Inicial</a>
+  <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
+</section>
+</main>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-box">
+    <div id="modalIcon" class="modal-icon">✓</div>
+    <h2 id="modalTitulo">Confirmar</h2>
+    <p id="modalTexto"></p>
+    <div id="modalResumo" class="modal-data"></div>
+    <div class="modal-actions">
+      <button id="modalVoltar" type="button">Voltar</button>
+      <button id="modalConfirmar" type="button">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "./Assets/js/firebase-config.js";
+import { ref, update, remove, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const limpar = (v) => String(v ?? "").replace(/\s+/g, " ").trim();
+const semAcento = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const soNum = (v) => String(v || "").replace(/\D/g, "");
+const cmp = (a, b) => String(a).localeCompare(String(b), "pt-BR", { sensitivity: "base" });
+const CAMPOS = ["titular", "banco", "tipoConta", "agencia", "conta", "pix"];
+const OBRIG = ["titular", "banco", "tipoConta", "agencia", "conta"];
+
+let alunas = [];     // [{ id, nome, cpf, banc }]
+let atual = null;    // aluna selecionada
+let acao = null;     // "salvar" | "excluir"
+
+function aviso(t, tipo) { $("status").textContent = t || ""; $("status").className = tipo || ""; }
+function erro(e) {
+  console.error(e);
+  aviso(String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION")
+    ? "Sem permissão no banco de dados. Confira o login e as regras do nó 'inscricoes'."
+    : "Não foi possível concluir a operação. Verifique a conexão e tente novamente.", "erro");
+}
+const temBanco = (a) => a.banc && (a.banc.banco || a.banc.conta || a.banc.agencia);
+
+/* ---------- dados em tempo real ---------- */
+onValue(ref(db, "inscricoes"), (snap) => {
+  alunas = Object.entries(snap.val() || {})
+    .filter(([, v]) => v && v.identificacao)
+    .map(([id, v]) => ({ id, nome: v.identificacao.nome || "", cpf: v.identificacao.cpf || id, banc: v.bancarios || null }))
+    .sort((a, b) => cmp(a.nome, b.nome));
+  $("pdfTodas").disabled = !alunas.length;
+  if (atual) {                       // mantém a aluna aberta atualizada
+    const nova = alunas.find((a) => a.id === atual.id);
+    if (nova) { atual = nova; resumo(); } else fechar();
+  }
+  if (!alunas.length) aviso("Nenhuma inscrição registrada ainda. Cadastre em 'Inscrição de Alunas'.");
+  sugerir();
+}, erro);
+
+/* ---------- busca ---------- */
+function sugerir() {
+  const q = limpar($("busca").value), box = $("sug");
+  if (!q || atual) { box.hidden = true; return; }
+  const qt = semAcento(q), qn = soNum(q);
+  const achadas = alunas.filter((a) => semAcento(a.nome).includes(qt) || (qn && soNum(a.cpf).includes(qn))).slice(0, 20);
+  box.innerHTML = achadas.length ? "" : '<div class="sem-resultado">Nenhuma aluna encontrada.</div>';
+  achadas.forEach((a) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "sug";
+    b.innerHTML = `<strong>${esc(a.nome)}</strong><span>${esc(a.cpf)} · ${temBanco(a) ? "com dados" : "sem dados"}</span>`;
+    b.onclick = () => abrir(a);
+    box.appendChild(b);
+  });
+  box.hidden = false;
+}
+$("busca").oninput = sugerir;
+
+/* ---------- ficha da aluna ---------- */
+function resumo() {
+  $("rNome").textContent = atual.nome;
+  $("rCpf").textContent = atual.cpf;
+  const tem = temBanco(atual);
+  $("rSit").textContent = tem ? "✓ Dados cadastrados" : "Sem dados bancários";
+  $("rSit").className = "situacao " + (tem ? "ok" : "sem");
+  $("excluir").disabled = !tem;
+  $("pdfAluna").disabled = !tem;
+}
+function abrir(a) {
+  atual = a;
+  $("busca").value = a.nome;
+  $("sug").hidden = true;
+  CAMPOS.forEach((c) => { $(c).value = (a.banc && a.banc[c]) || ""; $(c).classList.remove("invalido"); });
+  resumo();
+  $("area").hidden = false;
+  aviso(temBanco(a) ? "" : "Esta aluna ainda não tem dados bancários. Preencha e salve.");
+}
+function fechar() {
+  atual = null; $("area").hidden = true; $("busca").value = ""; $("sug").hidden = true; $("busca").focus();
+}
+$("fechar").onclick = () => { fechar(); aviso(""); };
+CAMPOS.forEach((c) => $(c).addEventListener("input", () => $(c).classList.remove("invalido")));
+
+/* ---------- salvar / excluir (com confirmação) ---------- */
+function dadosForm() { const o = {}; CAMPOS.forEach((c) => { o[c] = limpar($(c).value); }); return o; }
+function linhas(arr) { $("modalResumo").innerHTML = arr.map(([k, v]) => `<div><span>${esc(k)}</span><strong>${esc(v || "—")}</strong></div>`).join(""); }
+const fecharModal = () => { acao = null; $("modal").hidden = true; };
+
+$("salvar").onclick = () => {
+  if (!atual) return;
+  let primeiro = null;
+  OBRIG.forEach((c) => { if (!limpar($(c).value)) { $(c).classList.add("invalido"); primeiro = primeiro || $(c); } });
+  if (primeiro) { primeiro.focus(); return aviso("Preencha os campos obrigatórios (*).", "erro"); }
+  const d = dadosForm();
+  acao = "salvar";
+  $("modalIcon").textContent = temBanco(atual) ? "✎" : "✓"; $("modalIcon").style.background = "#e8f5e9";
+  $("modalTitulo").textContent = temBanco(atual) ? "Atualizar dados bancários" : "Salvar dados bancários";
+  $("modalTexto").textContent = "Confira os dados antes de gravar:";
+  linhas([["Aluna", atual.nome], ["CPF", atual.cpf], ["Titular", d.titular], ["Banco", d.banco + " · " + d.tipoConta],
+    ["Agência / Conta", d.agencia + " / " + d.conta], ["PIX", d.pix]]);
+  $("modalConfirmar").textContent = "Confirmar e salvar"; $("modalConfirmar").style.background = "#4caf50";
+  $("modal").hidden = false;
+};
+
+$("excluir").onclick = () => {
+  if (!atual || !temBanco(atual)) return;
+  acao = "excluir";
+  $("modalIcon").textContent = "🗑️"; $("modalIcon").style.background = "#fdeceb";
+  $("modalTitulo").textContent = "Excluir dados bancários";
+  $("modalTexto").textContent = "Deseja realmente excluir os dados bancários desta aluna? A inscrição e os demais dados são mantidos. Esta ação não pode ser desfeita.";
+  const b = atual.banc;
+  linhas([["Aluna", atual.nome], ["CPF", atual.cpf], ["Banco", b.banco], ["Agência / Conta", (b.agencia || "") + " / " + (b.conta || "")]]);
+  $("modalConfirmar").textContent = "Sim, excluir"; $("modalConfirmar").style.background = "#c62828";
+  $("modal").hidden = false;
+};
+
+$("modalVoltar").onclick = fecharModal;
+$("modalConfirmar").onclick = async () => {
+  if (!atual || !acao) return;
+  const id = atual.id, nome = atual.nome, qual = acao;
+  $("modalConfirmar").disabled = true;
+  try {
+    if (qual === "salvar") {
+      await update(ref(db, `inscricoes/${id}`), {
+        bancarios: { ...dadosForm(), atualizadoEm: serverTimestamp(), atualizadoPor: (auth.currentUser && auth.currentUser.email) || "" }
+      });
+      aviso(`✓ Dados bancários de ${nome} salvos.`, "ok");
+    } else {
+      await remove(ref(db, `inscricoes/${id}/bancarios`));
+      CAMPOS.forEach((c) => { $(c).value = ""; });
+      aviso(`Dados bancários de ${nome} excluídos.`, "ok");
+    }
+    fecharModal();
+  } catch (e) { fecharModal(); erro(e); }
+  finally { $("modalConfirmar").disabled = false; }
+};
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("modal").hidden) fecharModal(); });
+
+/* ---------- PDF ---------- */
+async function imagem(src) {
+  try {
+    const r = await fetch(src, { cache: "no-store" });
+    const b = await r.blob();
+    if (!r.ok || !b.type.startsWith("image")) return null;
+    const url = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); });
+    const dim = await new Promise((res) => { const i = new Image(); i.onload = () => res([i.naturalWidth, i.naturalHeight]); i.onerror = () => res(null); i.src = url; });
+    return dim ? { url, w: dim[0], h: dim[1], fmt: b.type.includes("png") ? "PNG" : "JPEG" } : null;
+  } catch (_) { return null; }
+}
+function colocar(doc, img, x, y, hMax, wMax, direita) {
+  if (!img) return;
+  let h = hMax, w = h * img.w / img.h;
+  if (w > wMax) { w = wMax; h = w * img.h / img.w; }
+  try { doc.addImage(img.url, img.fmt, direita ? x - w : x, y + (hMax - h) / 2, w, h); } catch (_) {}
+}
+
+async function gerarPdf(lista, arquivo, subtitulo) {
+  if (!lista.length) return aviso("Não há dados bancários para exportar.", "erro");
+  const botoes = document.querySelectorAll("button");
+  botoes.forEach((b) => { b.disabled = true; });
+  aviso("Gerando PDF...");
+  try {
+    const [logoIf, logoMm] = await Promise.all([imagem("if.png"), imagem("Logo-Mulheres-Mil.jpg")]);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
+    const ML = 30, W = 842 - ML * 2;
+    doc.setLineWidth(.8); doc.setDrawColor(0); doc.rect(ML, 24, W, 56);
+    colocar(doc, logoIf, ML + 10, 30, 44, 110, false);
+    colocar(doc, logoMm, ML + W - 10, 30, 44, 130, true);
+    doc.setFont("times", "bold"); doc.setFontSize(18); doc.setTextColor(0);
+    doc.text("Conferência de Dados Bancários", ML + W / 2, 57, { align: "center" });
+    doc.setFont("times", "normal"); doc.setFontSize(11);
+    doc.text(subtitulo, ML + 4, 100);
+    doc.setFontSize(9); doc.setTextColor(110);
+    doc.text("Gerado em " + new Date().toLocaleString("pt-BR"), ML + W, 100, { align: "right" });
+
+    doc.autoTable({
+      startY: 110, margin: { left: ML, right: ML, top: 30, bottom: 34 },
+      head: [["Nº", "Nome", "CPF", "Titular da conta", "Banco", "Tipo", "Agência", "Conta", "PIX"]],
+      body: lista.map((a, i) => { const b = a.banc || {}; return [i + 1, a.nome, a.cpf, b.titular || "", b.banco || "", (b.tipoConta || "").replace("Conta ", ""), b.agencia || "", b.conta || "", b.pix || ""]; }),
+      theme: "grid",
+      styles: { font: "times", fontSize: 9, cellPadding: 3, lineColor: [0, 0, 0], lineWidth: .4, textColor: 0, valign: "middle", overflow: "linebreak" },
+      headStyles: { fillColor: [142, 15, 69], textColor: 255, fontStyle: "bold" },
+      columnStyles: { 0: { cellWidth: 24, halign: "center" } }
+    });
+    const n = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= n; p++) { doc.setPage(p); doc.setFontSize(9); doc.setTextColor(110); doc.text("Página " + p + " de " + n, 842 - ML, 575, { align: "right" }); }
+    doc.save(arquivo);
+    aviso("✓ PDF gerado.", "ok");
+  } catch (e) { console.error(e); aviso("Não foi possível gerar o PDF.", "erro"); }
+  finally { botoes.forEach((b) => { b.disabled = false; }); $("pdfTodas").disabled = !alunas.length; if (atual) resumo(); }
+}
+
+$("pdfAluna").onclick = () => atual && gerarPdf([atual], "dados_bancarios_" + soNum(atual.cpf) + ".pdf", "Aluna: " + atual.nome);
+$("pdfTodas").onclick = () => {
+  const lista = alunas.filter(temBanco);
+  gerarPdf(lista, "dados_bancarios_todas.pdf", lista.length + " aluna(s) com dados bancários (ordem alfabética)");
+};
+</script>
+<script src="./Assets/js/script.js"></script>
+</body>
+</html>
