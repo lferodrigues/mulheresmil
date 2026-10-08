@@ -8,8 +8,12 @@
    - se já existe aluna com o mesmo nome no curso, só atualiza o WhatsApp (mantém o nº);
    - se não existe, cria com o próximo nº da chamada do curso.
    A gravação é feita em transação, então duas pessoas cadastrando ao mesmo tempo
-   não recebem o mesmo número. */
-import { ref, runTransaction } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+   não recebem o mesmo número.
+
+   sincronizarInscricoes() traz para alunas/{curso} quem foi inscrita em inscricao.html
+   (inscricoes/{cpf}) e ainda não está na lista do curso — inclusive inscrições antigas,
+   feitas antes deste vínculo existir. */
+import { ref, get, update, runTransaction } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 export const ALUNAS_PATH = "alunas";
 
@@ -58,7 +62,7 @@ export function proximaChamada(porChamada) {
  * @param dados { curso, nome, whatsapp, origem }  origem: "cadastro" | "inscricao" | ...
  * @returns { situacao: "nova" | "atualizada" | "sem-mudanca", chamada, nome }
  */
-export async function vincularAluna(db, { curso, nome, whatsapp = "", origem = "cadastro" }) {
+export async function vincularAluna(db, { curso, nome, whatsapp = "", origem = "cadastro", soPreencherZap = false }) {
   curso = String(curso || "").trim();
   nome = limparNome(nome);
   whatsapp = whatsapp ? formatarWhatsapp(whatsapp) : "";
@@ -74,18 +78,7 @@ export async function vincularAluna(db, { curso, nome, whatsapp = "", origem = "
 
     if (existente) {
       const chave = String(existente.chamada);
-      const mudaZap = whatsapp && whatsapp !== (existente.whatsapp || "");
+      // soPreencherZap: só grava o WhatsApp se a aluna ainda não tiver um (não sobrescreve correções manuais)
+      const mudaZap = whatsapp && whatsapp !== (existente.whatsapp || "") && !(soPreencherZap && existente.whatsapp);
       resultado = { situacao: mudaZap ? "atualizada" : "sem-mudanca", chamada: existente.chamada, nome: existente.nome };
-      if (!mudaZap) return;                       // nada a gravar: aborta sem escrever
-      lista[chave] = { ...lista[chave], curso, chamada: existente.chamada, whatsapp, atualizadoEm: agora };
-      return lista;
-    }
-
-    const chamada = proximaChamada(lista);
-    lista[String(chamada)] = { curso, nome, chamada, whatsapp, origem, criadoEm: agora, atualizadoEm: agora };
-    resultado = { situacao: "nova", chamada, nome };
-    return lista;
-  });
-
-  return resultado;
-}
+      if (!mudaZap) return;                       // nada
