@@ -4,7 +4,7 @@
    - o CPF é a chave: não permite duas inscrições da mesma pessoa (pede confirmação para atualizar);
    - NÃO guarda cópia de documentos (a aluna entrega o xerox em papel): só os números de RG, CPF e NIS
      e a conferência de quais documentos foram entregues. */
-import { auth, db } from "./firebase-config.js";
+import { auth, db } from "./firebase-config-inscricao.js";
 import { ref, get, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./cursos.js";
 
