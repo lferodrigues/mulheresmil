@@ -34,6 +34,7 @@
       "padding:24px;background:rgba(47,16,39,.94);font-family:'Segoe UI',Arial,sans-serif;text-align:center;color:#fff";
     caixa.innerHTML =
       '<div style="max-width:420px;background:#fff;color:#3b2931;border-radius:22px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+        '<img src="/if-sjn.png" alt="Mulheres Mil - IF Sudeste MG" style="display:block;max-width:100%;width:260px;max-height:90px;object-fit:contain;margin:0 auto 18px">' +
         '<div style="font-size:48px;line-height:1">🚫</div>' +
         '<h1 style="margin:12px 0 8px;font-size:22px;color:#5a1738">Acesso temporariamente bloqueado</h1>' +
         '<p style="margin:0 0 14px;color:#76656c;font-size:15px;line-height:1.5">Seu acesso a este site foi suspenso por alguns minutos.</p>' +
