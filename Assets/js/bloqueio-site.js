@@ -52,6 +52,8 @@
 
   function esconderCaixa() {
     if (iv) { clearInterval(iv); iv = null; }
+    // telas de carregamento seguraram o redirecionamento: ao liberar, recomeça do zero
+    if (caixa && window.__mmAguardandoLiberar) { location.reload(); return; }
     if (caixa) {
       if (caixa.parentNode) caixa.parentNode.removeChild(caixa);
       caixa = null;
@@ -60,6 +62,10 @@
   }
 
   function fim() { return Math.max(ate.d, ate.i); }
+
+  // As telas de carregamento (operadora, assistente, educação inclusiva) perguntam isto
+  // antes de redirecionar para os materiais: se estiver bloqueado, NÃO redirecionam.
+  window.__mmBloqueado = function () { return fim() > Date.now(); };
 
   function tick() {
     var resta = Math.max(0, Math.ceil((fim() - Date.now()) / 1000));
