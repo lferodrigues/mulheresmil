@@ -44,7 +44,7 @@ document.addEventListener('keydown', function(event) {
 const destination =
   "https://drive.google.com/drive/folders/1KDSAnPJ785LCJZeIIjZPesBlRGBtFNKA?usp=sharing";
 
-const duration = 9000; // 9 segundos
+const duration = 1500; // 15 segundos
 const startTime = performance.now();
 
 const percentage = document.getElementById("percentage");
