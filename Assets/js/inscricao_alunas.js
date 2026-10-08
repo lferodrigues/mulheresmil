@@ -6,7 +6,7 @@
      e a conferência de quais documentos foram entregues. */
 import { auth, db } from "./firebase-config-inscricao.js";
 import { ref, get, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-import { carregarCursos } from "./cursos.js";
+import { carregarCursos, CURSOS_PADRAO, gerarId } from "./cursos.js";
 import { vincularAluna } from "./alunas.js";
 
 const $ = (id) => document.getElementById(id);
@@ -151,7 +151,13 @@ $("nascimento").max = new Date().toISOString().slice(0, 10);
 
 /* ---------- cursos (vêm do banco) ---------- */
 let CURSOS = {};
-carregarCursos(true, db).then((c) => {
+// Cursos do banco; um curso padrão ("assistente", "operadora") só entra se não houver
+// no banco um curso com o mesmo nome — assim nenhum curso aparece duplicado na lista.
+carregarCursos(false, db).then((c) => {
+  const nomesNoBanco = new Set(Object.values(c).map(gerarId));
+  Object.entries(CURSOS_PADRAO).forEach(([id, nome]) => {
+    if (!c[id] && !nomesNoBanco.has(gerarId(nome))) c[id] = nome;
+  });
   CURSOS = c;
   const ids = Object.keys(c).sort((a, b) => c[a].localeCompare(c[b], "pt-BR"));
   $("curso").innerHTML = '<option value="">Selecione o curso</option>' +
