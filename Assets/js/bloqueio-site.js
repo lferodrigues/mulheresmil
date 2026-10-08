@@ -17,6 +17,7 @@
   var BASE = "https://biblioteca-virtual-8db41-default-rtdb.firebaseio.com/bloqueios/";
   var RECHECAR_MS = 30000;   // consulta de segurança (o streaming é quem dá o efeito instantâneo)
 
+  var PERMANENTE = 4000000000000;   // 'ate' a partir daqui = bloqueio definitivo (sem prazo)
   var ate = { d: 0, i: 0 };  // fim do bloqueio por aparelho (d) e por IP (i)
   var caixa = null, iv = null;
 
@@ -37,9 +38,9 @@
         '<img src="/if-sjn.png" alt="Mulheres Mil - IF Sudeste MG" style="display:block;max-width:100%;width:260px;max-height:90px;object-fit:contain;margin:0 auto 18px">' +
         '<div style="font-size:48px;line-height:1">🚫</div>' +
         '<h1 style="margin:12px 0 8px;font-size:22px;color:#5a1738">Acesso temporariamente bloqueado</h1>' +
-        '<p style="margin:0 0 14px;color:#76656c;font-size:15px;line-height:1.5">Seu acesso a este site foi suspenso por alguns minutos.</p>' +
-        '<div style="font-size:34px;font-weight:800;color:#c62828" id="mmBloqTempo">--:--</div>' +
-        '<p style="margin:10px 0 0;color:#8a777f;font-size:13px">O site será liberado automaticamente.</p>' +
+        '<p style="margin:0 0 14px;color:#76656c;font-size:15px;line-height:1.5">Seu acesso a este site foi bloqueado pelo administrador do sistema.</p>' +
+        '<div style="font-size:34px;font-weight:800;color:#c62828;display:none" id="mmBloqTempo">--:--</div>' +
+        '<p style="margin:10px 0 0;color:#8a777f;font-size:13px" id="mmBloqNota">O acesso só será liberado quando um administrador desbloquear.</p>' +
       '</div>';
     function anexar() {
       if (!caixa) return;
@@ -64,7 +65,13 @@
     var resta = Math.max(0, Math.ceil((fim() - Date.now()) / 1000));
     if (resta <= 0) { esconderCaixa(); return; }
     var el = caixa && caixa.querySelector("#mmBloqTempo");
-    if (el) el.textContent = dois(Math.floor(resta / 60)) + ":" + dois(resta % 60);
+    var nota = caixa && caixa.querySelector("#mmBloqNota");
+    if (fim() >= PERMANENTE) {              // bloqueio definitivo: sem contagem regressiva
+      if (el) el.style.display = "none";
+      return;
+    }
+    if (el) { el.style.display = ""; el.textContent = dois(Math.floor(resta / 60)) + ":" + dois(resta % 60); }
+    if (nota) nota.textContent = "O site será liberado automaticamente.";
   }
 
   // Chamada sempre que o valor de um bloqueio muda: mostra ou tira o aviso imediatamente
