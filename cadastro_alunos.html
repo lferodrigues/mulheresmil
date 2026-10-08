@@ -11,6 +11,19 @@
 a.btn-importar{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;padding:13px;border-radius:10px;background:#f9e4ee;color:#8e0f45;font-weight:800;text-decoration:none;border:1px solid #eadbe3;transition:background .15s ease,transform .15s ease}
 a.btn-importar:hover{background:#f3d0e0;transform:translateY(-1px)}
 a.btn-importar+a.btn-importar{margin-top:10px}
+/* Nova aluna */
+.btn-nova{display:block;width:100%;margin-top:10px;padding:12px;border:1px dashed #c2185b;border-radius:10px;background:#fff;color:#8e0f45;font:inherit;font-weight:700;cursor:pointer}
+.btn-nova:hover{background:#fdf3f6}
+.sugestao-nova{display:block;width:100%;padding:12px 14px;border:0;border-top:1px solid #eadbe3;background:#fdf3f6;color:#8e0f45;font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.sugestao-nova:hover,.sugestao-nova:focus{background:#f9e4ee;outline:0}
+#novaAluna{margin-top:15px}
+.tag-nova{display:inline-block;background:#e8f5e9;color:#2e7d32;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:800}
+#novaAluna .dados{margin-top:10px;align-items:end}
+#novaAluna .dados>div small{display:block;margin-top:4px;font-size:11px}
+label.sem-margem{margin:0}
+.aviso-nome{display:block;margin-top:8px;color:#b26a00;font-weight:600}
+.aviso-nome:empty{display:none}
+#lista .sem-zap{color:#b26a00;font-weight:600;font-size:13px}
 </style>
 <script type="module" src="./Assets/js/auth-guard.js"></script>
 </head>
@@ -20,18 +33,25 @@ a.btn-importar+a.btn-importar{margin-top:10px}
 <img src="if-sjn.png" class="logo">
 <hr><span class="badge">Painel do Administrador(a)</span>
 <h1>Cadastro de Alunas</h1>
-<p>Selecione o curso, pesquise a aluna e informe o WhatsApp para contato.</p>
+<p>Selecione o curso e pesquise a aluna. Se ela ainda não estiver na lista, cadastre como nova aluna: ela passa a aparecer na frequência, na lista de presença e na biblioteca.</p>
 <a class="btn-importar" href="cadastro_cursos.html">🎓 Cadastrar novo curso</a>
 <a class="btn-importar" href="importar_alunas.html">📄 Importar alunas de planilha</a>
 <label>Curso<select id="curso"><option value="">Carregando cursos...</option></select></label>
 <div id="area" hidden>
 <label class="campo-pesquisa">Pesquisar aluna<input id="pesquisa" type="search" placeholder="Digite o nome..." autocomplete="off">
 <div id="listaSugestoes" class="lista-sugestoes" hidden></div></label>
+<button type="button" id="btnNova" class="btn-nova">＋ Cadastrar nova aluna neste curso</button>
 <small id="status"></small>
 <div id="dados" hidden><div><span>Nome completo</span><b id="nome"></b></div><div><span>Nº da chamada</span><b id="numero"></b></div></div>
+<div id="novaAluna" hidden>
+<span class="tag-nova">Nova aluna</span>
+<div class="dados"><label class="sem-margem">Nome completo<input id="nomeNovo" type="text" maxlength="120" autocomplete="off" placeholder="Nome e sobrenome"></label>
+<div><span>Nº da chamada</span><b id="numeroNovo"></b><small>gerado automaticamente</small></div></div>
+<small id="avisoNome" class="aviso-nome"></small>
+</div>
 <label id="campoZap" hidden>WhatsApp para contato<input id="whatsapp" type="tel" inputmode="numeric" maxlength="15" placeholder="(32) 99999-9999"></label>
-<div class="buttons"><button id="salvar" disabled>Salvar</button><button id="apagar" disabled>Apagar</button></div>
-<section id="cadastros" hidden><h2>Alunas cadastradas <span id="contador">0</span></h2><div id="lista"></div></section>
+<div class="buttons"><button id="salvar" disabled>Salvar</button><button id="apagar" disabled>Cancelar</button></div>
+<section id="cadastros" hidden><h2>Alunas do curso <span id="contador">0</span></h2><small id="semZap"></small><div id="lista"></div></section>
 </div>
 <a href="painel.html">← Voltar para a Tela Inicial</a>
 <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
