@@ -187,7 +187,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
-import { ref, get, set, remove, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { ref, get, set, remove, onValue, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -273,17 +273,22 @@ $("formAcesso").addEventListener("submit", async (e) => {
 });
 
 /* ---------- dados ---------- */
-async function carregar() {
-  $("status").className = ""; $("status").textContent = "Carregando logs...";
+const horaAgora = () => new Date().toLocaleTimeString("pt-BR");
+let cancelaLogs = null, cancelaVisitas = null, cancelaBloqueios = null;
+
+// Fica "ouvindo" o banco: cada novo log aparece na tela sozinho, sem clicar em Atualizar
+function carregar() {
+  if (cancelaLogs) { cancelaLogs(); cancelaLogs = null; }
+  $("status").className = ""; $("status").textContent = "Conectando em tempo real...";
   $("btnPdf").disabled = true;
-  try {
-    const snap = await get(query(ref(db, "logsAcesso"), orderByKey(), limitToLast(5000)));
+  cancelaLogs = onValue(query(ref(db, "logsAcesso"), orderByKey(), limitToLast(5000)), (snap) => {
     logs = Object.entries(snap.val() || {})
       .map(([id, l]) => ({ id, ...l }))
       .sort((a, b) => (Number(b.quando || b.data) || 0) - (Number(a.quando || a.data) || 0));
-    $("status").textContent = "Logs carregados do Firebase.";
+    $("status").className = "ok";
+    $("status").textContent = "🟢 Em tempo real · atualizado às " + horaAgora();
     filtrar();
-  } catch (e) {
+  }, (e) => {
     console.error(e);
     const perm = String(e.code || e.message || "").toUpperCase().includes("PERMISSION");
     $("status").className = "erro";
@@ -291,7 +296,7 @@ async function carregar() {
       ? "Sem permissão para ler os logs. Entre com a conta autorizada e confira as regras do Realtime Database."
       : "Não foi possível carregar os logs (" + (e.code || e.message) + ").";
     logs = []; filtrar();
-  }
+  });
 }
 
 function filtrar() {
@@ -365,17 +370,20 @@ function fmtRestante(seg) {
   return String(Math.floor(seg / 60)).padStart(2, "0") + ":" + String(seg % 60).padStart(2, "0");
 }
 
-async function carregarBloqueios() {
-  try {
-    const snap = await get(ref(db, "bloqueios"));
+// Mantém a lista de bloqueios sincronizada em tempo real (inclusive bloqueios feitos em outro aparelho)
+function ouvirBloqueios() {
+  if (cancelaBloqueios) { cancelaBloqueios(); cancelaBloqueios = null; }
+  cancelaBloqueios = onValue(ref(db, "bloqueios"), (snap) => {
     bloqueios = snap.val() || {};
-  } catch (e) {
+    if (visCarregado) filtrarVisitas();
+  }, (e) => {
     console.error("[bloqueios] erro ao ler:", e);
     bloqueios = {};
-  }
+  });
 }
 
 function msgBloqueio(texto, tipo) {
+  ultimoAvisoBloq = Date.now();
   $("vStatus").className = tipo || ""; $("vStatus").textContent = texto;
 }
 function erroBloqueio(e) {
@@ -438,14 +446,22 @@ async function desbloquearAparelho(did, botao) {
   filtrarVisitas();
 }
 
-async function carregarVisitas() {
-  $("vStatus").className = ""; $("vStatus").textContent = "Carregando visitas...";
-  try {
-    const snap = await get(query(ref(db, "visitasSite"), orderByKey(), limitToLast(5000)));
+// Cada nova visita, clique ou saída aparece na tela sozinha, sem clicar em Atualizar
+let ultimoAvisoBloq = 0;
+function carregarVisitas() {
+  if (cancelaVisitas) { cancelaVisitas(); cancelaVisitas = null; }
+  $("vStatus").className = ""; $("vStatus").textContent = "Conectando em tempo real...";
+  ouvirBloqueios();
+  cancelaVisitas = onValue(query(ref(db, "visitasSite"), orderByKey(), limitToLast(5000)), (snap) => {
     visitas = agruparVisitas(Object.values(snap.val() || {}));
     visCarregado = true;
-    $("vStatus").textContent = "Visitas carregadas do Firebase.";
-  } catch (e) {
+    // não sobrescreve a mensagem de um bloqueio/desbloqueio recém-feito
+    if (Date.now() - ultimoAvisoBloq > 6000) {
+      $("vStatus").className = "ok";
+      $("vStatus").textContent = "🟢 Em tempo real · atualizado às " + horaAgora();
+    }
+    filtrarVisitas();
+  }, (e) => {
     console.error(e);
     const perm = String(e.code || e.message || "").toUpperCase().includes("PERMISSION");
     $("vStatus").className = "erro";
@@ -453,9 +469,8 @@ async function carregarVisitas() {
       ? "Sem permissão para ler as visitas. Entre com a conta autorizada e confira as regras de 'visitasSite' no Realtime Database."
       : "Não foi possível carregar as visitas (" + (e.code || e.message) + ").";
     visitas = [];
-  }
-  await carregarBloqueios();
-  filtrarVisitas();
+    filtrarVisitas();
+  });
 }
 
 function filtrarVisitas() {
@@ -474,7 +489,7 @@ function filtrarVisitas() {
   $("vCorpo").innerHTML = visFiltradas.map((v) => {
     const detalhes = [v.sistema, v.navegador, v.tela].filter(Boolean).join(" · ");
     const cliques = v.cliques.length
-      ? `<details><summary>${v.cliques.length} ${v.cliques.length === 1 ? "clique" : "cliques"}</summary>` +
+      ? `<details data-vid="${esc(v.vid)}"${abertos.has(v.vid) ? " open" : ""}><summary>${v.cliques.length} ${v.cliques.length === 1 ? "clique" : "cliques"}</summary>` +
         v.cliques.map((c) => `<small>${esc(c.acao)} <em>(aos ${esc(fmtTempo(c.t))})</em></small>`).join("") +
         `</details>`
       : "—";
@@ -517,6 +532,14 @@ $("vCorpo").addEventListener("click", (e) => {
   const desb = e.target.closest(".b-desbloq");
   if (desb) return desbloquearAparelho(desb.dataset.did, desb);
 });
+
+// lembra quais listas de cliques estão abertas para não fechá-las a cada atualização em tempo real
+const abertos = new Set();
+$("vCorpo").addEventListener("toggle", (e) => {
+  const d = e.target;
+  if (!d || d.tagName !== "DETAILS" || !d.dataset.vid) return;
+  if (d.open) abertos.add(d.dataset.vid); else abertos.delete(d.dataset.vid);
+}, true);
 
 $("vBusca").oninput = filtrarVisitas;
 $("vAtualizar").onclick = carregarVisitas;
