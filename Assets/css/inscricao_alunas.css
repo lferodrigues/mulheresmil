@@ -1,0 +1,78 @@
+*{box-sizing:border-box}
+body{margin:0;padding:18px;background:#fff7f0;font-family:Segoe UI,Arial;color:#3b2931}
+main{min-height:95vh;display:grid;place-items:center}
+[hidden]{display:none!important}
+.card{width:min(900px,100%);background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px #4b14251a;border:1px solid #eadbe3}
+.logo{display:block;width:180px;max-width:70%;margin:auto;border-radius:8px}
+hr{border:0;height:3px;background:linear-gradient(90deg,#f5a623,#c2185b,#8e0f45);margin:20px 0}
+.badge{display:inline-block;background:#f9e4ee;color:#8e0f45;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:800}
+h1{color:#5a1738;margin:10px 0 5px}
+p{color:#76656c}
+small{color:#8a777f}
+
+/* seções */
+.secao{margin-top:26px;padding-top:18px;border-top:1px solid #eadbe3}
+.secao>h2{font-size:18px;color:#5a1738;margin:0 0 4px}
+.secao>.dica{margin:0 0 12px;font-size:13px}
+.grade{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+
+label{display:block;font-weight:700;font-size:14px}
+input[type=text],input[type=date],input[type=number],input[type=tel],input[type=email],select,textarea{display:block;width:100%;padding:12px;border:1px solid #dbcbd3;border-radius:10px;margin-top:6px;font:inherit;font-weight:400;background:#fff}
+textarea{min-height:84px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #c2185b33;border-color:#c2185b}
+.invalido{border-color:#c62828!important;background:#fdeceb!important}
+.req::after{content:" *";color:#c62828}
+
+/* grupos de opções */
+fieldset.grupo{border:1px solid #eadbe3;border-radius:12px;margin:0;padding:10px 14px 12px;min-width:0}
+fieldset.grupo legend{font-weight:700;font-size:14px;padding:0 6px}
+.opcoes{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:4px}
+.op{display:inline-flex;align-items:center;gap:7px;font-weight:400;font-size:14px;padding:7px 11px;border:1px solid #eadbe3;border-radius:20px;background:#faf5f7;cursor:pointer}
+.op:has(input:checked){background:#f9e4ee;border-color:#c2185b;color:#5a1738;font-weight:700}
+.op input{accent-color:#c2185b;margin:0}
+.op .outro{display:inline-block;width:150px;margin:0;padding:4px 8px;font-size:13px;border-radius:8px}
+.sub{margin-top:10px}
+
+/* status e botões */
+#status{display:block;margin-top:14px}
+#status.ok{color:#2e7d32;font-weight:700}
+#status.erro{color:#c62828;font-weight:700}
+.buttons{display:flex;gap:10px;margin-top:18px}
+.buttons button,.modal-actions button{flex:1;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;cursor:pointer;color:#fff}
+.buttons button:disabled,.modal-actions button:disabled{opacity:.45;cursor:not-allowed}
+#salvar,#modalConfirmar{background:#4caf50}
+#limpar{background:#c2185b}
+
+/* lista */
+#inscritas{border-top:1px solid #eadbe3;margin-top:25px;padding-top:20px}
+#inscritas h2{font-size:18px;color:#5a1738}
+#inscritas h2 span{font-size:12px;background:#f9e4ee;padding:4px 9px;border-radius:20px}
+#lista>div{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px 12px;border:1px solid #eadbe3;border-radius:9px;margin:7px 0}
+#lista small{display:block}
+#lista .cpf{font-weight:700;white-space:nowrap;color:#8a777f}
+
+a{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
+footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:#2f102766;backdrop-filter:blur(4px)}
+.modal-box{width:min(520px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px #2f102655}
+.modal-icon{width:52px;height:52px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#e8f5e9;color:#2e7d32;font-size:28px;font-weight:800}
+.modal-box h2{text-align:center;margin:0 0 8px;font-size:24px;color:#5a1738}
+.modal-box>p{text-align:center;margin:0 0 20px}
+.modal-data{display:grid;gap:9px}
+.modal-data div{padding:11px 13px;background:#faf5f7;border:1px solid #eadbe3;border-radius:10px}
+.modal-data span{display:block;color:#8a777f;font-size:11px;margin-bottom:3px}
+.modal-data strong{display:block;overflow-wrap:anywhere}
+.modal-actions{display:flex;gap:10px;margin-top:22px}
+.modal-actions #modalVoltar{background:#eee5e9;color:#5a1738}
+
+@media(max-width:650px){
+  body{padding:8px}
+  .card{padding:20px 15px}
+  .grade{grid-template-columns:1fr}
+  .buttons,.modal-actions{flex-direction:column}
+  .modal-box{padding:22px 17px}
+  .op .outro{width:120px}
+}
