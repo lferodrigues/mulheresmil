@@ -2,11 +2,12 @@
    - aluna já na lista do curso: pesquisa, escolhe e informa/atualiza o WhatsApp;
    - aluna nova: informa nome + WhatsApp; recebe o próximo nº da chamada do curso.
    Tudo é gravado em alunas/{curso}/{nº} (Assets/js/alunas.js), o mesmo lugar lido pela
-   Frequência, Gerar Lista de Presença, Reserva de Livros e o sino de atrasos. */
+   Frequência, Gerar Lista de Presença, Reserva de Livros e o sino de atrasos.
+   Ao abrir, traz também quem foi inscrita em inscricao.html e ainda não está na lista. */
 import { db } from "./firebase-config.js";
 import { ref, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./cursos.js";
-import { ALUNAS_PATH, vincularAluna, acharPorNome, proximaChamada, formatarWhatsapp, limparNome, chaveNome } from "./alunas.js";
+import { ALUNAS_PATH, vincularAluna, acharPorNome, proximaChamada, formatarWhatsapp, limparNome, chaveNome, sincronizarInscricoes, marcarRemocaoNasInscricoes } from "./alunas.js";
 
 let curso = "";
 let cursos = {};            // { id: nome }
@@ -247,6 +248,8 @@ async function confirmarRemocao() {
       return;
     }
     await remove(ref(db, `${ALUNAS_PATH}/${curso}/${a.chamada}`));
+    // impede que a sincronização com as inscrições traga a aluna de volta
+    try { await marcarRemocaoNasInscricoes(db, curso, a.nome, cursos); } catch (e) { console.error("[cadastro] marcar inscrição:", e); }
     if (atual && atual.chamada === a.chamada) limpar();
     fecharModal();
     $("status").textContent = `${a.nome} removida do curso.`;
@@ -290,4 +293,33 @@ document.addEventListener("click", (e) => {
   if (!e.target.closest(".campo-pesquisa")) $("listaSugestoes").hidden = true;
 });
 
-montarCursos().catch((e) => { console.error(e); $("curso").innerHTML = '<option value="">Erro ao carregar cursos</option>'; });
+/* ---------- início: cursos + inscrições feitas em inscricao.html ---------- */
+let avisoInscricoes = "";
+async function iniciar() {
+  try {
+    await montarCursos();
+  } catch (e) {
+    console.error(e);
+    $("curso").innerHTML = '<option value="">Erro ao carregar cursos</option>';
+    return;
+  }
+  try {
+    const r = await sincronizarInscricoes(db, cursos);
+    const partes = [];
+    if (r.novas) partes.push(`${r.novas} aluna(s) incluída(s) a partir das inscrições`);
+    if (r.atualizadas) partes.push(`${r.atualizadas} WhatsApp(s) completado(s) pelas inscrições`);
+    if (r.semCurso) partes.push(`${r.semCurso} inscrição(ões) com curso que não está cadastrado`);
+    avisoInscricoes = partes.join(" · ");
+    if (avisoInscricoes) mostrarAvisoInscricoes();
+  } catch (e) {
+    console.error("[cadastro] sincronizar inscrições:", e);
+    avisoInscricoes = msgErro(e, "ler as inscrições");
+    mostrarAvisoInscricoes();
+  }
+}
+function mostrarAvisoInscricoes() {
+  const el = $("avisoInscricoes");
+  if (el) { el.textContent = avisoInscricoes; el.hidden = !avisoInscricoes; }
+}
+
+iniciar();
