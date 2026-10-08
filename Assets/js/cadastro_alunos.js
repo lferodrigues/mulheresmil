@@ -1,253 +1,293 @@
-/* Cadastro de Alunas — Biblioteca Itinerante (Firebase Realtime Database) */
+/* Cadastro de Alunas (Firebase Realtime Database)
+   - aluna já na lista do curso: pesquisa, escolhe e informa/atualiza o WhatsApp;
+   - aluna nova: informa nome + WhatsApp; recebe o próximo nº da chamada do curso.
+   Tudo é gravado em alunas/{curso}/{nº} (Assets/js/alunas.js), o mesmo lugar lido pela
+   Frequência, Gerar Lista de Presença, Reserva de Livros e o sino de atrasos. */
 import { db } from "./firebase-config.js";
-import { ref, get, set, remove } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { ref, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./cursos.js";
+import { ALUNAS_PATH, vincularAluna, acharPorNome, proximaChamada, formatarWhatsapp, limparNome, chaveNome } from "./alunas.js";
 
-const ALUNAS_PATH = "alunas";
-// Listas antigas em HTML (só usadas se o curso ainda não tiver alunas no banco)
-const LISTAS_ANTIGAS = {
-  assistente: "lista_presenca_assistente_escolar.html",
-  operadora: "lista_presenca_mulheres_mil.html"
-};
-
-let alunas = [], curso = "", atual = null;
-let cursos = {};           // { id: nome } — vem do banco (cursos/) + padrão
-let cadastradas = [];
+let curso = "";
+let cursos = {};            // { id: nome }
+let porChamada = {};        // alunas/{curso} como está no banco (tempo real)
+let alunas = [];            // [{ nome, chamada, whatsapp }] ordenadas pelo nº
+let atual = null;           // aluna existente escolhida
+let modoNova = false;       // cadastrando aluna nova?
 let paraRemover = null;
-const $ = id => document.getElementById(id);
+let pararEscuta = null;
+const $ = (id) => document.getElementById(id);
 
-function esc(t) {
-  return String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nomeDoCurso = () => cursos[curso] || "";
+const whatsappDigitado = () => $("whatsapp").value.trim();
+const whatsappValido = () => whatsappDigitado().replace(/\D/g, "").length >= 10;
+const nomeNovo = () => limparNome($("nomeNovo").value);
+
+function msgErro(e, acao) {
+  console.error(e);
+  const m = String(e?.code || e?.message || "").toUpperCase();
+  return m.includes("PERMISSION")
+    ? `Sem permissão para ${acao} no banco de dados. Verifique o login e as regras do Realtime Database.`
+    : `Não foi possível ${acao}. Verifique a conexão e tente novamente.`;
 }
-function normalizar(t){ return t.trim().toLocaleLowerCase("pt-BR"); }
-function nomeDoCurso(){ return cursos[curso] || ""; }
-function whatsappDigitado(){ return $("whatsapp").value.trim(); }
 
-function formatarWhatsapp(texto){
-  const v = texto.replace(/\D/g,"").slice(0,11);
-  const d = v.replace(/^(\d{2})(\d)/,"($1) $2");
-  return v.length<=10 ? d.replace(/(\d{4})(\d)/,"$1-$2") : d.replace(/(\d{5})(\d)/,"$1-$2");
-}
-
-/* ---------- cursos (vêm do banco) ---------- */
-async function montarCursos(){
+/* ---------- cursos ---------- */
+async function montarCursos() {
   const sel = $("curso");
-  sel.innerHTML = '<option value="">Carregando cursos...</option>';
   cursos = await carregarCursos(false);   // só os cursos cadastrados no banco
-  const ordenados = Object.entries(cursos).sort((a,b) => a[1].localeCompare(b[1],"pt-BR"));
-  sel.innerHTML = '<option value="">Selecione</option>' +
-    ordenados.map(([id,nome]) => `<option value="${esc(id)}">${esc(nome)}</option>`).join("");
+  const ordenados = Object.entries(cursos).sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  sel.innerHTML = ordenados.length
+    ? '<option value="">Selecione</option>' + ordenados.map(([id, nome]) => `<option value="${esc(id)}">${esc(nome)}</option>`).join("")
+    : '<option value="">Nenhum curso cadastrado</option>';
 }
 
-/* ---------- lista de alunas do curso ---------- */
-async function carregarAlunasDoCurso(id){
-  // 1) banco: alunas/{curso}/{nº}
-  const snap = await get(ref(db,`${ALUNAS_PATH}/${id}`));
-  const doBanco = Object.values(snap.val() || {})
-    .filter(a => a && a.nome)
-    .map(a => ({ nome: String(a.nome), chamada: Number(a.chamada) }))
-    .sort((a,b) => a.chamada - b.chamada);
-  if(doBanco.length) return doBanco;
-
-  // 2) lista antiga em HTML (cursos antigos)
-  const arquivo = LISTAS_ANTIGAS[id];
-  if(arquivo){
-    try{
-      const resposta = await fetch(arquivo,{cache:"no-store"});
-      const texto = await resposta.text();
-      const match = texto.match(/(?:const|let|var)\s+ALUNAS\s*=\s*(\[[\s\S]*?\]);/);
-      if(resposta.ok && match) return Function("return "+match[1])().map((nome,i)=>({nome,chamada:i+1}));
-    }catch(e){ console.error(e); }
-  }
-  return [];
-}
-
-async function buscarCadastros(){
-  const snap = await get(ref(db,ALUNAS_PATH));
-  return snap.exists() ? (snap.val() || {}) : {};
-}
-
-async function aoTrocarCurso(){
+/* ---------- alunas do curso (tempo real) ---------- */
+function aoTrocarCurso() {
+  if (pararEscuta) { pararEscuta(); pararEscuta = null; }
   curso = $("curso").value;
+  porChamada = {}; alunas = [];
   limpar();
   $("area").hidden = !curso;
-  if(!curso) return;
-  $("status").textContent = "Carregando lista...";
-  try{
-    alunas = await carregarAlunasDoCurso(curso);
+  $("cadastros").hidden = true;
+  if (!curso) return;
+  $("status").textContent = "Carregando alunas...";
+
+  pararEscuta = onValue(ref(db, `${ALUNAS_PATH}/${curso}`), (snap) => {
+    porChamada = snap.val() || {};
+    alunas = Object.entries(porChamada)
+      .filter(([, a]) => a && a.nome)
+      .map(([chave, a]) => ({ nome: String(a.nome), chamada: Number(a.chamada ?? chave), whatsapp: a.whatsapp || "" }))
+      .sort((a, b) => a.chamada - b.chamada);
     $("status").textContent = alunas.length
-      ? alunas.length+" alunas carregadas."
-      : "Nenhuma aluna neste curso ainda. Use 'Importar alunas de planilha' para enviar a lista de presença.";
+      ? `${alunas.length} aluna(s) neste curso.`
+      : "Nenhuma aluna neste curso ainda. Cadastre uma nova aluna ou importe a lista de uma planilha.";
+    if (modoNova) atualizarNova();
     preencher();
-    await render();
-  }catch(e){
-    console.error(e);
-    $("status").textContent = "Não foi possível carregar a lista de alunas.";
-  }
+    render();
+  }, (e) => { $("status").textContent = msgErro(e, "carregar as alunas"); });
 }
 
-function preencher(){
-  const busca = normalizar($("pesquisa").value), sugestoes = $("listaSugestoes");
+/* ---------- pesquisa ---------- */
+function preencher() {
+  const texto = $("pesquisa").value.trim();
+  const busca = chaveNome(texto);
+  const sugestoes = $("listaSugestoes");
   sugestoes.innerHTML = "";
-  if(!busca){ sugestoes.hidden = true; return; }
-  const encontradas = alunas.filter(a => a.nome.toLocaleLowerCase("pt-BR").includes(busca));
-  if(!encontradas.length){
-    sugestoes.innerHTML = '<div class="sem-resultado">Nenhuma aluna encontrada.</div>';
-    sugestoes.hidden = false; return;
-  }
-  encontradas.forEach(a => {
-    const botao = document.createElement("button");
-    botao.type = "button"; botao.className = "sugestao-aluna";
-    botao.innerHTML = `<strong>${esc(a.nome)}</strong><span>Chamada ${a.chamada}</span>`;
-    botao.onclick = () => selecionar(alunas.indexOf(a));
-    sugestoes.appendChild(botao);
+  if (!busca || atual || modoNova) { sugestoes.hidden = true; return; }
+
+  const encontradas = alunas.filter((a) => chaveNome(a.nome).includes(busca)).slice(0, 30);
+  encontradas.forEach((a) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "sugestao-aluna";
+    b.innerHTML = `<strong>${esc(a.nome)}</strong><span>Chamada ${a.chamada}${a.whatsapp ? "" : " · sem WhatsApp"}</span>`;
+    b.onclick = () => selecionar(a.chamada);
+    sugestoes.appendChild(b);
   });
+  if (!encontradas.length) {
+    sugestoes.insertAdjacentHTML("beforeend", '<div class="sem-resultado">Nenhuma aluna encontrada neste curso.</div>');
+  }
+  // oferece cadastrar como nova, se o nome digitado não for exatamente de alguém da lista
+  if (texto.length >= 3 && !acharPorNome(porChamada, texto)) {
+    const nova = document.createElement("button");
+    nova.type = "button"; nova.className = "sugestao-nova";
+    nova.textContent = `＋ Cadastrar “${limparNome(texto)}” como nova aluna`;
+    nova.onclick = () => abrirNova(texto);
+    sugestoes.appendChild(nova);
+  }
   sugestoes.hidden = false;
 }
 
-async function selecionar(indice){
-  if(!alunas[indice]) return limpar();
-  atual = alunas[indice];
-  $("pesquisa").value = atual.nome;
+/* ---------- aluna existente ---------- */
+function selecionar(chamada) {
+  const a = alunas.find((x) => x.chamada === Number(chamada));
+  if (!a) return limpar();
+  modoNova = false; atual = a;
+  $("novaAluna").hidden = true;
+  $("pesquisa").value = a.nome;
   $("listaSugestoes").hidden = true;
   $("dados").hidden = $("campoZap").hidden = false;
-  $("nome").textContent = atual.nome;
-  $("numero").textContent = atual.chamada;
-  try{
-    const snap = await get(ref(db,`${ALUNAS_PATH}/${curso}/${atual.chamada}`));
-    $("whatsapp").value = snap.exists() ? (snap.val()?.whatsapp || "") : "";
-  }catch(e){ console.error(e); $("whatsapp").value = ""; }
+  $("nome").textContent = a.nome;
+  $("numero").textContent = a.chamada;
+  $("whatsapp").value = a.whatsapp;
+  $("whatsapp").focus();
   atualizarBotoes();
 }
 
-function atualizarBotoes(){
-  $("salvar").disabled = !atual || !whatsappDigitado();
-  $("apagar").disabled = false;
+/* ---------- aluna nova ---------- */
+function abrirNova(nomeSugerido = "") {
+  if (!curso) return;
+  atual = null; modoNova = true;
+  $("listaSugestoes").hidden = true;
+  $("dados").hidden = true;
+  $("novaAluna").hidden = false;
+  $("campoZap").hidden = false;
+  $("nomeNovo").value = limparNome(nomeSugerido);
+  $("whatsapp").value = "";
+  atualizarNova();
+  ($("nomeNovo").value ? $("whatsapp") : $("nomeNovo")).focus();
 }
 
-function limpar(){
-  atual = null; $("pesquisa").value = ""; $("whatsapp").value = "";
-  $("dados").hidden = $("campoZap").hidden = true;
-  $("salvar").disabled = true; $("apagar").disabled = false;
+function atualizarNova() {
+  $("numeroNovo").textContent = proximaChamada(porChamada);
+  const igual = nomeNovo() && acharPorNome(porChamada, nomeNovo());
+  $("avisoNome").textContent = igual
+    ? `Já existe “${igual.nome}” neste curso (chamada ${igual.chamada}). Ao salvar, só o WhatsApp dela será atualizado.`
+    : "";
+  atualizarBotoes();
+}
+
+function atualizarBotoes() {
+  const temAluna = modoNova ? nomeNovo().length >= 3 : !!atual;
+  $("salvar").disabled = !temAluna || !whatsappValido();
+  $("apagar").disabled = !(atual || modoNova || $("pesquisa").value);
+}
+
+function limpar() {
+  atual = null; modoNova = false;
+  $("pesquisa").value = ""; $("whatsapp").value = ""; $("nomeNovo").value = "";
+  $("avisoNome").textContent = "";
+  $("dados").hidden = $("campoZap").hidden = $("novaAluna").hidden = true;
   $("listaSugestoes").innerHTML = ""; $("listaSugestoes").hidden = true;
+  $("salvar").disabled = true; $("apagar").disabled = true;
 }
 
-function voltarInicio(){
-  curso = ""; atual = null; alunas = []; cadastradas = []; paraRemover = null;
-  $("curso").value = ""; $("area").hidden = true; $("pesquisa").value = "";
-  $("whatsapp").value = ""; $("dados").hidden = true; $("campoZap").hidden = true;
-  $("salvar").disabled = true; $("apagar").disabled = false;
-  $("listaSugestoes").innerHTML = ""; $("listaSugestoes").hidden = true; $("cadastros").hidden = true;
+/* ---------- confirmação ---------- */
+function abrirModal({ icone, titulo, texto, botao, acao, aluna }) {
+  $("modalIcon").textContent = icone;
+  $("modalTitulo").textContent = titulo;
+  $("modalTexto").textContent = texto;
+  $("modalCurso").textContent = nomeDoCurso();
+  $("modalNome").textContent = aluna.nome;
+  $("modalChamada").textContent = aluna.chamada;
+  $("modalWhatsapp").textContent = aluna.whatsapp || "Não informado";
+  $("modalData").hidden = false;
+  $("modalSalvar").textContent = botao;
+  $("modalSalvar").dataset.acao = acao;
+  $("modalSalvar").disabled = false;
+  $("modal").hidden = false;
 }
+function fecharModal() { paraRemover = null; $("modal").hidden = true; }
 
-function fecharModal(){ paraRemover = null; $("modal").hidden = true; }
-
-function salvar(){
-  if(!atual || !whatsappDigitado()) return;
+function salvar() {
+  if ($("salvar").disabled) return;
   paraRemover = null;
-  $("modalIcon").textContent = "✓"; $("modalTitulo").textContent = "Confirmar cadastro";
-  $("modalTexto").textContent = "Confira os dados da aluna e confirme se deseja realmente salvar:";
-  $("modalCurso").textContent = nomeDoCurso(); $("modalNome").textContent = atual.nome;
-  $("modalChamada").textContent = atual.chamada; $("modalWhatsapp").textContent = whatsappDigitado();
-  $("modalData").hidden = false; $("modalSalvar").textContent = "Salvar cadastro";
-  $("modalSalvar").dataset.acao = "salvar"; $("modal").hidden = false;
+  if (modoNova) {
+    const igual = acharPorNome(porChamada, nomeNovo());
+    abrirModal({
+      icone: "✓",
+      titulo: igual ? "Atualizar WhatsApp" : "Cadastrar nova aluna",
+      texto: igual
+        ? "Esta aluna já está no curso. Confirme para atualizar o WhatsApp dela:"
+        : "Confira os dados. A aluna passa a aparecer na frequência, na lista de presença e na biblioteca:",
+      botao: igual ? "Atualizar WhatsApp" : "Cadastrar aluna",
+      acao: "salvar",
+      aluna: { nome: igual ? igual.nome : nomeNovo(), chamada: igual ? igual.chamada : `${proximaChamada(porChamada)} (automático)`, whatsapp: whatsappDigitado() }
+    });
+  } else if (atual) {
+    abrirModal({
+      icone: "✓", titulo: "Confirmar cadastro",
+      texto: "Confira os dados da aluna e confirme se deseja salvar:",
+      botao: "Salvar cadastro", acao: "salvar",
+      aluna: { ...atual, whatsapp: whatsappDigitado() }
+    });
+  }
 }
 
-function apagar(){
-  paraRemover = null;
-  $("modalIcon").textContent = "!"; $("modalTitulo").textContent = "Voltar para o início?";
-  $("modalTexto").textContent = "Você está prestes a sair desta etapa do cadastro. Os dados já salvos não serão apagados.";
-  $("modalCurso").textContent = nomeDoCurso(); $("modalNome").textContent = atual ? atual.nome : "";
-  $("modalChamada").textContent = atual ? atual.chamada : ""; $("modalWhatsapp").textContent = whatsappDigitado() || "Não informado";
-  $("modalData").hidden = false; $("modalSalvar").textContent = "Confirmar e voltar";
-  $("modalSalvar").dataset.acao = "voltar"; $("modal").hidden = false;
-}
-
-/* ---------- remover cadastro de aluna ---------- */
-function pedirRemocao(chamada){
-  const cadastro = cadastradas.find(x => String(x.chamada) === String(chamada));
-  if(!cadastro) return;
-  paraRemover = cadastro;
-  $("modalIcon").textContent = "🗑️"; $("modalTitulo").textContent = "Remover cadastro";
-  $("modalTexto").textContent = "Deseja realmente remover o cadastro desta aluna? Esta ação não pode ser desfeita.";
-  $("modalCurso").textContent = nomeDoCurso(); $("modalNome").textContent = cadastro.nome;
-  $("modalChamada").textContent = cadastro.chamada; $("modalWhatsapp").textContent = cadastro.whatsapp || "Não informado";
-  $("modalData").hidden = false; $("modalSalvar").textContent = "Sim, remover";
-  $("modalSalvar").dataset.acao = "remover"; $("modal").hidden = false;
-}
-
-async function confirmarRemocao(){
-  if(!paraRemover) return;
-  const cadastro = paraRemover;
+async function confirmarSalvar() {
+  const acao = $("modalSalvar").dataset.acao;
+  if (acao === "remover") return confirmarRemocao();
   $("modalSalvar").disabled = true;
-  try{
-    const snap = await get(ref(db,"emprestimos"));
-    const emprestimos = Object.values(snap.val() || {});
-    const comLivro = emprestimos.some(e =>
-      e && e.status === "emprestado" &&
-      e.alunaCurso === curso && String(e.alunaChamada) === String(cadastro.chamada));
-    if(comLivro){
-      $("modalTexto").textContent = "Esta aluna ainda está com livro(s) emprestado(s). Registre a devolução em 'Devolução de Livros' antes de remover o cadastro.";
+  try {
+    if (modoNova) {
+      const r = await vincularAluna(db, { curso, nome: nomeNovo(), whatsapp: whatsappDigitado(), origem: "cadastro" });
+      fecharModal(); limpar();
+      $("status").textContent = r.situacao === "nova"
+        ? `${r.nome} cadastrada no curso com o nº ${r.chamada}.`
+        : `WhatsApp de ${r.nome} atualizado.`;
+    } else if (atual) {
+      const nome = atual.nome;
+      await update(ref(db, `${ALUNAS_PATH}/${curso}/${atual.chamada}`), {
+        curso, nome, chamada: atual.chamada,
+        whatsapp: formatarWhatsapp(whatsappDigitado()),
+        atualizadoEm: new Date().toISOString()
+      });
+      fecharModal(); limpar();
+      $("status").textContent = `Cadastro de ${nome} salvo.`;
+    }
+  } catch (e) {
+    $("modalSalvar").disabled = false;
+    $("modalTexto").textContent = msgErro(e, "salvar");
+  }
+}
+
+/* ---------- remover ---------- */
+function pedirRemocao(chamada) {
+  const a = alunas.find((x) => String(x.chamada) === String(chamada));
+  if (!a) return;
+  abrirModal({
+    icone: "🗑️", titulo: "Remover aluna",
+    texto: "Deseja realmente remover esta aluna do curso? Ela deixa de aparecer na frequência, na lista de presença e na biblioteca.",
+    botao: "Sim, remover", acao: "remover", aluna: a
+  });
+  paraRemover = a;
+}
+
+async function confirmarRemocao() {
+  if (!paraRemover) return;
+  const a = paraRemover;
+  $("modalSalvar").disabled = true;
+  try {
+    const emprestimos = Object.values((await get(ref(db, "emprestimos"))).val() || {});
+    const comLivro = emprestimos.some((e) => e && e.status === "emprestado" &&
+      e.alunaCurso === curso && String(e.alunaChamada) === String(a.chamada));
+    if (comLivro) {
+      $("modalTexto").textContent = "Esta aluna ainda está com livro(s) emprestado(s). Registre a devolução em 'Devolução de Livros' antes de remover.";
       $("modalSalvar").disabled = false;
       return;
     }
-
-    await remove(ref(db,`${ALUNAS_PATH}/${curso}/${cadastro.chamada}`));
-    $("modalSalvar").disabled = false;
-    if(atual && String(atual.chamada) === String(cadastro.chamada)) limpar();
+    await remove(ref(db, `${ALUNAS_PATH}/${curso}/${a.chamada}`));
+    if (atual && atual.chamada === a.chamada) limpar();
     fecharModal();
-    await render();
-    $("status").textContent = "Cadastro de " + cadastro.nome + " removido.";
-  }catch(e){
-    console.error(e);
+    $("status").textContent = `${a.nome} removida do curso.`;
+  } catch (e) {
     $("modalSalvar").disabled = false;
-    $("modalTexto").textContent = `Não foi possível remover no Firebase. Erro: ${e?.code||e?.message||"desconhecido"}. Verifique as regras do Realtime Database e se você está logado.`;
+    $("modalTexto").textContent = msgErro(e, "remover");
   }
 }
 
-async function confirmarSalvar(){
-  const acao = $("modalSalvar").dataset.acao;
-  if(acao === "remover"){ return confirmarRemocao(); }
-  if(acao === "voltar"){ fecharModal(); voltarInicio(); return; }
-  if(!atual || !whatsappDigitado()) return;
-  const cadastro = {
-    curso, nome: atual.nome, chamada: atual.chamada,
-    whatsapp: whatsappDigitado(), atualizadoEm: new Date().toISOString()
-  };
-  try{
-    $("modalSalvar").disabled = true;
-    await set(ref(db,`${ALUNAS_PATH}/${curso}/${atual.chamada}`), cadastro);
-    $("modalSalvar").disabled = false;
-    fecharModal(); voltarInicio();
-    $("status").textContent = "Cadastro salvo no Firebase.";
-  }catch(e){
-    console.error(e);
-    $("modalSalvar").disabled = false;
-    $("modalTexto").textContent = `Não foi possível salvar no Firebase. Erro: ${e?.code||e?.message||"desconhecido"}. Verifique as regras do Realtime Database e se você está logado.`;
-  }
+/* ---------- lista do curso ---------- */
+function render() {
+  $("cadastros").hidden = !alunas.length;
+  $("contador").textContent = alunas.length;
+  const semZap = alunas.filter((a) => !a.whatsapp).length;
+  $("semZap").textContent = semZap ? `${semZap} sem WhatsApp — pesquise o nome acima para completar.` : "";
+  $("lista").innerHTML = alunas.map((a) =>
+    `<div><b class="num">${esc(a.chamada)}</b><span><strong>${esc(a.nome)}</strong><br><small>${esc(nomeDoCurso())}</small></span>` +
+    (a.whatsapp ? `<b class="phone">${esc(a.whatsapp)}</b>` : `<span class="sem-zap">Sem WhatsApp</span>`) +
+    `<button type="button" class="remover-aluna" data-chamada="${esc(a.chamada)}">Remover</button></div>`
+  ).join("");
 }
 
-async function render(){
-  try{
-    const dados = await buscarCadastros();
-    // só mostra quem já tem WhatsApp cadastrado (alunas importadas entram com WhatsApp vazio)
-    cadastradas = Object.values(dados?.[curso] || {}).filter(x => x && x.whatsapp).sort((a,b) => Number(a.chamada) - Number(b.chamada));
-    $("cadastros").hidden = !cadastradas.length;
-    $("contador").textContent = cadastradas.length;
-    $("lista").innerHTML = cadastradas.map(x =>
-      `<div><b class="num">${esc(x.chamada)}</b><span><strong>${esc(x.nome)}</strong><br><small>${esc(nomeDoCurso())}</small></span><b class="phone">${esc(x.whatsapp)}</b><button type="button" class="remover-aluna" data-chamada="${esc(x.chamada)}">Remover</button></div>`
-    ).join("");
-  }catch(e){ console.error(e); }
-}
-
+/* ---------- eventos ---------- */
 $("curso").onchange = aoTrocarCurso;
-$("pesquisa").oninput = preencher;
+$("pesquisa").oninput = () => {
+  if (atual || modoNova) { atual = null; modoNova = false; $("dados").hidden = $("campoZap").hidden = $("novaAluna").hidden = true; }
+  preencher(); atualizarBotoes();
+};
+$("btnNova").onclick = () => abrirNova($("pesquisa").value && !acharPorNome(porChamada, $("pesquisa").value) ? $("pesquisa").value : "");
+$("nomeNovo").oninput = atualizarNova;
 $("whatsapp").oninput = () => { $("whatsapp").value = formatarWhatsapp($("whatsapp").value); atualizarBotoes(); };
-$("salvar").onclick = salvar; $("apagar").onclick = apagar;
-$("modalVoltar").onclick = fecharModal; $("modalSalvar").onclick = confirmarSalvar;
-$("lista").addEventListener("click", e => {
+$("salvar").onclick = salvar;
+$("apagar").onclick = limpar;
+$("modalVoltar").onclick = fecharModal;
+$("modalSalvar").onclick = confirmarSalvar;
+$("lista").addEventListener("click", (e) => {
   const b = e.target.closest(".remover-aluna");
-  if(b) pedirRemocao(b.dataset.chamada);
+  if (b) pedirRemocao(b.dataset.chamada);
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".campo-pesquisa")) $("listaSugestoes").hidden = true;
 });
 
-montarCursos().catch(e => { console.error(e); $("curso").innerHTML = '<option value="">Erro ao carregar cursos</option>'; });
+montarCursos().catch((e) => { console.error(e); $("curso").innerHTML = '<option value="">Erro ao carregar cursos</option>'; });
