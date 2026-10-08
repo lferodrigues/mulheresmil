@@ -6,6 +6,8 @@ import { db } from "./firebase-config.js";
 import {
   ref, get, push, set, update, onValue, runTransaction
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { carregarCursos } from "./cursos.js";
+import { sincronizarInscricoes } from "./alunas.js";
 
 const PRAZO_DIAS = 15;
 const $ = (id) => document.getElementById(id);
@@ -32,6 +34,9 @@ function erro(e) {
 
 /* ---------- carregamento ---------- */
 async function carregarAlunas() {
+  // traz para a lista quem foi inscrita em inscricao.html e ainda não está no curso
+  try { await sincronizarInscricoes(db, await carregarCursos(false)); }
+  catch (e) { console.error("[reserva] sincronizar inscrições:", e); }
   const snap = await get(ref(db, "alunas"));
   const dados = snap.val() || {};
   alunas = [];
