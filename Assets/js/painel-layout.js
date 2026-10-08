@@ -24,8 +24,10 @@ document.getElementById("overlay").onclick = () => body.classList.remove("side-o
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") body.classList.remove("side-on"); });
 
 grupos.forEach((g) => g.querySelector(".group-btn").onclick = () => g.classList.toggle("open"));
-document.getElementById("btnExpandir").onclick = () => grupos.forEach((g) => g.classList.add("open"));
-document.getElementById("btnRecolher").onclick = () => grupos.forEach((g) => g.classList.remove("open"));
+const btnExpandir = document.getElementById("btnExpandir");
+const btnRecolher = document.getElementById("btnRecolher");
+if (btnExpandir) btnExpandir.onclick = () => grupos.forEach((g) => g.classList.add("open"));
+if (btnRecolher) btnRecolher.onclick = () => grupos.forEach((g) => g.classList.remove("open"));
 
 // busca no menu
 const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -44,10 +46,13 @@ document.getElementById("busca").addEventListener("input", (e) => {
     g.classList.toggle("open", !!q && n > 0);
     achou += n;
   });
-  const inicio = document.querySelector(".nav-link");
-  const inicioOk = !q || norm(inicio.textContent).includes(q);
-  inicio.style.display = inicioOk ? "" : "none";
-  document.getElementById("navVazio").style.display = (achou || inicioOk) ? "none" : "block";
+  // links soltos do menu (Início, ou os itens da Biblioteca)
+  document.querySelectorAll("#nav > .nav-link").forEach((l) => {
+    const ok = !q || norm(l.textContent).includes(q);
+    l.style.display = ok ? "" : "none";
+    if (ok) achou++;
+  });
+  document.getElementById("navVazio").style.display = achou ? "none" : "block";
 });
 
 /* ---------- sino de atrasos (notificacoes.js) dentro do topo ---------- */
