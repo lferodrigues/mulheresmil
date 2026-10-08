@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
   <meta name="description" content="Acesso ao material do curso Educação Inclusiva - Mulheres Mil">
+  <link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
   <title>Mulheres Mil | Acessando materiais</title>
+  <script src="./Assets/js/bloqueio-site.js"></script>
   <link rel="stylesheet" href="./Assets/css/style.css">
 </head>
 <body>
@@ -60,7 +61,7 @@
     var destination =
       "https://drive.google.com/drive/folders/1khDEVIbD_eggkcJljSPnTi3Ox5lT00lZ?usp=sharing";
 
-    var duration = 1500; // 15 segundos
+    var duration = 9000; // 9 segundos
     var startTime = performance.now();
 
     var percentage = document.getElementById("percentage");
@@ -104,6 +105,14 @@
         progressBar.style.width = "100%";
         statusEl.textContent = "Redirecionando...";
         seconds.textContent = "0";
+
+        // Visitante bloqueado: NÃO redireciona para os materiais.
+        // Quando o administrador desbloquear, bloqueio-site.js recarrega a página.
+        if (window.__mmBloqueado && window.__mmBloqueado()) {
+          window.__mmAguardandoLiberar = true;
+          return;
+        }
+
         window.location.href = destination;
       }
     }
