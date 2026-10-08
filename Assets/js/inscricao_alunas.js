@@ -7,6 +7,7 @@
 import { auth, db } from "./firebase-config-inscricao.js";
 import { ref, get, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./cursos.js";
+import { vincularAluna } from "./alunas.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -267,9 +268,24 @@ async function confirmarSalvar() {
     }
     await set(ref(db, "inscricoes/" + id), registro);
     const nome = dados.identificacao.nome;
+
+    // vincula a inscrita à lista de alunas do curso (frequência, lista de presença, biblioteca)
+    let vinculo = "";
+    try {
+      const r = await vincularAluna(db, {
+        curso: dados.inscricao.curso, nome, whatsapp: dados.identificacao.whatsapp, origem: "inscricao"
+      });
+      vinculo = r.situacao === "nova"
+        ? ` Ela foi incluída na lista de alunas do curso com o nº ${r.chamada}.`
+        : " Ela já estava na lista de alunas do curso.";
+    } catch (e) {
+      console.error("[inscricao] não foi possível vincular a aluna:", e);
+      vinculo = " Atenção: não foi possível incluí-la na lista de alunas do curso. Cadastre-a em 'Cadastro de Alunas'.";
+    }
+
     fecharModal();
     limparForm();
-    msg(`Inscrição de ${nome} ${existe ? "atualizada" : "salva"} no banco de dados.`, "ok");
+    msg(`Inscrição de ${nome} ${existe ? "atualizada" : "salva"} no banco de dados.${vinculo}`, "ok");
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (e) { fecharModal(); erro(e); }
   finally { btn.disabled = false; }
