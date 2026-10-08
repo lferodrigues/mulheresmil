@@ -97,6 +97,7 @@ footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./Assets/js/cursos.js";
+import { sincronizarInscricoes } from "./Assets/js/alunas.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -116,6 +117,8 @@ const textoData = () => $("data").value ? dataBR($("data").value) : "____/____/_
 async function iniciar() {
   try { await auth.authStateReady(); } catch (_) {}
   try {
+    // traz para a lista quem foi inscrita em inscricao.html e ainda não está no curso
+    try { await sincronizarInscricoes(db, await carregarCursos(false)); } catch (e) { console.error("[gerar lista] sincronizar inscrições:", e); }
     const [todos, snap] = await Promise.all([carregarCursos(true), get(ref(db, "alunas"))]);
     alunasDb = snap.val() || {};
     const total = (id) => Object.values(alunasDb[id] || {}).filter((a) => a && a.nome).length;
