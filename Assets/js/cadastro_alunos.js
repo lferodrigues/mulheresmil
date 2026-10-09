@@ -7,7 +7,7 @@
 import { db } from "./firebase-config.js";
 import { ref, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./cursos.js";
-import { ALUNAS_PATH, vincularAluna, acharPorNome, proximaChamada, formatarWhatsapp, limparNome, chaveNome, sincronizarInscricoes, marcarRemocaoNasInscricoes } from "./alunas.js";
+import { ALUNAS_PATH, vincularAluna, acharPorNome, proximaChamada, formatarWhatsapp, limparNome, chaveNome, sincronizarInscricoes, levantarDadosDaAluna, removerAlunaCompleta } from "./alunas.js";
 
 let curso = "";
 let cursos = {};            // { id: nome }
@@ -164,6 +164,7 @@ function abrirModal({ icone, titulo, texto, botao, acao, aluna }) {
   $("modalChamada").textContent = aluna.chamada;
   $("modalWhatsapp").textContent = aluna.whatsapp || "Não informado";
   $("modalData").hidden = false;
+  $("modalApagar").hidden = true; $("modalApagar").innerHTML = "";
   $("modalSalvar").textContent = botao;
   $("modalSalvar").dataset.acao = acao;
   // vermelho para remover, verde para salvar
@@ -226,38 +227,71 @@ async function confirmarSalvar() {
   }
 }
 
-/* ---------- remover ---------- */
-function pedirRemocao(chamada) {
+/* ---------- remover (apaga TUDO da aluna no banco) ---------- */
+const plural = (n, um, varios) => n + " " + (n === 1 ? um : varios);
+
+async function pedirRemocao(chamada) {
   const a = alunas.find((x) => String(x.chamada) === String(chamada));
   if (!a) return;
-  abrirModal({
-    icone: "🗑️", titulo: "Remover aluna",
-    texto: "Deseja realmente remover esta aluna do curso? Ela deixa de aparecer na frequência, na lista de presença e na biblioteca.",
-    botao: "Sim, remover", acao: "remover", aluna: a
-  });
   paraRemover = a;
+  abrirModal({
+    icone: "🗑️", titulo: "Remover aluna e todos os dados",
+    texto: "Verificando os dados desta aluna no banco…",
+    botao: "Sim, apagar tudo", acao: "remover", aluna: a
+  });
+  $("modalSalvar").disabled = true;
+
+  try {
+    const { resumo } = await levantarDadosDaAluna(db, curso, a, cursos);
+    if (paraRemover !== a) return; // o pop-up foi fechado ou trocou de aluna enquanto carregava
+    if (resumo.comLivro) {
+      $("modalTexto").textContent = "Esta aluna ainda está com " + plural(resumo.comLivro, "livro emprestado", "livros emprestados") +
+        ". Registre a devolução em 'Devolução de Livros' antes de remover.";
+      return; // botão continua desativado
+    }
+    $("modalTexto").textContent = "Isto apaga do banco de dados tudo o que pertence a esta aluna neste curso. Esta ação não pode ser desfeita.";
+    const itens = [
+      "Cadastro no curso (nome, nº da chamada e WhatsApp)",
+      resumo.inscricoes
+        ? "Ficha de inscrição completa — dados pessoais, socioeconômicos, bancários e documentos"
+        : "Ficha de inscrição — nenhuma encontrada",
+      resumo.presencas
+        ? "Presenças e faltas em " + plural(resumo.presencas, "lista de chamada", "listas de chamada")
+        : "Presenças e faltas — nenhuma registrada",
+      resumo.emprestimos
+        ? "Histórico da biblioteca: " + plural(resumo.emprestimos, "empréstimo devolvido", "empréstimos devolvidos")
+        : "Histórico da biblioteca — nenhum empréstimo"
+    ];
+    $("modalApagar").innerHTML = '<strong>Será apagado:</strong><ul>' +
+      itens.map((t) => `<li class="${/nenhum/.test(t) ? "vazio-item" : ""}">${esc(t)}</li>`).join("") + "</ul>";
+    $("modalApagar").hidden = false;
+    $("modalSalvar").disabled = false;
+  } catch (e) {
+    $("modalTexto").textContent = msgErro(e, "remover");
+  }
 }
 
 async function confirmarRemocao() {
   if (!paraRemover) return;
   const a = paraRemover;
   $("modalSalvar").disabled = true;
+  $("modalSalvar").textContent = "Apagando…";
   try {
-    const emprestimos = Object.values((await get(ref(db, "emprestimos"))).val() || {});
-    const comLivro = emprestimos.some((e) => e && e.status === "emprestado" &&
-      e.alunaCurso === curso && String(e.alunaChamada) === String(a.chamada));
-    if (comLivro) {
-      $("modalTexto").textContent = "Esta aluna ainda está com livro(s) emprestado(s). Registre a devolução em 'Devolução de Livros' antes de remover.";
-      $("modalSalvar").disabled = false;
-      return;
-    }
-    await remove(ref(db, `${ALUNAS_PATH}/${curso}/${a.chamada}`));
-    // impede que a sincronização com as inscrições traga a aluna de volta
-    try { await marcarRemocaoNasInscricoes(db, curso, a.nome, cursos); } catch (e) { console.error("[cadastro] marcar inscrição:", e); }
+    const r = await removerAlunaCompleta(db, curso, a, cursos);
     if (atual && atual.chamada === a.chamada) limpar();
     fecharModal();
-    $("status").textContent = `${a.nome} removida do curso.`;
+    const partes = ["cadastro no curso"];
+    if (r.inscricoes) partes.push("ficha de inscrição");
+    if (r.presencas) partes.push("presenças em " + plural(r.presencas, "lista", "listas"));
+    if (r.emprestimos) partes.push(plural(r.emprestimos, "empréstimo", "empréstimos") + " no histórico");
+    $("status").textContent = `${a.nome} removida. Apagado do banco: ${partes.join(", ")}.`;
   } catch (e) {
+    $("modalSalvar").textContent = "Sim, apagar tudo";
+    if (e && e.code === "COM_LIVRO") {
+      $("modalTexto").textContent = "Esta aluna acabou de pegar um livro emprestado. Registre a devolução antes de remover.";
+      $("modalApagar").hidden = true;
+      return;
+    }
     $("modalSalvar").disabled = false;
     $("modalTexto").textContent = msgErro(e, "remover");
   }

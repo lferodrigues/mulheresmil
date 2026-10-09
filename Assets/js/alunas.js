@@ -169,3 +169,70 @@ export async function marcarRemocaoNasInscricoes(db, curso, nome, cursos) {
   if (Object.keys(mudancas).length) await update(ref(db), mudancas);
   return Object.keys(mudancas).length;
 }
+
+/* ---------- remoção completa da aluna ---------- */
+
+/**
+ * Procura TUDO o que pertence à aluna (curso + nº da chamada + nome) e devolve
+ * os caminhos a apagar, sem apagar nada ainda (serve para a pré-visualização).
+ *   - alunas/{curso}/{nº}                                   cadastro no curso
+ *   - inscricoes/{cpf}                                      ficha de inscrição (mesmo nome e mesmo curso)
+ *   - presenca/{curso}/listas/{lista}/presencas/{nº}         presenças e faltas
+ *   - emprestimos/{id}                                      histórico de livros (já devolvidos)
+ * Se houver livro ainda emprestado com ela, devolve comLivro > 0 (a remoção deve ser bloqueada).
+ */
+export async function levantarDadosDaAluna(db, curso, aluna, cursos) {
+  const chamada = String(aluna.chamada);
+  const alvo = chaveNome(aluna.nome);
+  const [insSnap, presSnap, empSnap] = await Promise.all([
+    get(ref(db, "inscricoes")),
+    get(ref(db, `presenca/${curso}/listas`)),
+    get(ref(db, "emprestimos"))
+  ]);
+
+  const caminhos = [`${ALUNAS_PATH}/${curso}/${chamada}`];
+  const resumo = { inscricoes: 0, presencas: 0, emprestimos: 0, comLivro: 0 };
+
+  // ficha de inscrição: mesma aluna (nome) no mesmo curso
+  for (const [id, v] of Object.entries(insSnap.val() || {})) {
+    if (chaveNome(v?.identificacao?.nome) === alvo && cursoDaInscricao(v?.inscricao, cursos || {}) === curso) {
+      caminhos.push(`inscricoes/${id}`);
+      resumo.inscricoes++;
+    }
+  }
+
+  // presenças: o nº da chamada dela em cada lista do curso
+  for (const [listaId, l] of Object.entries(presSnap.val() || {})) {
+    if (l && l.presencas && Object.prototype.hasOwnProperty.call(l.presencas, chamada)) {
+      caminhos.push(`presenca/${curso}/listas/${listaId}/presencas/${chamada}`);
+      resumo.presencas++;
+    }
+  }
+
+  // empréstimos: ativo bloqueia; devolvidos entram na remoção
+  for (const [id, e] of Object.entries(empSnap.val() || {})) {
+    if (!e || e.alunaCurso !== curso || String(e.alunaChamada) !== chamada) continue;
+    if (e.status === "emprestado") resumo.comLivro++;
+    else { caminhos.push(`emprestimos/${id}`); resumo.emprestimos++; }
+  }
+
+  return { caminhos, resumo };
+}
+
+/**
+ * Apaga de uma vez (atualização atômica: ou apaga tudo, ou nada) todos os dados da aluna.
+ * Confere de novo no momento de apagar. Lança erro "COM_LIVRO" se ela estiver com livro emprestado.
+ * @returns resumo { inscricoes, presencas, emprestimos }
+ */
+export async function removerAlunaCompleta(db, curso, aluna, cursos) {
+  const { caminhos, resumo } = await levantarDadosDaAluna(db, curso, aluna, cursos);
+  if (resumo.comLivro) {
+    const e = new Error("A aluna está com livro emprestado.");
+    e.code = "COM_LIVRO";
+    throw e;
+  }
+  const mudancas = {};
+  caminhos.forEach((c) => { mudancas[c] = null; });
+  await update(ref(db), mudancas);
+  return resumo;
+}

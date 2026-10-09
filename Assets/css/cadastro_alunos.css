@@ -458,6 +458,21 @@ tbody td strong { color: var(--text); font-weight: 600; }
 
 .modal-foot { padding: 6px 22px 18px; display: flex; justify-content: flex-end; gap: 8px; }
 
+/* lista do que será apagado ao remover a aluna */
+.modal-apagar {
+  margin: 10px 22px 0;
+  padding: 10px 14px;
+  border: 1px solid #f0b9ba;
+  border-left: 3px solid var(--vermelho);
+  border-radius: 4px;
+  background: #fff7f7;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.modal-apagar strong { display: block; margin-bottom: 4px; color: var(--vermelho-escuro); font-weight: 600; }
+.modal-apagar ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+.modal-apagar li.vazio-item { color: #8a8079; }
+
 /* ---------- Telas menores ---------- */
 @media (max-width: 860px) {
   .content { padding: 16px 12px 28px; }

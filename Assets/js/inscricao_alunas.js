@@ -5,7 +5,7 @@
    - NÃO guarda cópia de documentos (a aluna entrega o xerox em papel): só os números de RG, CPF e NIS
      e a conferência de quais documentos foram entregues. */
 import { auth, db } from "./firebase-config-inscricao.js";
-import { ref, get, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { ref, get, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos, CURSOS_PADRAO, gerarId } from "./cursos.js";
 import { vincularAluna } from "./alunas.js";
 import { confirmar } from "./dialogo.js";
@@ -119,7 +119,10 @@ function htmlCampo(f) {
 }
 
 $("form").innerHTML = SECOES.map((s) =>
-  `<section class="secao"><h2>${esc(s.titulo)}</h2>${s.dica ? `<p class="dica">${esc(s.dica)}</p>` : ""}` +
+  `<section class="secao secao-${s.key}"><h2>${(() => {
+    const m = s.titulo.match(/^(\d+)\.\s*(.*)$/);
+    return m ? `<span class="num">${m[1]}</span>${esc(m[2])}` : esc(s.titulo);
+  })()}</h2>${s.dica ? `<p class="dica">${esc(s.dica)}</p>` : ""}` +
   `<div class="grade">${s.campos.map(htmlCampo).join("")}</div></section>`).join("");
 
 /* ---------- máscaras e campos condicionais ---------- */
@@ -224,33 +227,98 @@ function erro(e) {
 }
 const fecharModal = () => { pendente = null; $("modal").hidden = true; };
 
+/* ---------- verificação de cadastro existente ---------- */
+const normTxt = (v) => limparTxt(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+// valor comparável de uma seção (ignora ordem das opções marcadas e diferenças de espaço/acento)
+function chaveSecao(sec) {
+  const o = {};
+  Object.keys(sec || {}).sort().forEach((k) => {
+    const v = sec[k];
+    const t = Array.isArray(v) ? v.map(normTxt).filter(Boolean).sort().join("|") : normTxt(v);
+    if (t) o[k] = t;
+  });
+  return JSON.stringify(o);
+}
+// seções do formulário que mudaram em relação ao que está no banco
+function secoesDiferentes(novo, antigo) {
+  return SECOES.filter((s) => {
+    if (s.key === "inscricao") return normTxt(novo.inscricao.curso) !== normTxt(antigo?.inscricao?.curso);
+    return chaveSecao(novo[s.key]) !== chaveSecao(antigo?.[s.key]);
+  }).map((s) => s.titulo.replace(/^\d+\.\s*/, ""));
+}
+const dataHoraBR = (v) => (typeof v === "number" ? new Date(v).toLocaleString("pt-BR") : "");
+
 async function pedirSalvar() {
   if (!validar()) return;
   const dados = coletar();
   const id = soNum(dados.identificacao.cpf);
-  $("salvar").disabled = true;
-  let existe = false;
-  try { existe = (await get(ref(db, "inscricoes/" + id))).exists(); }
-  catch (e) { $("salvar").disabled = false; return erro(e); }
-  $("salvar").disabled = false;
-
-  pendente = { id, dados, existe };
   const i = dados.identificacao, b = dados.bancarios;
-  $("modalIcon").textContent = existe ? "!" : "✓";
-  $("modalTitulo").textContent = existe ? "Atualizar inscrição" : "Confirmar inscrição";
-  $("modalTexto").textContent = existe
-    ? "Já existe uma inscrição com este CPF. Os dados serão substituídos pelos do formulário."
-    : "Confira os dados principais antes de salvar:";
-  const linhas = [
-    ["Nome", i.nome], ["CPF", i.cpf], ["RG", i.rg], ["WhatsApp", i.whatsapp],
+  $("salvar").disabled = true;
+  msg("Verificando se a pessoa já está cadastrada…");
+
+  let antigo = null, homonima = null;
+  try {
+    antigo = (await get(ref(db, "inscricoes/" + id))).val();
+    if (!antigo) {
+      // mesma pessoa com CPF diferente? (mesmo nome e mesma data de nascimento)
+      const todas = (await get(ref(db, "inscricoes"))).val() || {};
+      const achada = Object.entries(todas).find(([outroId, v]) =>
+        outroId !== id && normTxt(v?.identificacao?.nome) === normTxt(i.nome) &&
+        (v?.identificacao?.nascimento || "") === i.nascimento);
+      if (achada) homonima = { id: achada[0], ...achada[1] };
+    }
+  } catch (e) { $("salvar").disabled = false; msg(""); return erro(e); }
+  $("salvar").disabled = false;
+  msg("");
+
+  pendente = { id, dados, existe: !!antigo };
+  const resumoNovo = [
+    ["Nome", i.nome], ["CPF", i.cpf], ["WhatsApp", i.whatsapp],
     ["Curso", CURSOS[dados.inscricao.curso] || dados.inscricao.curso],
     ["Dados bancários", `${b.banco} · ${b.tipoConta} · Ag. ${b.agencia} · Conta ${b.conta}`],
-    ["Titular da conta", b.titular],
     ["Documentos entregues", `${dados.documentos.entregues.length} de 6`]
   ];
-  $("modalResumo").innerHTML = linhas.map(([k, v]) => `<div><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join("");
-  $("modalConfirmar").textContent = existe ? "Confirmar e atualizar" : "Confirmar e salvar";
+
+  const box = $("modal").querySelector(".modal-box");
+  box.classList.remove("aviso", "igual");
+
+  if (antigo) {
+    // já existe inscrição com este CPF: pergunta se deseja atualizar
+    const mudou = secoesDiferentes(dados, antigo);
+    const ai = antigo.identificacao || {};
+    box.classList.add(mudou.length ? "aviso" : "igual");
+    $("modalIcon").textContent = mudou.length ? "!" : "=";
+    $("modalTitulo").textContent = "Esta pessoa já está cadastrada";
+    $("modalTexto").textContent = mudou.length
+      ? "Encontramos uma inscrição com este CPF. Deseja atualizar com os dados do formulário?"
+      : "Encontramos uma inscrição com este CPF e todos os dados são iguais aos do formulário. Não há nada novo para salvar.";
+    const linhas = [
+      ["Nome no cadastro", ai.nome || "—"],
+      ["CPF", ai.cpf || i.cpf],
+      ["Curso no cadastro", antigo.inscricao?.cursoNome || antigo.inscricao?.curso || "—"],
+      ["Inscrita em", dataHoraBR(antigo.criadoEm) || "—"]
+    ];
+    if (antigo.atualizadoEm && antigo.atualizadoEm !== antigo.criadoEm) linhas.push(["Última atualização", dataHoraBR(antigo.atualizadoEm)]);
+    linhas.push(["O que muda", mudou.length ? mudou.join(" · ") : "Nada — dados idênticos"]);
+    $("modalResumo").innerHTML = linhas.map(([k, v], n) =>
+      `<div${n === linhas.length - 1 ? ' class="destaque"' : ""}><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join("");
+    $("modalVoltar").textContent = mudou.length ? "Não atualizar" : "Fechar";
+    $("modalConfirmar").textContent = "Sim, atualizar";
+    $("modalConfirmar").hidden = !mudou.length;
+  } else {
+    $("modalIcon").textContent = homonima ? "!" : "✓";
+    if (homonima) box.classList.add("aviso");
+    $("modalTitulo").textContent = homonima ? "Possível cadastro repetido" : "Confirmar inscrição";
+    $("modalTexto").textContent = homonima
+      ? `Já existe uma inscrição de ${homonima.identificacao?.nome || "pessoa"} com a mesma data de nascimento, mas com outro CPF (final ${String(homonima.id).slice(-2)}). Confira se o CPF está correto antes de salvar.`
+      : "Confira os dados principais antes de salvar:";
+    $("modalResumo").innerHTML = resumoNovo.map(([k, v]) => `<div><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join("");
+    $("modalVoltar").textContent = homonima ? "Voltar e conferir" : "Voltar";
+    $("modalConfirmar").textContent = homonima ? "Salvar mesmo assim" : "Confirmar e salvar";
+    $("modalConfirmar").hidden = false;
+  }
   $("modal").hidden = false;
+  (antigo && $("modalConfirmar").hidden ? $("modalVoltar") : $("modalConfirmar")).focus();
 }
 
 async function confirmarSalvar() {
@@ -305,18 +373,6 @@ function limparForm() {
   });
   document.querySelectorAll(".sub").forEach((s) => { s.hidden = true; });
 }
-
-/* ---------- lista de inscrições ---------- */
-onValue(ref(db, "inscricoes"), (snap) => {
-  const lista = Object.entries(snap.val() || {})
-    .map(([id, v]) => ({ id, nome: v?.identificacao?.nome || "", curso: v?.inscricao?.cursoNome || v?.inscricao?.curso || "" }))
-    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
-  $("contador").textContent = lista.length;
-  $("inscritas").hidden = !lista.length;
-  $("lista").innerHTML = lista.map((x) =>
-    `<div><span><strong>${esc(x.nome)}</strong><small>${esc(x.curso)}</small></span>` +
-    `<span class="cpf">CPF ***.${esc(x.id.slice(3, 6))}.${esc(x.id.slice(6, 9))}-**</span></div>`).join("");
-}, (e) => console.error("[inscricoes] erro ao ler:", e));
 
 /* ---------- eventos ---------- */
 $("salvar").onclick = pedirSalvar;
