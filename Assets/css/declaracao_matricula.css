@@ -236,14 +236,13 @@
 
 .f-logo { display: block; width: 34cqw; margin: 0 auto 2.4cqw; }
 .f-orgao { display: flex; flex-direction: column; align-items: center; gap: .3cqw; text-align: center; font-size: 1.5cqw; font-weight: 700; color: #282828; }
-.f-titulo { margin: 11cqw 0 0; text-align: center; font-size: 2.9cqw; font-weight: 400; letter-spacing: .9cqw; }
-.f-texto { margin-top: 13cqw; text-align: justify; text-indent: 6cqw; font-size: 2.1cqw; line-height: 2; }
+.f-titulo { margin: 8cqw 0 0; text-align: center; font-size: 2.9cqw; font-weight: 400; letter-spacing: .9cqw; }
+.f-texto { margin-top: 9cqw; text-align: justify; text-indent: 6cqw; font-size: 2.1cqw; line-height: 2; }
 .f-texto b { font-weight: 600; }
 .f-texto .ph { color: #b9b1aa; background: #f3f1ee; border-radius: 2px; padding: 0 .6cqw; }
-.f-data { margin-top: 9cqw; text-align: right; font-size: 2.1cqw; }
+.f-data { margin-top: 5cqw; text-align: right; font-size: 2.1cqw; }
 .f-assina {
-  margin-top: auto;
-  margin-bottom: 9cqw;
+  margin-top: 12cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
