@@ -385,6 +385,15 @@ Sistema Mulheres Mil
 /logsAcesso/{id}        → uid, email, tipo, ip, sessao, pagina, acao, data, navegador...
 ```
 
+### Perfis de acesso (`controle_usuarios.html`)
+
+Na lista do Controle de Usuários, a coluna **Perfil** tem um botão em cada linha que abre o pop-up de perfil:
+
+* **Perfil de cadastro** — o usuário entra **somente** pela Inscrição de Alunas (`login.html`). Se tentar entrar pelo `admin.html` ou abrir qualquer página do painel, é desconectado e recebe o aviso para usar a página de inscrição;
+* **Administrador** — acesso a tudo (painel e inscrição).
+
+O perfil fica em `perfis/{uid}/perfil` (fora de `usuarios/`, que cada usuário pode editar). Usuário **sem perfil gravado** é tratado como administrador, para não tirar o acesso de quem já usava o sistema. Ninguém pode trocar o **próprio** perfil para cadastro pelo pop-up. A checagem fica em `Assets/js/perfis.js`, usada pelo `auth-guard.js` (todas as páginas do painel) e pelo `admin.html`.
+
 ### Regras do Realtime Database
 
 ```json
@@ -408,6 +417,14 @@ Sistema Mulheres Mil
         ".write": "auth != null && auth.uid === $uid"
       }
     },
+    "perfis": {
+      ".read": "auth != null && root.child('perfis/' + auth.uid + '/perfil').val() !== 'cadastro'",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && root.child('perfis/' + auth.uid + '/perfil').val() !== 'cadastro'",
+        ".validate": "newData.child('perfil').val() === 'cadastro' || newData.child('perfil').val() === 'administrador'"
+      }
+    },
     "logsAcesso": {
       ".read": "auth != null && auth.token.email === 'contato@feliperodrigues.net'",
       "$id": {
@@ -423,6 +440,7 @@ Sistema Mulheres Mil
 * **`cursos`**: sem esta regra o Cadastro de Cursos retorna "Sem permissão no banco de dados";
 * **`presenca`**: guarda as listas de chamada de cada curso;
 * **`usuarios`**: cada usuária lê e grava apenas o próprio perfil;
+* **`perfis`**: perfil de acesso de cada usuário (`administrador` ou `cadastro`). Cada um lê o próprio; só quem **não** é de cadastro pode ler a lista e alterar perfis — assim um usuário de cadastro não consegue se promover a administrador;
 * **`logsAcesso`**: os registros só podem ser **criados** (nunca editados ou apagados) e cada um precisa carregar o `uid` de quem o gravou; a **leitura** é restrita à conta do administrador.
 
 ---
