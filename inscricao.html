@@ -6,45 +6,73 @@
 <link rel="icon" href="Logo-Mulheres-Mil.jpg">
 <title>Inscrição de Alunas | Mulheres Mil</title>
 <script type="module" src="./Assets/js/auth-guard-inscricao.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="Assets/css/inscricao_alunas.css">
 </head>
 <body>
-<style>
-.login-btn{position:fixed;top:16px;right:16px;z-index:10;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;background:rgba(255,255,255,.9);color:#202124;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.10);border:1px solid rgba(0,0,0,.06)}
-</style>
-...
-<a class="login-btn" href="./login_inscricao.html" id="btnSair">🚪 Sair</a>
-<main>
-<section class="card">
-  <img src="if-sjn.png" alt="Mulheres Mil" class="logo">
-  <hr>
-  <span class="badge">PAINEL DO ADMINISTRADOR(A)</span>
-  <h1>Inscrição de Alunas</h1>
-  <p>Formulário de inscrição do Programa Mulheres Mil (Anexo I do edital). A cópia dos documentos deve ser entregue em papel (xerox); aqui são registrados apenas os números e a conferência.</p>
 
-  <form id="form" novalidate></form>
+<!-- barra do administrador -->
+<div class="barra-admin">
+  <span class="selo-admin">Painel do administrador(a)</span>
+  <a class="btn-sair" href="./login_inscricao.html" id="btnSair">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 20.5H5.5a1 1 0 01-1-1v-15a1 1 0 011-1H13"/><path d="M14 12h7M18 9l3 3-3 3"/></svg>Sair
+  </a>
+</div>
 
-  <small id="status"></small>
-  <div class="buttons">
-    <button id="salvar" type="button">Salvar inscrição</button>
-    <button id="limpar" type="button">Limpar</button>
+<main class="folha">
+  <!-- ===== Cabeçalho (faixa escura + listra com as cores do logo) ===== -->
+  <header class="cabecalho">
+    <div class="cab-texto">
+      <h1>Ficha de Inscrição<br><span>Programa Mulheres Mil</span></h1>
+      <p>Anexo I do edital · IF Sudeste MG – Campus São João Nepomuceno</p>
+    </div>
+    <div class="cab-logo"><img src="Logo-Mulheres-Mil.jpg" alt="Mulheres Mil — Educação, Cidadania e Desenvolvimento Sustentável"></div>
+  </header>
+  <div class="listra" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+  <div class="corpo">
+    <p class="intro">A cópia dos documentos deve ser entregue <strong>em papel (xerox)</strong>; aqui são registrados apenas os números e a conferência. Campos com <span class="req-demo">*</span> são obrigatórios.</p>
+
+    <!-- as seções do formulário são montadas pelo inscricao_alunas.js -->
+    <form id="form" novalidate></form>
   </div>
 
-  <section id="inscritas" hidden>
+  <!-- ===== Faixa cinza: envio ===== -->
+  <div class="faixa-final">
+    <ul class="declaracoes">
+      <li>Confira se os dados pessoais, o curso escolhido e os dados bancários estão corretos.</li>
+      <li>A conta bancária deve estar no nome da própria aluna.</li>
+    </ul>
+    <small id="status"></small>
+    <div class="buttons">
+      <button id="limpar" type="button">Limpar formulário</button>
+      <button id="salvar" type="button">Salvar inscrição</button>
+    </div>
+  </div>
+
+  <!-- ===== Inscrições já registradas ===== -->
+  <section id="inscritas" class="inscritas" hidden>
     <h2>Inscrições registradas <span id="contador">0</span></h2>
     <div id="lista"></div>
   </section>
 
-  
-  <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
-</section>
+  <footer class="rodape">
+    <div class="listra" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <p>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</p>
+  </footer>
 </main>
 
 <div id="modal" class="modal" hidden>
-  <div class="modal-box">
-    <div id="modalIcon" class="modal-icon">✓</div>
-    <h2 id="modalTitulo">Confirmar inscrição</h2>
-    <p id="modalTexto">Confira os dados principais antes de salvar:</p>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-topo">
+      <div id="modalIcon" class="modal-icon">✓</div>
+      <div>
+        <h2 id="modalTitulo">Confirmar inscrição</h2>
+        <p id="modalTexto">Confira os dados principais antes de salvar:</p>
+      </div>
+    </div>
     <div id="modalResumo" class="modal-data"></div>
     <div class="modal-actions">
       <button id="modalVoltar" type="button">Voltar</button>

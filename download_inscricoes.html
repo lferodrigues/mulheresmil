@@ -9,6 +9,8 @@
 <script src="./Assets/js/script.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<!-- gerador de planilhas Excel (SheetJS) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -47,6 +49,7 @@
   <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-filtro" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.5V19l-3.6-1.8v-4.7z"/></symbol>
   <symbol id="i-olho" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-planilha" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5"/><path d="M4 9h16M4 14.5h16M10 9v11.5"/></symbol>
   <symbol id="i-pdf-baixar" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
   <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3.5 7A1.5 1.5 0 015 5.5h4.5l2 2.5H19a1.5 1.5 0 011.5 1.5v8.5A1.5 1.5 0 0119 19.5H5A1.5 1.5 0 013.5 18z"/></symbol>
 </svg>
@@ -144,16 +147,19 @@
         <h1>Download das Inscrições</h1>
         <p class="sub-titulo">Inscrições registradas: <strong id="resumoTopo">carregando…</strong></p>
       </div>
-      <button type="button" class="btn-trocar" id="btnTodos" hidden><svg class="i"><use href="#i-pdf-baixar"/></svg>Baixar todos os cursos em um PDF</button>
+      <div class="acoes-topo">
+        <button type="button" class="btn-trocar" id="btnTodos" hidden><svg class="i"><use href="#i-pdf-baixar"/></svg>Todos os cursos em PDF</button>
+        <button type="button" class="btn-excel" id="btnXlsx" disabled><svg class="i"><use href="#i-planilha"/></svg>Baixar planilha completa (.xlsx)</button>
+      </div>
     </div>
 
     <section class="card">
       <div class="toolbar">
         <span class="rotulo"><svg class="i"><use href="#i-pasta"/></svg>Inscrições por curso</span>
         <span class="espaco"></span>
-        <label class="check"><input type="checkbox" id="chkBanco" checked> Incluir dados bancários no PDF</label>
+        <label class="check"><input type="checkbox" id="chkBanco" checked> Incluir dados bancários nos arquivos</label>
       </div>
-      <p class="ajuda">Baixe em PDF as inscrições registradas, separadas por curso (em ordem alfabética) e com as alunas também em ordem alfabética.</p>
+      <p class="ajuda">Baixe as inscrições separadas por curso, com as alunas em ordem alfabética. O <strong>PDF</strong> traz um resumo para impressão; a <strong>planilha Excel</strong> traz <strong>todas</strong> as respostas do formulário de inscrição (dados pessoais, socioeconômicos, domicílio, programa, banco e documentos).</p>
 
       <div class="lista-meta">
         <span id="resumo">Carregando inscrições...</span>
@@ -164,7 +170,7 @@
 
       <div class="tabela-wrap"><table>
         <thead><tr>
-          <th class="col-num">Nº</th><th>Curso</th><th class="centro">Inscritas</th><th class="centro col-acoes">PDF</th>
+          <th class="col-num">Nº</th><th>Curso</th><th class="centro">Inscritas</th><th class="centro col-acoes">Baixar</th>
         </tr></thead>
         <tbody id="lista"></tbody>
       </table></div>
@@ -183,6 +189,7 @@
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { baixarPlanilha } from "./Assets/js/exportar_inscricoes.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -208,7 +215,8 @@ async function iniciar() {
       if (!v || !v.identificacao) return;
       const nomeCurso = v.inscricao?.cursoNome || v.inscricao?.curso || "Sem curso informado";
       const chave = semAcento(nomeCurso);
-      if (!mapa.has(chave)) mapa.set(chave, { id: v.inscricao?.curso || chave, nome: nomeCurso, alunas: [] });
+      if (!mapa.has(chave)) mapa.set(chave, { id: v.inscricao?.curso || chave, nome: nomeCurso, alunas: [], registros: [] });
+      mapa.get(chave).registros.push({ id: cpfId, dados: v }); // tudo o que foi gravado (para a planilha)
       const i = v.identificacao, b = v.bancarios || {};
       mapa.get(chave).alunas.push({
         nome: i.nome || "", cpf: i.cpf || cpfId, rg: i.rg || "", whatsapp: i.whatsapp || "",
@@ -217,7 +225,10 @@ async function iniciar() {
       });
     });
     grupos = [...mapa.values()].sort((a, b) => cmp(a.nome, b.nome));
-    grupos.forEach((g) => g.alunas.sort((a, b) => cmp(a.nome, b.nome)));
+    grupos.forEach((g) => {
+      g.alunas.sort((a, b) => cmp(a.nome, b.nome));
+      g.registros.sort((a, b) => cmp(a.dados.identificacao?.nome || "", b.dados.identificacao?.nome || ""));
+    });
     desenhar();
   } catch (e) {
     console.error(e);
@@ -239,8 +250,11 @@ function desenhar() {
   $("lista").innerHTML = grupos.map((g, i) =>
     `<tr><td class="col-num">${i + 1}</td><td><strong>${esc(g.nome)}</strong></td>` +
     `<td class="centro"><span class="badge">${g.alunas.length} inscrita(s)</span></td>` +
-    `<td class="centro"><button type="button" class="btn btn-contorno btn-mini" data-i="${i}">` +
-    `<svg class="i"><use href="#i-pdf-baixar"/></svg>Baixar PDF</button></td></tr>`).join("");
+    `<td class="centro"><div class="botoes-linha">` +
+    `<button type="button" class="btn btn-contorno btn-mini" data-i="${i}"><svg class="i"><use href="#i-pdf-baixar"/></svg>PDF</button>` +
+    `<button type="button" class="btn btn-excel-mini btn-mini" data-x="${i}"><svg class="i"><use href="#i-planilha"/></svg>Excel</button>` +
+    `</div></td></tr>`).join("");
+  $("btnXlsx").disabled = total === 0;
 }
 
 /* ---------- PDF ---------- */
@@ -263,7 +277,7 @@ function colocar(doc, img, x, y, hMax, wMax, direita) {
 
 async function gerarPdf(lista, nomeArquivo) {
   if (!lista.length) return;
-  const botoes = document.querySelectorAll(".btn, #btnTodos");
+  const botoes = document.querySelectorAll(".btn, #btnTodos, #btnXlsx");
   botoes.forEach((b) => { b.disabled = true; });
   aviso("Gerando PDF...");
   try {
@@ -323,7 +337,23 @@ async function gerarPdf(lista, nomeArquivo) {
 
 const slug = (t) => semAcento(t).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "curso";
 
+/* ---------- planilha Excel (todas as informações da inscrição) ---------- */
+function gerarXlsx(lista, nomeArquivo) {
+  if (!lista.length) return;
+  try {
+    baixarPlanilha(lista, { comBanco: $("chkBanco").checked, arquivo: nomeArquivo });
+    aviso("Planilha gerada.", "ok");
+  } catch (e) {
+    console.error(e);
+    aviso(e.message || "Não foi possível gerar a planilha.", "erro");
+  }
+}
+const hoje = () => new Date().toISOString().slice(0, 10);
+$("btnXlsx").onclick = () => gerarXlsx(grupos, "inscricoes_completas_" + hoje() + ".xlsx");
+
 $("lista").addEventListener("click", (e) => {
+  const x = e.target.closest("button[data-x]");
+  if (x) { const g = grupos[+x.dataset.x]; return gerarXlsx([g], "inscricoes_" + slug(g.nome) + "_" + hoje() + ".xlsx"); }
   const b = e.target.closest("button[data-i]");
   if (!b) return;
   const g = grupos[+b.dataset.i];

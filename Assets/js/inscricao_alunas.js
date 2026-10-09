@@ -8,6 +8,7 @@ import { auth, db } from "./firebase-config-inscricao.js";
 import { ref, get, set, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos, CURSOS_PADRAO, gerarId } from "./cursos.js";
 import { vincularAluna } from "./alunas.js";
+import { confirmar } from "./dialogo.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -319,7 +320,14 @@ onValue(ref(db, "inscricoes"), (snap) => {
 
 /* ---------- eventos ---------- */
 $("salvar").onclick = pedirSalvar;
-$("limpar").onclick = () => { if (confirm("Limpar todos os campos do formulário?")) { limparForm(); msg(""); } };
+$("limpar").onclick = async () => {
+  const ok = await confirmar({
+    titulo: "Limpar o formulário?",
+    texto: "Todos os campos preenchidos serão apagados. A inscrição só é gravada quando você clica em Salvar.",
+    botaoOk: "Sim, limpar", tipo: "perigo"
+  });
+  if (ok) { limparForm(); msg(""); window.scrollTo({ top: 0, behavior: "smooth" }); }
+};
 $("modalVoltar").onclick = fecharModal;
 $("modalConfirmar").onclick = confirmarSalvar;
 $("form").addEventListener("submit", (e) => e.preventDefault());

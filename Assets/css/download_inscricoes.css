@@ -184,7 +184,29 @@ tbody td strong { color: var(--text); font-weight: 600; }
 .dica { margin-top: 10px; font-size: 12px; color: #8a8079; }
 
 
-.col-acoes { width: 140px; }
+.col-acoes { width: 190px; }
+.botoes-linha { display: flex; justify-content: center; gap: 6px; }
+
+/* botões da planilha Excel */
+.acoes-topo { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.acoes-topo .btn-trocar { margin-left: 0; }
+.btn-excel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--verde);
+  border-radius: 4px;
+  background: var(--verde);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.btn-excel:hover:not(:disabled) { background: var(--verde-escuro); }
+.btn-excel:disabled { opacity: .55; cursor: not-allowed; }
+.btn-excel-mini { background: var(--verde); color: #fff; }
+.btn-excel-mini:hover:not(:disabled) { background: var(--verde-escuro); }
 .vazio:not(td) { padding: 26px 0; border: 1px solid var(--border); border-top: 0; border-radius: 0 0 4px 4px; }
 
 /* ---------- Telas menores ---------- */
@@ -197,7 +219,8 @@ tbody td strong { color: var(--text); font-weight: 600; }
   .page-head { align-items: flex-start; flex-direction: column; }
   .btn-trocar { margin-left: 0; }
   .toolbar .espaco, .lista-meta .espaco { display: none; }
-  .btn-trocar { width: 100%; justify-content: center; }
+  .acoes-topo { margin-left: 0; width: 100%; }
+  .acoes-topo .btn-trocar, .btn-excel { flex: 1; justify-content: center; }
 }
 
 /* botão "Baixar todos" desabilitado enquanto o PDF é gerado */
