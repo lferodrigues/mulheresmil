@@ -88,26 +88,44 @@ function emprestados() {
   return livros.filter((l) => obterSituacao(l).chave !== "livre");
 }
 
+// etiqueta da situação + detalhe (prazo ou dias de atraso)
+function htmlSituacao(s) {
+  return `<span class="tag ${s.chave}">${esc(s.rotulo)}</span>` +
+    (s.detalhe ? `<span class="situacao-detalhe ${s.chave}">${esc(s.detalhe)}</span>` : "");
+}
+
 function criarItemLivro(livro) {
   const s = obterSituacao(livro);
   const aluna = valor(livro, ...CAMPOS.aluna);
-  const item = document.createElement("div");
-  item.className = "livro-item";
-  item.innerHTML = `
-    <strong class="livro-codigo">${esc(valor(livro, ...CAMPOS.codigo) || livro.id)}</strong>
-    <span class="livro-info">
-      <strong>${esc(valor(livro, ...CAMPOS.titulo))}</strong>
-      <small>${esc(valor(livro, ...CAMPOS.autor))}</small>
-      ${aluna ? `<small>Aluna: ${esc(aluna)}</small>` : ""}
-      <small class="livro-status livro-status-${s.chave}">${esc(textoSituacao(s))}</small>
-    </span>
-    <button class="remover" type="button">Remover</button>`;
-  item.querySelector("button").onclick = () => abrirConfirmacao(livro);
-  return item;
+  const inicio = parseData(bruto(livro, ...CAMPOS.dataReserva));
+  const tr = document.createElement("tr");
+  if (s.chave === "atrasado") tr.className = "atrasado-linha";
+  tr.innerHTML = `
+    <td class="col-num">${esc(valor(livro, ...CAMPOS.codigo) || livro.id)}</td>
+    <td><strong>${esc(valor(livro, ...CAMPOS.titulo))}</strong>
+      <span class="situacao-detalhe">${esc(valor(livro, ...CAMPOS.autor))}</span></td>
+    <td>${aluna ? esc(aluna) : '<span class="situacao-detalhe">não informada</span>'}</td>
+    <td class="centro">${inicio ? formatarData(inicio) : "—"}</td>
+    <td>${htmlSituacao(s)}</td>
+    <td class="centro"><button class="btn btn-primaria btn-mini" type="button">
+      <svg class="i"><use href="#i-devolver"/></svg>Devolver</button></td>`;
+  tr.querySelector("button").onclick = () => abrirConfirmacao(livro);
+  return tr;
+}
+
+// resumo no topo: quantos estão com as alunas e quantos atrasados
+function resumir() {
+  const lista = emprestados();
+  const atrasados = lista.filter((l) => obterSituacao(l).chave === "atrasado").length;
+  $("resumoEmprestimos").textContent = lista.length
+    ? `${lista.length} livro(s) emprestado(s) • ${atrasados} atrasado(s)`
+    : "nenhum livro emprestado";
 }
 
 function render(lista) {
-  $("contador").textContent = lista.length + (lista.length === 1 ? " livro" : " livros");
+  const total = emprestados().length;
+  $("contador").textContent = lista.length + (lista.length === 1 ? " livro" : " livros") +
+    (lista.length !== total ? " de " + total : "");
   $("lista").innerHTML = "";
   $("vazio").hidden = lista.length > 0;
   lista.forEach((l) => $("lista").appendChild(criarItemLivro(l)));
@@ -117,7 +135,7 @@ function filtrar() {
   const fc = normalizar($("filtroCodigo").value), ft = normalizar($("filtroTitulo").value);
   render(emprestados().filter((l) =>
     (valor(l, ...CAMPOS.codigo) || l.id).toLocaleLowerCase("pt-BR").includes(fc) &&
-    valor(l, ...CAMPOS.titulo).toLocaleLowerCase("pt-BR").includes(ft)));
+    (valor(l, ...CAMPOS.titulo) + " " + valor(l, ...CAMPOS.aluna)).toLocaleLowerCase("pt-BR").includes(ft)));
 }
 
 /* ---------- pop-up de confirmação ---------- */
@@ -127,7 +145,7 @@ function abrirConfirmacao(livro) {
   $("modalCodigo").textContent = valor(livro, ...CAMPOS.codigo) || livro.id || "—";
   $("modalTitulo").textContent = valor(livro, ...CAMPOS.titulo) || "—";
   $("modalAluna").textContent = valor(livro, ...CAMPOS.aluna) || "Nome da aluna não informado";
-  $("modalStatus").textContent = textoSituacao(s);
+  $("modalStatus").innerHTML = htmlSituacao(s);
   $("modal").hidden = false;
 }
 function fecharModal() { pendente = null; $("modal").hidden = true; }
@@ -174,17 +192,22 @@ onValue(ref(db, "livros"), (snap) => {
   const dados = snap.val() || {};
   livros = Object.entries(dados).map(([id, l]) => ({ id, ...l }))
     .sort((a, b) => String(a.codigo || a.id).localeCompare(String(b.codigo || b.id), "pt-BR", { numeric: true }));
-  if ($("status").textContent === "Carregando livros...") $("status").textContent = "Livros carregados do Firebase.";
+  if ($("status").textContent === "Carregando livros...") $("status").textContent = "Livros carregados do banco de dados.";
+  resumir();
   filtrar();
 }, (e) => {
   console.error(e);
   $("status").textContent = "Não foi possível consultar o Firebase (" + (e.code || e.message) + ").";
   $("vazio").hidden = false;
+  $("resumoEmprestimos").textContent = "não foi possível carregar";
 });
 
 /* ---------- eventos ---------- */
 $("filtrar").onclick = filtrar;
 $("filtroCodigo").onkeydown = (e) => { if (e.key === "Enter") filtrar(); };
 $("filtroTitulo").onkeydown = (e) => { if (e.key === "Enter") filtrar(); };
+// filtra enquanto digita
+$("filtroCodigo").oninput = filtrar;
+$("filtroTitulo").oninput = filtrar;
 $("modalVoltar").onclick = fecharModal;
 $("modalConfirmar").onclick = confirmarDevolucao;

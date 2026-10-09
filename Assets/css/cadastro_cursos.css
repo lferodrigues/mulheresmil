@@ -1,7 +1,7 @@
 /* =========================================================
-   Devolução de Livros — Biblioteca Itinerante (Mulheres Mil)
+   Cadastro de Cursos — Painel Mulheres Mil
    Complementa o painel-layout.css (menu lateral + topo),
-   no mesmo padrão do Cadastro, da Reserva, da Consulta e da Frequência.
+   no mesmo padrão da Biblioteca e da Frequência.
    ========================================================= */
 
 [hidden] { display: none !important; }
@@ -54,6 +54,13 @@
   margin-bottom: 20px;
 }
 
+.ajuda { font-size: 13px; color: var(--text-2); line-height: 1.5; margin: -6px 0 16px; }
+
+#status { display: block; margin-top: 12px; font-size: 12.5px; color: var(--text-2); }
+#status:empty { display: none; }
+#status.ok { color: var(--verde-escuro); font-weight: 600; }
+#status.erro { color: var(--vermelho); font-weight: 600; }
+
 /* ---------- Barra de ferramentas ---------- */
 .toolbar {
   display: flex;
@@ -83,16 +90,15 @@
   font-weight: 600;
 }
 
-/* ---------- Filtros ---------- */
-.filtros {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr auto;
+/* ---------- Formulário (nome + botões na mesma linha) ---------- */
+.form-linha {
+  display: flex;
+  align-items: flex-end;
   gap: 12px;
-  align-items: end;
-  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
-
 .campo {
+  flex: 1 1 320px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -100,60 +106,21 @@
   font-weight: 600;
   color: var(--text);
 }
-
-.busca-campo {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.campo input {
   height: 38px;
   padding: 0 10px;
   border: 1px solid #cfd6d1;
   border-radius: 4px;
-  background: #fff;
-  color: #8a8079;
-}
-.busca-campo:focus-within { outline: 2px solid rgba(4, 138, 40, .18); border-color: var(--verde); }
-.busca-campo svg.i { width: 15px; height: 15px; }
-.busca-campo input {
-  flex: 1;
-  min-width: 0;
-  height: 36px;
-  border: 0;
-  outline: 0;
-  padding: 0;
   font: inherit;
   font-size: 13px;
   font-weight: 400;
   color: var(--text);
-  background: transparent;
+  background: #fff;
 }
-.filtros .btn { height: 38px; }
+.campo input:focus { outline: 2px solid rgba(4, 138, 40, .18); border-color: var(--verde); }
 
-/* ---------- Status e legenda ---------- */
-.lista-meta {
-  display: flex;
-  gap: 10px 14px;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 10px 14px;
-  margin-bottom: 14px;
-  background: #f6f8f6;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 12.5px;
-  color: var(--text-2);
-}
-.lista-meta .espaco { flex: 1; }
-
-.legenda {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 12px;
-  color: #8a8079;
-}
-.legenda li { display: inline-flex; align-items: center; gap: 6px; }
+.form-acoes { display: flex; gap: 8px; }
+.form-acoes .btn { height: 38px; }
 
 /* ---------- Botões ---------- */
 .btn {
@@ -221,26 +188,9 @@ tbody td strong { color: var(--text); font-weight: 600; }
 .dica { margin-top: 10px; font-size: 12px; color: #8a8079; }
 
 
-/* ---------- Situação do empréstimo ---------- */
-.tag {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.tag.livre { background: #eef7f0; color: var(--verde-escuro); }
-.tag.emprestado { background: #fff8e6; color: #8a6100; }
-.tag.atrasado { background: #fdeeee; color: var(--vermelho); }
-.situacao-detalhe { display: block; margin-top: 3px; font-size: 11.5px; color: #8a8079; }
-.situacao-detalhe.atrasado { color: var(--vermelho); font-weight: 600; }
-.col-acoes { width: 120px; }
-tr.atrasado-linha td { background: #fffafa; }
-.vazio:not(td) { padding: 26px 0; border: 1px solid var(--border); border-top: 0; border-radius: 0 0 4px 4px; }
-
-/* situação dentro do pop-up */
-.modal-data .tag { display: inline-block; }
+.col-acoes { width: 130px; }
+.codigo { font-family: Consolas, "Courier New", monospace; font-size: 12.5px; color: #8a8079; }
+.dica { margin-top: 10px; font-size: 12px; color: #8a8079; }
 
 /* ---------- Pop-ups ---------- */
 .modal {
@@ -279,6 +229,11 @@ tr.atrasado-linha td { background: #fffafa; }
 .modal-box h2 { font-size: 17px; font-weight: 600; color: var(--verde-escuro); }
 .modal-box p { margin-top: 4px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
 
+.modal-icon.perigo { background: #fdeeee; color: var(--vermelho); }
+.btn-excluir { background: var(--vermelho); color: #fff; }
+.btn-excluir:hover:not(:disabled) { background: var(--vermelho-escuro); }
+.btn-trocar:disabled { opacity: .55; cursor: not-allowed; }
+
 .modal-data { display: grid; gap: 8px; padding: 12px 22px; }
 .modal-data div {
   padding: 10px 12px;
@@ -300,7 +255,9 @@ tr.atrasado-linha td { background: #fffafa; }
 @media (max-width: 600px) {
   .page-head { align-items: flex-start; flex-direction: column; }
   .btn-trocar { margin-left: 0; }
-  .filtros { grid-template-columns: 1fr; }
-  .filtros .btn, .modal-foot .btn { flex: 1; }
-  .lista-meta .espaco { display: none; }
+  .btn-trocar { width: 100%; justify-content: center; }
+  .form-acoes { width: 100%; }
+  .form-acoes .btn, .modal-foot .btn { flex: 1 1 auto; }
+  .toolbar .espaco { display: none; }
+  .sug { flex-direction: column; align-items: flex-start; gap: 2px; }
 }

@@ -3,130 +3,231 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="Logo-Mulheres-Mil.jpg">
-<title>Conferência de Dados Bancários | Mulheres Mil</title>
+<title>Conferência de Dados Bancários | Mulheres Mil - IF Sudeste MG</title>
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
 <script type="module" src="./Assets/js/auth-guard.js"></script>
+<script src="./Assets/js/script.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;padding:18px;background:#fff7f0;font-family:"Segoe UI",Arial,sans-serif;color:#3b2931}
-main{min-height:95vh;display:grid;place-items:center}
-[hidden]{display:none!important}
-.card{width:min(820px,100%);background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px #4b14251a;border:1px solid #eadbe3}
-.logo{display:block;width:180px;max-width:70%;margin:auto;border-radius:8px}
-hr{border:0;height:3px;background:linear-gradient(90deg,#f5a623,#c2185b,#8e0f45);margin:20px 0}
-.badge{display:inline-block;background:#f9e4ee;color:#8e0f45;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:800}
-h1{color:#5a1738;margin:10px 0 5px}
-p{color:#76656c}
-small{color:#8a777f}
-label{display:block;font-weight:700;font-size:14px}
-input,select{display:block;width:100%;padding:12px;border:1px solid #dbcbd3;border-radius:10px;margin-top:6px;font:inherit;font-weight:400;background:#fff}
-input:focus,select:focus{outline:2px solid #c2185b33;border-color:#c2185b}
-input[readonly]{background:#faf5f7;color:#8a777f}
-.invalido{border-color:#c62828!important;background:#fdeceb!important}
-.req::after{content:" *";color:#c62828}
-.campo-pesquisa{position:relative;margin-top:18px}
-.lista-sugestoes{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:1px solid #dbcbd3;border-radius:0 0 10px 10px;box-shadow:0 10px 22px #4b14251a;max-height:280px;overflow:auto;margin-top:-6px}
-.sug{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:0;border-bottom:1px solid #eadbe3;background:#fff;color:#3b2931;text-align:left;font:inherit;cursor:pointer}
-.sug:hover,.sug:focus{background:#f9e4ee;outline:0}
-.sug strong{color:#5a1738}
-.sug span{color:#8a777f;font-size:12px;white-space:nowrap}
-.sem-resultado{padding:12px 14px;color:#8a777f;font-size:13px}
-#status{display:block;margin-top:12px;font-size:13px}
-#status.ok{color:#2e7d32;font-weight:700}
-#status.erro{color:#c62828;font-weight:700}
-.resumo-aluna{margin-top:18px;padding:14px;background:#faf5f7;border:1px solid #eadbe3;border-radius:12px;display:grid;grid-template-columns:1fr auto;gap:10px}
-.resumo-aluna span{display:block;color:#8a777f;font-size:11px;margin-bottom:3px}
-.situacao{align-self:center;font-size:12px;font-weight:800;padding:5px 12px;border-radius:20px;white-space:nowrap}
-.situacao.ok{background:#e8f5e9;color:#2e7d32}.situacao.sem{background:#fff4dc;color:#b7791f}
-.grade{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
-.full{grid-column:1/-1}
-.buttons{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
-.buttons button,.modal-actions button{flex:1;min-width:130px;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;cursor:pointer;color:#fff}
-.buttons button:disabled,.modal-actions button:disabled{opacity:.45;cursor:not-allowed}
-#salvar,#modalConfirmar{background:#4caf50}
-#excluir{background:#c62828}
-#pdfAluna{background:#8e0f45}
-#pdfTodas{display:block;width:100%;margin-top:22px;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;cursor:pointer;color:#fff;background:#5d6b7a}
-#pdfTodas:disabled{opacity:.45;cursor:not-allowed}
-#fechar{background:#eee5e9;color:#5a1738}
-a.voltar{display:block;text-align:center;margin-top:24px;color:#8e0f45;font-weight:700;text-decoration:none}
-footer{text-align:center;color:#a58f98;font-size:12px;margin-top:20px}
-.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:#2f102766;backdrop-filter:blur(4px)}
-.modal-box{width:min(500px,100%);max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:22px;padding:28px;box-shadow:0 20px 60px #2f102655}
-.modal-icon{width:52px;height:52px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#e8f5e9;color:#2e7d32;font-size:26px;font-weight:800}
-.modal-box h2{text-align:center;margin:0 0 8px;font-size:24px;color:#5a1738}
-.modal-box>p{text-align:center;margin:0 0 20px}
-.modal-data{display:grid;gap:9px}
-.modal-data div{padding:11px 13px;background:#faf5f7;border:1px solid #eadbe3;border-radius:10px}
-.modal-data span{display:block;color:#8a777f;font-size:11px;margin-bottom:3px}
-.modal-data strong{display:block;overflow-wrap:anywhere}
-.modal-actions{display:flex;gap:10px;margin-top:22px}
-#modalVoltar{background:#eee5e9;color:#5a1738}
-@media(max-width:650px){body{padding:8px}.card{padding:20px 15px}.grade{grid-template-columns:1fr}.resumo-aluna{grid-template-columns:1fr}.buttons,.modal-actions{flex-direction:column}}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./Assets/css/notificacoes.css">
+<link rel="stylesheet" href="./Assets/css/painel-layout.css">
+<link rel="stylesheet" href="./Assets/css/conferencia_bancaria.css">
 </head>
 <body>
-<main>
-<section class="card">
-  <img src="if-sjn.png" alt="Mulheres Mil" class="logo">
-  <hr>
-  <span class="badge">PAINEL DO ADMINISTRADOR(A)</span>
-  <h1>Conferência de Dados Bancários</h1>
-  <p>Digite o nome ou o CPF da aluna para conferir, acrescentar, editar ou excluir os dados bancários. Depois, baixe em PDF.</p>
+<script>try{if(localStorage.getItem("mm_menu_fechado")==="1")document.body.classList.add("side-off")}catch(e){}</script>
 
-  <label class="campo-pesquisa">Buscar aluna (nome ou CPF)
-    <input id="busca" type="search" placeholder="Digite o nome ou o CPF..." autocomplete="off">
-    <div id="sug" class="lista-sugestoes" hidden></div>
-  </label>
-  <small id="status"></small>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19.5h11V9.5"/><path d="M10 19.5v-5h4v5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5"/><path d="M8 9.5l2 2 4-4M8 16h8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 19.5c.6-3.3 3.3-5.5 6.5-5.5s5.9 2.2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.3c1.8.8 3.1 2.6 3.5 5.2"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3.5H6.5A1.5 1.5 0 005 5v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5z"/><path d="M14 3.5v5h5M8.5 13h7M8.5 16.5h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
+  <symbol id="i-porta" viewBox="0 0 24 24"><path d="M13 20.5H5.5a1 1 0 01-1-1v-15a1 1 0 011-1H13"/><path d="M13 3.5v4M13 16.5v4"/><path d="M10 12h.01"/><path d="M14 12h7M18 9l3 3-3 3"/></symbol>
+  <symbol id="i-lixo" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6.5 7l1 12.5a1.5 1.5 0 001.5 1.4h6a1.5 1.5 0 001.5-1.4l1-12.5M9 7V4.5h6V7"/></symbol>
+  <symbol id="i-salvar" viewBox="0 0 24 24"><path d="M5 4h11l3 3v12a1 1 0 01-1 1H6a1 1 0 01-1-1z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-limpar" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4.5 19.5h15"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M14 3.5H6.5A1.5 1.5 0 005 5v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5z"/><path d="M14 3.5v5h5"/><path d="M9 13.5h6M9 16.5h4"/></symbol>
+  <symbol id="i-livro-mais" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 016.5 3H19v14H6.5A1.5 1.5 0 005 18.5z"/><path d="M5 18.5A1.5 1.5 0 006.5 20H19v-3"/><path d="M12 7v6M9 10h6"/></symbol>
+  <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+  <symbol id="i-aluna" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6.2 7.5-6.2s6.7 2.4 7.5 6.2"/></symbol>
+  <symbol id="i-reservar" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/><path d="M9.5 9.5l2 2 3.5-3.5"/></symbol>
+  <symbol id="i-devolver" viewBox="0 0 24 24"><path d="M9 7.5L4.5 12 9 16.5"/><path d="M4.5 12H15a4.5 4.5 0 010 9h-2"/></symbol>
+  <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-filtro" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.5V19l-3.6-1.8v-4.7z"/></symbol>
+  <symbol id="i-olho" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-pdf-baixar" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+  <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3.5 7A1.5 1.5 0 015 5.5h4.5l2 2.5H19a1.5 1.5 0 011.5 1.5v8.5A1.5 1.5 0 0119 19.5H5A1.5 1.5 0 013.5 18z"/></symbol>
+  <symbol id="i-banco" viewBox="0 0 24 24"><path d="M3.5 9.5L12 4.5l8.5 5M5 9.5v8M9.5 9.5v8M14.5 9.5v8M19 9.5v8M3.5 20h17"/></symbol>
+  <symbol id="i-aluna" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6.2 7.5-6.2s6.7 2.4 7.5 6.2"/></symbol>
+</svg>
 
-  <div id="area" hidden>
-    <div class="resumo-aluna">
-      <div><span>Nome da aluna</span><strong id="rNome"></strong>
-        <div style="margin-top:8px"><span>CPF</span><strong id="rCpf"></strong></div></div>
-      <div class="situacao" id="rSit"></div>
-    </div>
+<!-- ============ MENU LATERAL ============ -->
+<aside class="sidebar" id="sidebar" aria-label="Menu principal">
+  <div class="side-title">
+    Painel de Controle
+    <button class="side-close" id="btnFechar" type="button" title="Fechar menu" aria-label="Fechar menu"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
 
-    <div class="grade">
-      <label class="full"><span class="req">Nome do titular da conta</span><input id="titular" maxlength="100" autocomplete="off"></label>
-      <label><span class="req">Banco</span><input id="banco" maxlength="60" placeholder="Ex.: Caixa Econômica Federal" autocomplete="off"></label>
-      <label><span class="req">Tipo de conta</span>
-        <select id="tipoConta"><option value="">Selecione</option><option>Conta corrente</option><option>Conta poupança</option><option>Poupança social digital</option></select></label>
-      <label><span class="req">Agência</span><input id="agencia" maxlength="10" autocomplete="off"></label>
-      <label><span class="req">Conta (com dígito)</span><input id="conta" maxlength="20" autocomplete="off"></label>
-      <label class="full">Chave PIX (opcional)<input id="pix" maxlength="80" autocomplete="off"></label>
-    </div>
-
-    <div class="buttons">
-      <button id="salvar" type="button">Salvar</button>
-      <button id="excluir" type="button">Excluir dados</button>
-      <button id="pdfAluna" type="button">⬇️ PDF desta aluna</button>
-      <button id="fechar" type="button">Nova busca</button>
+  <div class="side-tools">
+    <label class="search">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="busca" type="search" placeholder="Encontrar opção" autocomplete="off" aria-label="Encontrar opção no menu">
+    </label>
+    <div class="tool-row">
+      <button type="button" id="btnExpandir"><svg class="i"><use href="#i-plus"/></svg>Expandir</button>
+      <button type="button" id="btnRecolher"><svg class="i"><use href="#i-minus"/></svg>Recolher</button>
     </div>
   </div>
 
-  <button id="pdfTodas" type="button" disabled>⬇️ Baixar PDF de todas as alunas (nome, CPF e dados bancários)</button>
+  <nav class="nav" id="nav">
+    <a class="nav-link" href="./painel.html"><svg class="i"><use href="#i-home"/></svg>Início</a>
 
-  <a class="voltar" href="painel.html">← Voltar para a Tela Inicial</a>
-  <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
-</section>
-</main>
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-check"/></svg>Frequência<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./lista_presenca_mulheres_mil.html">Lançamento de frequência</a>
+        <a href="./gerar_lista_presenca.html">Gerar lista de presença (PDF)</a>
+      </div>
+    </div>
 
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-users"/></svg>Alunas e Cursos<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./cadastro_alunos.html">Cadastro de alunas</a>
+        <a href="./importar_alunas.html">Importar alunas de planilha</a>
+        <a href="./cadastro_cursos.html">Cadastro de cursos</a>
+      </div>
+    </div>
+
+    <div class="group open">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-form"/></svg>Inscrições<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./inscricao.html">Inscrição de alunas</a>
+        <a href="./download_inscricoes.html">Download das inscrições</a>
+        <a href="./conferencia_bancaria.html" class="active" aria-current="page">Conferência de dados bancários</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-book"/></svg>Biblioteca Itinerante<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./biblioteca.html">Visão geral</a>
+        <a href="./cadastro_livros.html">Cadastro de livros</a>
+        <a href="./reserva_livros.html">Reserva de livros</a>
+        <a href="./consulta-livros.html">Consulta de livros</a>
+        <a href="./devolucao_livros.html">Devolução de livros</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-shield"/></svg>Administração<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./controle_usuarios.html">Controle de usuários</a>
+        <a href="./logs_acesso.html">Logs de acesso</a>
+      </div>
+    </div>
+
+    <p class="nav-empty" id="navVazio">Nenhuma opção encontrada.</p>
+  </nav>
+
+  <div class="side-foot">
+    <a href="./index.html" target="_blank" rel="noopener"><svg class="i"><use href="#i-globe"/></svg>Visitar site</a>
+  </div>
+</aside>
+<div class="overlay" id="overlay"></div>
+
+<!-- ============ ÁREA PRINCIPAL ============ -->
+<div class="main">
+  <header class="topbar">
+    <button class="burger" id="btnMenu" type="button" title="Abrir menu" aria-label="Abrir menu" aria-controls="sidebar"><svg class="i"><use href="#i-menu"/></svg></button>
+    <span class="page-title">Inscrições</span>
+    <div class="top-right">
+      <span class="user-name" id="userName"></span>
+      <a class="btn-sair" href="./admin.html" id="btnSair" title="Sair do sistema" aria-label="Sair do sistema"><svg class="i"><use href="#i-porta"/></svg></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <p class="crumb">Página inicial / Inscrições / Conferência de dados bancários</p>
+    <div class="page-head">
+      <div>
+        <h1>Conferência de Dados Bancários</h1>
+        <p class="sub-titulo">Situação: <strong id="resumoTopo">carregando…</strong></p>
+      </div>
+      <button id="pdfTodas" class="btn-trocar" type="button" disabled><svg class="i"><use href="#i-pdf-baixar"/></svg>Baixar PDF de todas as alunas</button>
+    </div>
+
+    <!-- ===== Busca ===== -->
+    <section class="card">
+      <div class="toolbar">
+        <span class="rotulo"><svg class="i"><use href="#i-search"/></svg>Buscar aluna</span>
+      </div>
+      <p class="ajuda">Digite o nome ou o CPF da aluna para conferir, acrescentar, editar ou excluir os dados bancários. Depois, baixe em PDF.</p>
+
+      <label class="campo-pesquisa">
+        <span class="campo-rotulo">Nome ou CPF da aluna</span>
+        <span class="busca-campo">
+          <svg class="i"><use href="#i-search"/></svg>
+          <input id="busca" type="search" placeholder="Digite o nome ou o CPF..." autocomplete="off">
+        </span>
+        <div id="sug" class="lista-sugestoes" hidden></div>
+      </label>
+      <span id="status"></span>
+    </section>
+
+    <!-- ===== Ficha da aluna ===== -->
+    <section id="area" class="card" hidden>
+      <div class="resumo-aluna">
+        <svg class="i avatar"><use href="#i-aluna"/></svg>
+        <div class="resumo-dados">
+          <div><span>Nome da aluna</span><strong id="rNome"></strong></div>
+          <div><span>CPF</span><strong id="rCpf"></strong></div>
+        </div>
+        <span id="rSit" class="tag"></span>
+      </div>
+
+      <div class="toolbar">
+        <span class="rotulo"><svg class="i"><use href="#i-banco"/></svg>Dados bancários</span>
+        <span class="espaco"></span>
+        <small class="obrig"><span class="req"></span> campos obrigatórios</small>
+      </div>
+
+      <div class="grade">
+        <label class="full"><span class="req">Nome do titular da conta</span><input id="titular" maxlength="100" autocomplete="off"></label>
+        <label><span class="req">Banco</span><input id="banco" maxlength="60" placeholder="Ex.: Caixa Econômica Federal" autocomplete="off"></label>
+        <label><span class="req">Tipo de conta</span>
+          <select id="tipoConta"><option value="">Selecione</option><option>Conta corrente</option><option>Conta poupança</option><option>Poupança social digital</option></select></label>
+        <label><span class="req">Agência</span><input id="agencia" maxlength="10" autocomplete="off"></label>
+        <label><span class="req">Conta (com dígito)</span><input id="conta" maxlength="20" autocomplete="off"></label>
+        <label class="full">Chave PIX (opcional)<input id="pix" maxlength="80" autocomplete="off"></label>
+      </div>
+
+      <div class="form-acoes">
+        <button id="fechar" class="btn btn-contorno" type="button"><svg class="i"><use href="#i-search"/></svg>Nova busca</button>
+        <button id="pdfAluna" class="btn btn-contorno" type="button"><svg class="i"><use href="#i-pdf-baixar"/></svg>PDF desta aluna</button>
+        <span class="espaco"></span>
+        <button id="excluir" class="btn btn-perigo" type="button"><svg class="i"><use href="#i-lixo"/></svg>Excluir dados</button>
+        <button id="salvar" class="btn btn-primaria" type="button"><svg class="i"><use href="#i-salvar"/></svg>Salvar</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Conferência de dados bancários · IF Sudeste MG – Campus São João Nepomuceno</span>
+    <span>Produzido por:<a href="https://feliperodrigues.net">Felipe Rodrigues</a></span>
+  </footer>
+</div>
+
+<!-- Pop-up: confirmar salvar / excluir -->
 <div id="modal" class="modal" hidden>
-  <div class="modal-box">
-    <div id="modalIcon" class="modal-icon">✓</div>
-    <h2 id="modalTitulo">Confirmar</h2>
-    <p id="modalTexto"></p>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-head">
+      <div id="modalIcon" class="modal-icon">✓</div>
+      <h2 id="modalTitulo">Confirmar</h2>
+      <p id="modalTexto"></p>
+    </div>
     <div id="modalResumo" class="modal-data"></div>
-    <div class="modal-actions">
-      <button id="modalVoltar" type="button">Voltar</button>
-      <button id="modalConfirmar" type="button">Confirmar</button>
+    <div class="modal-foot">
+      <button id="modalVoltar" class="btn btn-contorno" type="button">Voltar</button>
+      <button id="modalConfirmar" class="btn btn-primaria" type="button">Confirmar</button>
     </div>
   </div>
 </div>
 
+<script type="module" src="./Assets/js/notificacoes.js"></script>
+<script type="module" src="./Assets/js/painel-layout.js"></script>
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, update, remove, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
@@ -160,6 +261,10 @@ onValue(ref(db, "inscricoes"), (snap) => {
     .map(([id, v]) => ({ id, nome: v.identificacao.nome || "", cpf: v.identificacao.cpf || id, banc: v.bancarios || null }))
     .sort((a, b) => cmp(a.nome, b.nome));
   $("pdfTodas").disabled = !alunas.length;
+  const comDados = alunas.filter(temBanco).length;
+  $("resumoTopo").textContent = alunas.length
+    ? comDados + " de " + alunas.length + " aluna(s) com dados bancários"
+    : "nenhuma inscrição registrada";
   if (atual) {                       // mantém a aluna aberta atualizada
     const nova = alunas.find((a) => a.id === atual.id);
     if (nova) { atual = nova; resumo(); } else fechar();
@@ -191,8 +296,8 @@ function resumo() {
   $("rNome").textContent = atual.nome;
   $("rCpf").textContent = atual.cpf;
   const tem = temBanco(atual);
-  $("rSit").textContent = tem ? "✓ Dados cadastrados" : "Sem dados bancários";
-  $("rSit").className = "situacao " + (tem ? "ok" : "sem");
+  $("rSit").textContent = tem ? "Dados cadastrados" : "Sem dados bancários";
+  $("rSit").className = "tag " + (tem ? "ok" : "sem");
   $("excluir").disabled = !tem;
   $("pdfAluna").disabled = !tem;
 }
@@ -223,24 +328,24 @@ $("salvar").onclick = () => {
   if (primeiro) { primeiro.focus(); return aviso("Preencha os campos obrigatórios (*).", "erro"); }
   const d = dadosForm();
   acao = "salvar";
-  $("modalIcon").textContent = temBanco(atual) ? "✎" : "✓"; $("modalIcon").style.background = "#e8f5e9";
+  $("modalIcon").textContent = temBanco(atual) ? "✎" : "✓"; $("modalIcon").className = "modal-icon";
   $("modalTitulo").textContent = temBanco(atual) ? "Atualizar dados bancários" : "Salvar dados bancários";
   $("modalTexto").textContent = "Confira os dados antes de gravar:";
   linhas([["Aluna", atual.nome], ["CPF", atual.cpf], ["Titular", d.titular], ["Banco", d.banco + " · " + d.tipoConta],
     ["Agência / Conta", d.agencia + " / " + d.conta], ["PIX", d.pix]]);
-  $("modalConfirmar").textContent = "Confirmar e salvar"; $("modalConfirmar").style.background = "#4caf50";
+  $("modalConfirmar").textContent = "Confirmar e salvar"; $("modalConfirmar").className = "btn btn-primaria";
   $("modal").hidden = false;
 };
 
 $("excluir").onclick = () => {
   if (!atual || !temBanco(atual)) return;
   acao = "excluir";
-  $("modalIcon").textContent = "🗑️"; $("modalIcon").style.background = "#fdeceb";
+  $("modalIcon").textContent = "🗑️"; $("modalIcon").className = "modal-icon perigo";
   $("modalTitulo").textContent = "Excluir dados bancários";
   $("modalTexto").textContent = "Deseja realmente excluir os dados bancários desta aluna? A inscrição e os demais dados são mantidos. Esta ação não pode ser desfeita.";
   const b = atual.banc;
   linhas([["Aluna", atual.nome], ["CPF", atual.cpf], ["Banco", b.banco], ["Agência / Conta", (b.agencia || "") + " / " + (b.conta || "")]]);
-  $("modalConfirmar").textContent = "Sim, excluir"; $("modalConfirmar").style.background = "#c62828";
+  $("modalConfirmar").textContent = "Sim, excluir"; $("modalConfirmar").className = "btn btn-excluir";
   $("modal").hidden = false;
 };
 
@@ -286,7 +391,7 @@ function colocar(doc, img, x, y, hMax, wMax, direita) {
 
 async function gerarPdf(lista, arquivo, subtitulo) {
   if (!lista.length) return aviso("Não há dados bancários para exportar.", "erro");
-  const botoes = document.querySelectorAll("button");
+  const botoes = document.querySelectorAll(".content button, #pdfTodas");
   botoes.forEach((b) => { b.disabled = true; });
   aviso("Gerando PDF...");
   try {
@@ -327,6 +432,5 @@ $("pdfTodas").onclick = () => {
   gerarPdf(lista, "dados_bancarios_todas.pdf", lista.length + " aluna(s) com dados bancários (ordem alfabética)");
 };
 </script>
-<script src="./Assets/js/script.js"></script>
 </body>
 </html>

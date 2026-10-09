@@ -24,6 +24,14 @@ const norm = (t) => String(t || "").trim().toLocaleLowerCase("pt-BR");
 const fmt = (ms) => new Date(ms).toLocaleDateString("pt-BR");
 const prazo = (ms) => ms + PRAZO_DIAS * 86400000;
 
+// esconde ou mostra o campo de busca inteiro (caixa com a lupa)
+function mostrarBusca(id, mostrar) {
+  const input = $(id);
+  input.hidden = !mostrar;
+  const caixa = input.closest(".busca-campo");
+  if (caixa) caixa.hidden = !mostrar;
+}
+
 function erro(e) {
   console.error(e);
   const msg = String((e && (e.code || e.message)) || "").toUpperCase();
@@ -61,14 +69,27 @@ onValue(ref(db, "emprestimos"), (snap) => {
   const todos = Object.entries(snap.val() || {}).map(([id, e]) => ({ id, ...e }))
     .filter((e) => e.status === "emprestado")
     .sort((a, b) => b.dataReserva - a.dataReserva);
-  $("reservas").hidden = !todos.length;
-  $("contador").textContent = todos.length;
   const agora = Date.now();
+  const atrasados = todos.filter((e) => agora > prazo(e.dataReserva)).length;
+  $("contador").textContent = todos.length;
+  $("contAtrasados").hidden = !atrasados;
+  $("contAtrasados").textContent = atrasados + " atrasado(s)";
+
+  if (!todos.length) {
+    $("lista").innerHTML = '<tr><td colspan="7" class="vazio">Nenhum livro emprestado no momento.</td></tr>';
+    return;
+  }
   $("lista").innerHTML = todos.map((e) => {
     const atrasado = agora > prazo(e.dataReserva);
-    return `<div><strong>${esc(e.codigo)} — ${esc(e.titulo)}</strong>
-      <small>Aluna: ${esc(e.alunaNome)} (${esc(NOMES_CURSO[e.alunaCurso] || e.alunaCurso)})</small>
-      <small>Reservado em ${fmt(e.dataReserva)} · devolver até <span class="${atrasado ? "atrasado" : ""}">${fmt(prazo(e.dataReserva))}${atrasado ? " (atrasado)" : ""}</span></small></div>`;
+    return `<tr>
+      <td class="col-num">${esc(e.codigo)}</td>
+      <td><strong>${esc(e.titulo)}</strong></td>
+      <td>${esc(e.alunaNome)}</td>
+      <td>${esc(NOMES_CURSO[e.alunaCurso] || e.alunaCurso)}</td>
+      <td class="centro">${fmt(e.dataReserva)}</td>
+      <td class="centro${atrasado ? " atrasado-data" : ""}">${fmt(prazo(e.dataReserva))}</td>
+      <td class="centro"><span class="tag ${atrasado ? "atrasado" : "emprestado"}">${atrasado ? "Atrasado" : "Emprestado"}</span></td>
+    </tr>`;
   }).join("");
 }, erro);
 
@@ -93,16 +114,16 @@ function sugerirLivros() {
 }
 function escolherLivro(l) {
   livroSel = l;
-  $("buscaLivro").value = ""; $("buscaLivro").hidden = true;
+  $("buscaLivro").value = ""; mostrarBusca("buscaLivro", false);
   $("sugLivro").hidden = true;
   $("boxLivro").hidden = false;
   $("boxLivro").innerHTML = `<b>${esc(l.titulo)}</b><small>Código ${esc(l.codigo || l.id)} · ${esc(l.autor)}</small>
-    <small><a href="#" id="trocaLivro" style="margin:0;display:inline">trocar livro</a></small>`;
+    <small><a href="#" id="trocaLivro">trocar livro</a></small>`;
   $("trocaLivro").onclick = (e) => { e.preventDefault(); limparLivro(); $("buscaLivro").focus(); };
   atualizarBotao();
 }
 function limparLivro() {
-  livroSel = null; $("boxLivro").hidden = true; $("buscaLivro").hidden = false; $("buscaLivro").value = "";
+  livroSel = null; $("boxLivro").hidden = true; mostrarBusca("buscaLivro", true); $("buscaLivro").value = "";
   atualizarBotao();
 }
 
@@ -123,16 +144,16 @@ function sugerirAlunas() {
 }
 function escolherAluna(a) {
   alunaSel = a;
-  $("buscaAluna").value = ""; $("buscaAluna").hidden = true;
+  $("buscaAluna").value = ""; mostrarBusca("buscaAluna", false);
   $("sugAluna").hidden = true;
   $("boxAluna").hidden = false;
   $("boxAluna").innerHTML = `<b>${esc(a.nome)}</b><small>${esc(NOMES_CURSO[a.curso] || a.curso)} · chamada ${esc(a.chamada)} · ${esc(a.whatsapp || "sem WhatsApp")}</small>
-    <small><a href="#" id="trocaAluna" style="margin:0;display:inline">trocar aluna</a></small>`;
+    <small><a href="#" id="trocaAluna">trocar aluna</a></small>`;
   $("trocaAluna").onclick = (e) => { e.preventDefault(); limparAluna(); $("buscaAluna").focus(); };
   atualizarBotao();
 }
 function limparAluna() {
-  alunaSel = null; $("boxAluna").hidden = true; $("buscaAluna").hidden = false; $("buscaAluna").value = "";
+  alunaSel = null; $("boxAluna").hidden = true; mostrarBusca("buscaAluna", true); $("buscaAluna").value = "";
   atualizarBotao();
 }
 

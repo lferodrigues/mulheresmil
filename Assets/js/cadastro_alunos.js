@@ -50,6 +50,7 @@ function aoTrocarCurso() {
   porChamada = {}; alunas = [];
   limpar();
   $("area").hidden = !curso;
+  $("areaFicha").hidden = !curso;
   $("cadastros").hidden = true;
   if (!curso) return;
   $("status").textContent = "Carregando alunas...";
@@ -165,6 +166,9 @@ function abrirModal({ icone, titulo, texto, botao, acao, aluna }) {
   $("modalData").hidden = false;
   $("modalSalvar").textContent = botao;
   $("modalSalvar").dataset.acao = acao;
+  // vermelho para remover, verde para salvar
+  $("modalIcon").className = "modal-icon" + (acao === "remover" ? " perigo" : "");
+  $("modalSalvar").className = "btn " + (acao === "remover" ? "btn-excluir" : "btn-primaria");
   $("modalSalvar").disabled = false;
   $("modal").hidden = false;
 }
@@ -266,9 +270,10 @@ function render() {
   const semZap = alunas.filter((a) => !a.whatsapp).length;
   $("semZap").textContent = semZap ? `${semZap} sem WhatsApp — pesquise o nome acima para completar.` : "";
   $("lista").innerHTML = alunas.map((a) =>
-    `<div><b class="num">${esc(a.chamada)}</b><span><strong>${esc(a.nome)}</strong><br><small>${esc(nomeDoCurso())}</small></span>` +
-    (a.whatsapp ? `<b class="phone">${esc(a.whatsapp)}</b>` : `<span class="sem-zap">Sem WhatsApp</span>`) +
-    `<button type="button" class="remover-aluna" data-chamada="${esc(a.chamada)}">Remover</button></div>`
+    `<tr><td class="col-num">${esc(a.chamada)}</td><td><strong>${esc(a.nome)}</strong></td>` +
+    `<td>${a.whatsapp ? `<span class="phone">${esc(a.whatsapp)}</span>` : `<span class="tag sem">Sem WhatsApp</span>`}</td>` +
+    `<td class="centro"><button type="button" class="btn btn-perigo btn-mini remover-aluna" data-chamada="${esc(a.chamada)}">` +
+    `<svg class="i"><use href="#i-lixo"/></svg>Remover</button></td></tr>`
   ).join("");
 }
 

@@ -30,11 +30,18 @@ function todos() {
 function render() {
   const itens = todos();
   $("contador").textContent = itens.length;
-  $("cadastros").hidden = !itens.length;
-  $("lista").innerHTML = itens.map((c) =>
-    `<div><span><strong>${esc(c.nome)}</strong><br><small>código: ${esc(c.id)}</small></span>` +
-    `<button type="button" class="remover-aluna" data-id="${esc(c.id)}">Remover</button>` +
-    `</div>`).join("");
+  $("resumoTopo").textContent = itens.length
+    ? itens.length + (itens.length === 1 ? " curso" : " cursos")
+    : "nenhum curso cadastrado";
+  if (!itens.length) {
+    $("lista").innerHTML = '<tr><td colspan="4" class="vazio">Nenhum curso cadastrado ainda.</td></tr>';
+    return;
+  }
+  $("lista").innerHTML = itens.map((c, i) =>
+    `<tr><td class="col-num">${i + 1}</td><td><strong>${esc(c.nome)}</strong></td>` +
+    `<td><span class="codigo">${esc(c.id)}</span></td>` +
+    `<td class="centro"><button type="button" class="btn btn-perigo btn-mini remover-aluna" data-id="${esc(c.id)}">` +
+    `<svg class="i"><use href="#i-lixo"/></svg>Remover</button></td></tr>`).join("");
 }
 
 async function carregar() {
@@ -56,7 +63,9 @@ function pedirSalvar() {
   if (CURSOS_PADRAO[id] || noBanco[id]) { msg("Já existe um curso com este nome.", "erro"); return; }
   msg("");
   pendente = { acao: "salvar", id, nome };
-  $("modalIcon").textContent = "✓"; $("modalTitulo").textContent = "Confirmar cadastro";
+  $("modalIcon").textContent = "✓"; $("modalIcon").className = "modal-icon";
+  $("modalSalvar").className = "btn btn-primaria";
+  $("modalTitulo").textContent = "Confirmar cadastro";
   $("modalTexto").textContent = "Confira os dados do curso antes de salvar:";
   $("modalNome").textContent = nome; $("modalId").textContent = id;
   $("modalData").hidden = false; $("modalSalvar").textContent = "Salvar curso";
@@ -77,7 +86,9 @@ async function pedirRemocao(id) {
   } catch (e) { return erro(e); }
   msg("");
   pendente = { acao: "remover", id, nome: c.nome };
-  $("modalIcon").textContent = "🗑️"; $("modalTitulo").textContent = "Remover curso";
+  $("modalIcon").textContent = "🗑️"; $("modalIcon").className = "modal-icon perigo";
+  $("modalSalvar").className = "btn btn-excluir";
+  $("modalTitulo").textContent = "Remover curso";
   $("modalTexto").textContent = "Deseja realmente remover este curso? Esta ação não pode ser desfeita.";
   $("modalNome").textContent = c.nome; $("modalId").textContent = id;
   $("modalData").hidden = false; $("modalSalvar").textContent = "Sim, remover";

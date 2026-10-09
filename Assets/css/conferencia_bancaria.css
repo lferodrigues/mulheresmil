@@ -1,7 +1,7 @@
 /* =========================================================
-   Devolução de Livros — Biblioteca Itinerante (Mulheres Mil)
+   Conferência de Dados Bancários — Painel Mulheres Mil
    Complementa o painel-layout.css (menu lateral + topo),
-   no mesmo padrão do Cadastro, da Reserva, da Consulta e da Frequência.
+   no mesmo padrão da Biblioteca e da Frequência.
    ========================================================= */
 
 [hidden] { display: none !important; }
@@ -54,6 +54,13 @@
   margin-bottom: 20px;
 }
 
+.ajuda { font-size: 13px; color: var(--text-2); line-height: 1.5; margin: -6px 0 16px; }
+
+#status { display: block; margin-top: 10px; font-size: 12.5px; color: var(--text-2); }
+#status:empty { display: none; }
+#status.ok { color: var(--verde-escuro); font-weight: 600; }
+#status.erro { color: var(--vermelho); font-weight: 600; }
+
 /* ---------- Barra de ferramentas ---------- */
 .toolbar {
   display: flex;
@@ -83,23 +90,24 @@
   font-weight: 600;
 }
 
-/* ---------- Filtros ---------- */
-.filtros {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr auto;
-  gap: 12px;
-  align-items: end;
-  margin-bottom: 14px;
-}
-
-.campo {
+/* ---------- Campo de busca ---------- */
+.campo-pesquisa {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.campo-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
+.campo-rotulo svg.i { width: 16px; height: 16px; color: var(--verde); }
+.campo-rotulo small { font-weight: 400; color: #8a8079; }
 
 .busca-campo {
   display: flex;
@@ -123,37 +131,117 @@
   padding: 0;
   font: inherit;
   font-size: 13px;
-  font-weight: 400;
   color: var(--text);
   background: transparent;
 }
-.filtros .btn { height: 38px; }
 
-/* ---------- Status e legenda ---------- */
-.lista-meta {
+/* lista de sugestões */
+.lista-sugestoes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 25;
+  margin-top: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #cfd6d1;
+  border-radius: 4px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
+}
+
+.sug {
   display: flex;
-  gap: 10px 14px;
-  flex-wrap: wrap;
+  width: 100%;
   align-items: center;
-  padding: 10px 14px;
-  margin-bottom: 14px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid #eef1ef;
+  background: #fff;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sug:last-child { border-bottom: 0; }
+.sug:hover,
+.sug:focus { background: #eef7f0; outline: 0; }
+.sug strong { color: var(--text); font-weight: 600; }
+.sug span { color: #8a8079; font-size: 12px; white-space: nowrap; }
+.sem-resultado { padding: 12px; color: #8a8079; font-size: 13px; }
+
+/* ---------- Ficha da aluna ---------- */
+.resumo-aluna {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 18px;
   background: #f6f8f6;
   border: 1px solid var(--border);
+  border-left: 3px solid var(--verde);
   border-radius: 4px;
-  font-size: 12.5px;
-  color: var(--text-2);
 }
-.lista-meta .espaco { flex: 1; }
+.resumo-aluna .avatar {
+  width: 38px;
+  height: 38px;
+  padding: 8px;
+  border-radius: 50%;
+  background: #eef7f0;
+  color: var(--verde-escuro);
+}
+.resumo-dados { display: flex; flex-wrap: wrap; gap: 6px 28px; flex: 1; }
+.resumo-dados span { display: block; font-size: 11px; color: #8a8079; }
+.resumo-dados strong { display: block; font-size: 14px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
 
-.legenda {
-  list-style: none;
+/* ---------- Formulário dos dados bancários ---------- */
+.grade {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.grade label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.grade .full { grid-column: 1 / -1; }
+
+.grade input,
+.grade select {
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #cfd6d1;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  background: #fff;
+}
+.grade input:focus,
+.grade select:focus { outline: 2px solid rgba(4, 138, 40, .18); border-color: var(--verde); }
+.grade input[readonly] { background: #f6f8f6; color: #8a8079; }
+
+.invalido { border-color: var(--vermelho) !important; background: #fdeeee !important; }
+.req::after { content: " *"; color: var(--vermelho); }
+.obrig { font-size: 12px; color: #8a8079; }
+
+.form-acoes {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 12px;
-  color: #8a8079;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
-.legenda li { display: inline-flex; align-items: center; gap: 6px; }
+.form-acoes .espaco { flex: 1; }
 
 /* ---------- Botões ---------- */
 .btn {
@@ -181,66 +269,17 @@
 .btn-mini { height: 30px; padding: 0 10px; font-size: 12.5px; }
 .btn-mini svg.i { width: 14px; height: 14px; }
 
-/* ---------- Tabelas ---------- */
-.tabela-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-.tabela-alta { max-height: 420px; overflow-y: auto; }
-
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-
-thead th {
-  background: #f3f6f4;
-  color: var(--text);
-  text-align: left;
-  font-weight: 600;
-  padding: 10px;
-  border-bottom: 2px solid #d5ddd7;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  white-space: nowrap;
-}
-
-tbody td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #eef1ef;
-  vertical-align: middle;
-  color: var(--text-2);
-}
-tbody tr:last-child td { border-bottom: 0; }
-tbody tr:hover td { background: #fafcfa; }
-tbody td strong { color: var(--text); font-weight: 600; }
-
-
-.col-num { width: 56px; text-align: center !important; color: #9a928c; font-variant-numeric: tabular-nums; }
-.centro { text-align: center !important; }
-.vazio { text-align: center; color: #9a928c; padding: 30px 0 !important; }
-.dica { margin-top: 10px; font-size: 12px; color: #8a8079; }
-
-
-/* ---------- Situação do empréstimo ---------- */
+/* ---------- Situação dos dados ---------- */
 .tag {
   display: inline-block;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 3px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
 }
-.tag.livre { background: #eef7f0; color: var(--verde-escuro); }
-.tag.emprestado { background: #fff8e6; color: #8a6100; }
-.tag.atrasado { background: #fdeeee; color: var(--vermelho); }
-.situacao-detalhe { display: block; margin-top: 3px; font-size: 11.5px; color: #8a8079; }
-.situacao-detalhe.atrasado { color: var(--vermelho); font-weight: 600; }
-.col-acoes { width: 120px; }
-tr.atrasado-linha td { background: #fffafa; }
-.vazio:not(td) { padding: 26px 0; border: 1px solid var(--border); border-top: 0; border-radius: 0 0 4px 4px; }
-
-/* situação dentro do pop-up */
-.modal-data .tag { display: inline-block; }
+.tag.ok { background: #eef7f0; color: var(--verde-escuro); }
+.tag.sem { background: #fff8e6; color: #8a6100; }
 
 /* ---------- Pop-ups ---------- */
 .modal {
@@ -279,6 +318,11 @@ tr.atrasado-linha td { background: #fffafa; }
 .modal-box h2 { font-size: 17px; font-weight: 600; color: var(--verde-escuro); }
 .modal-box p { margin-top: 4px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
 
+.modal-icon.perigo { background: #fdeeee; color: var(--vermelho); }
+.btn-excluir { background: var(--vermelho); color: #fff; }
+.btn-excluir:hover:not(:disabled) { background: var(--vermelho-escuro); }
+.btn-trocar:disabled { opacity: .55; cursor: not-allowed; }
+
 .modal-data { display: grid; gap: 8px; padding: 12px 22px; }
 .modal-data div {
   padding: 10px 12px;
@@ -300,7 +344,9 @@ tr.atrasado-linha td { background: #fffafa; }
 @media (max-width: 600px) {
   .page-head { align-items: flex-start; flex-direction: column; }
   .btn-trocar { margin-left: 0; }
-  .filtros { grid-template-columns: 1fr; }
-  .filtros .btn, .modal-foot .btn { flex: 1; }
-  .lista-meta .espaco { display: none; }
+  .grade { grid-template-columns: 1fr; }
+  .btn-trocar { width: 100%; justify-content: center; }
+  .form-acoes .btn, .modal-foot .btn { flex: 1 1 auto; }
+  .form-acoes .espaco, .toolbar .espaco { display: none; }
+  .sug { flex-direction: column; align-items: flex-start; gap: 2px; }
 }

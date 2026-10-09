@@ -86,36 +86,49 @@ async function carregar() {
     const dados = snap.val() || {};
     livros = Object.entries(dados).map(([id, l]) => ({ id, ...l }))
       .sort((a, b) => String(a.codigo || a.id).localeCompare(String(b.codigo || b.id), "pt-BR", { numeric: true }));
-    render(livros);
-    $("status").textContent = "Livros carregados do Firebase.";
+    resumirAcervo();
+    filtrar(); // respeita o que já estiver digitado nos filtros
+    $("status").textContent = "Livros carregados do banco de dados.";
   } catch (e) {
     console.error(e);
     $("status").textContent = "Não foi possível consultar o Firebase (" + (e.code || e.message) + ").";
     $("vazio").hidden = false;
+    $("resumoAcervo").textContent = "não foi possível carregar";
   }
 }
 
 function criarItemLivro(livro) {
   const s = obterSituacao(livro);
-  const item = document.createElement("div");
-  item.className = "livro-item";
-  item.innerHTML = `
-    <strong class="livro-codigo">${esc(valor(livro, ...CAMPOS.codigo) || livro.id)}</strong>
-    <span class="livro-info">
-      <strong>${esc(valor(livro, ...CAMPOS.titulo))}</strong>
-      <small>${esc(valor(livro, ...CAMPOS.autor))}</small>
-      <small class="livro-status livro-status-${s.chave}">${esc(textoSituacao(s))}</small>
-    </span>
-    <button class="expandir" type="button">Expandir</button>`;
-  item.querySelector("button").onclick = () => abrirDetalhes(livro);
-  return item;
+  const tr = document.createElement("tr");
+  tr.title = "Clique para ver os detalhes";
+  tr.innerHTML = `
+    <td class="col-num">${esc(valor(livro, ...CAMPOS.codigo) || livro.id)}</td>
+    <td><strong>${esc(valor(livro, ...CAMPOS.titulo))}</strong></td>
+    <td>${esc(valor(livro, ...CAMPOS.autor))}</td>
+    <td>${esc(valor(livro, ...CAMPOS.genero))}</td>
+    <td><span class="tag ${s.chave}">${esc(s.rotulo)}</span>
+      ${s.detalhe ? `<span class="situacao-detalhe ${s.chave}">${esc(s.detalhe)}</span>` : ""}</td>
+    <td class="centro"><button class="btn btn-contorno btn-mini" type="button">
+      <svg class="i"><use href="#i-olho"/></svg>Expandir</button></td>`;
+  tr.onclick = () => abrirDetalhes(livro);
+  return tr;
 }
 
 function render(lista) {
-  $("contador").textContent = lista.length + (lista.length === 1 ? " livro" : " livros");
+  $("contador").textContent = lista.length + (lista.length === 1 ? " livro" : " livros") +
+    (lista.length !== livros.length ? " de " + livros.length : "");
   $("lista").innerHTML = "";
   $("vazio").hidden = lista.length > 0;
   lista.forEach((l) => $("lista").appendChild(criarItemLivro(l)));
+}
+
+// resumo do acervo no topo da página
+function resumirAcervo() {
+  const conta = { livre: 0, emprestado: 0, atrasado: 0 };
+  livros.forEach((l) => { conta[obterSituacao(l).chave]++; });
+  $("resumoAcervo").textContent = livros.length
+    ? `${livros.length} livro(s) • ${conta.livre} livre(s) • ${conta.emprestado} emprestado(s) • ${conta.atrasado} atrasado(s)`
+    : "nenhum livro cadastrado";
 }
 
 function filtrar() {
@@ -132,8 +145,8 @@ function abrirDetalhes(livro) {
   $("modalTitulo").textContent = valor(livro, ...CAMPOS.titulo) || "—";
   $("modalAutor").textContent = valor(livro, ...CAMPOS.autor) || "—";
   $("modalGenero").textContent = valor(livro, ...CAMPOS.genero) || "—";
-  $("modalStatus").textContent = textoSituacao(s);
-  $("modalStatus").className = "situacao" + (livre ? "" : " reservado");
+  $("modalStatus").innerHTML = `<span class="tag ${s.chave}">${esc(s.rotulo)}</span>` +
+    (s.detalhe ? `<span class="situacao-detalhe ${s.chave}">${esc(s.detalhe)}</span>` : "");
   $("modalAluna").textContent = valor(livro, ...CAMPOS.aluna) || "Nome da aluna não informado";
   $("reservaBox").hidden = livre;
   $("modal").hidden = false;
@@ -142,6 +155,9 @@ function abrirDetalhes(livro) {
 $("filtrar").onclick = filtrar;
 $("filtroCodigo").onkeydown = (e) => { if (e.key === "Enter") filtrar(); };
 $("filtroTitulo").onkeydown = (e) => { if (e.key === "Enter") filtrar(); };
+// filtra enquanto digita
+$("filtroCodigo").oninput = filtrar;
+$("filtroTitulo").oninput = filtrar;
 $("modalFechar").onclick = () => { $("modal").hidden = true; };
 
 carregar();

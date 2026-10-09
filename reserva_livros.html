@@ -3,70 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="Logo-Mulheres-Mil.jpg">
-<title>Reserva de Livros | Biblioteca Itinerante</title>
+<title>Reserva de Livros | Mulheres Mil - IF Sudeste MG</title>
+<link rel="icon" type="image/jpg" sizes="192x192" href="Logo-Mulheres-Mil.jpg">
 <script type="module" src="./Assets/js/auth-guard.js"></script>
-<link rel="stylesheet" href="Assets/css/reserva_livros.css">
+<script src="./Assets/js/script.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./Assets/css/notificacoes.css">
+<link rel="stylesheet" href="./Assets/css/painel-layout.css">
+<link rel="stylesheet" href="./Assets/css/reserva_livros.css">
 </head>
 <body>
-<main>
-<section class="card">
-  <img src="if-sjn.png" alt="Mulheres Mil" class="logo">
-  <hr>
-  <span class="badge">BIBLIOTECA ITINERANTE</span>
-  <h1>Reserva de Livros</h1>
-  <p>Escolha o livro e a aluna. O sistema registra quem reservou, o livro e a data da reserva.</p>
+<script>try{if(localStorage.getItem("mm_menu_fechado")==="1")document.body.classList.add("side-off")}catch(e){}</script>
 
-  <label class="campo-pesquisa">Livro (somente disponíveis)
-    <input id="buscaLivro" type="search" placeholder="Digite o código ou o título..." autocomplete="off">
-    <div id="sugLivro" class="lista-sugestoes" hidden></div>
-  </label>
-  <div id="boxLivro" class="selecionado" hidden></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19.5h11V9.5"/><path d="M10 19.5v-5h4v5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="1.5"/><path d="M8 9.5l2 2 4-4M8 16h8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 19.5c.6-3.3 3.3-5.5 6.5-5.5s5.9 2.2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.3c1.8.8 3.1 2.6 3.5 5.2"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3.5H6.5A1.5 1.5 0 005 5v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5z"/><path d="M14 3.5v5h5M8.5 13h7M8.5 16.5h5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM20 5.5A1.5 1.5 0 0018.5 4H13v16h5.5a1.5 1.5 0 001.5-1.5z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8.2-7.5 9.5-4.3-1.3-7.5-5-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5s1.1-6.1 3.5-8.5z"/></symbol>
+  <symbol id="i-porta" viewBox="0 0 24 24"><path d="M13 20.5H5.5a1 1 0 01-1-1v-15a1 1 0 011-1H13"/><path d="M13 3.5v4M13 16.5v4"/><path d="M10 12h.01"/><path d="M14 12h7M18 9l3 3-3 3"/></symbol>
+  <symbol id="i-lixo" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6.5 7l1 12.5a1.5 1.5 0 001.5 1.4h6a1.5 1.5 0 001.5-1.4l1-12.5M9 7V4.5h6V7"/></symbol>
+  <symbol id="i-salvar" viewBox="0 0 24 24"><path d="M5 4h11l3 3v12a1 1 0 01-1 1H6a1 1 0 01-1-1z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-limpar" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M7 7l1 13h8l1-13"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4.5 19.5h15"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M14 3.5H6.5A1.5 1.5 0 005 5v14a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19V8.5z"/><path d="M14 3.5v5h5"/><path d="M9 13.5h6M9 16.5h4"/></symbol>
+  <symbol id="i-livro-mais" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 016.5 3H19v14H6.5A1.5 1.5 0 005 18.5z"/><path d="M5 18.5A1.5 1.5 0 006.5 20H19v-3"/><path d="M12 7v6M9 10h6"/></symbol>
+  <symbol id="i-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+  <symbol id="i-aluna" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6.2 7.5-6.2s6.7 2.4 7.5 6.2"/></symbol>
+  <symbol id="i-reservar" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/><path d="M9.5 9.5l2 2 3.5-3.5"/></symbol>
+  <symbol id="i-devolver" viewBox="0 0 24 24"><path d="M9 7.5L4.5 12 9 16.5"/><path d="M4.5 12H15a4.5 4.5 0 010 9h-2"/></symbol>
+  <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+</svg>
 
-  <label class="campo-pesquisa">Aluna
-    <input id="buscaAluna" type="search" placeholder="Digite o nome da aluna..." autocomplete="off">
-    <div id="sugAluna" class="lista-sugestoes" hidden></div>
-  </label>
-  <div id="boxAluna" class="selecionado" hidden></div>
-
-  <small id="status"></small>
-
-  <div class="buttons">
-    <button id="reservar" type="button" disabled>Reservar</button>
-    <button id="limpar" type="button">Limpar</button>
+<!-- ============ MENU LATERAL ============ -->
+<aside class="sidebar" id="sidebar" aria-label="Menu principal">
+  <div class="side-title">
+    Painel de Controle
+    <button class="side-close" id="btnFechar" type="button" title="Fechar menu" aria-label="Fechar menu"><svg class="i"><use href="#i-x"/></svg></button>
   </div>
 
-  <section id="reservas" hidden>
-    <h2>Livros emprestados <span id="contador">0</span></h2>
-    <div id="lista"></div>
-  </section>
+  <div class="side-tools">
+    <label class="search">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="busca" type="search" placeholder="Encontrar opção" autocomplete="off" aria-label="Encontrar opção no menu">
+    </label>
+    <div class="tool-row">
+      <button type="button" id="btnExpandir"><svg class="i"><use href="#i-plus"/></svg>Expandir</button>
+      <button type="button" id="btnRecolher"><svg class="i"><use href="#i-minus"/></svg>Recolher</button>
+    </div>
+  </div>
 
-  <a href="biblioteca.html">← Voltar para a biblioteca</a>
-  <footer>Mulheres Mil • Educação, Cidadania e Desenvolvimento Sustentável</footer>
-</section>
-</main>
+  <nav class="nav" id="nav">
+    <a class="nav-link" href="./painel.html"><svg class="i"><use href="#i-home"/></svg>Início</a>
 
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-check"/></svg>Frequência<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./lista_presenca_mulheres_mil.html">Lançamento de frequência</a>
+        <a href="./gerar_lista_presenca.html">Gerar lista de presença (PDF)</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-users"/></svg>Alunas e Cursos<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./cadastro_alunos.html">Cadastro de alunas</a>
+        <a href="./importar_alunas.html">Importar alunas de planilha</a>
+        <a href="./cadastro_cursos.html">Cadastro de cursos</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-form"/></svg>Inscrições<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./inscricao.html">Inscrição de alunas</a>
+        <a href="./download_inscricoes.html">Download das inscrições</a>
+        <a href="./conferencia_bancaria.html">Conferência de dados bancários</a>
+      </div>
+    </div>
+
+    <div class="group open">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-book"/></svg>Biblioteca Itinerante<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./biblioteca.html">Visão geral</a>
+        <a href="./cadastro_livros.html">Cadastro de livros</a>
+        <a href="./reserva_livros.html" class="active" aria-current="page">Reserva de livros</a>
+        <a href="./consulta-livros.html">Consulta de livros</a>
+        <a href="./devolucao_livros.html">Devolução de livros</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <button class="group-btn" type="button"><svg class="i"><use href="#i-shield"/></svg>Administração<svg class="i chev"><use href="#i-down"/></svg></button>
+      <div class="sub">
+        <a href="./controle_usuarios.html">Controle de usuários</a>
+        <a href="./logs_acesso.html">Logs de acesso</a>
+      </div>
+    </div>
+
+    <p class="nav-empty" id="navVazio">Nenhuma opção encontrada.</p>
+  </nav>
+
+  <div class="side-foot">
+    <a href="./index.html" target="_blank" rel="noopener"><svg class="i"><use href="#i-globe"/></svg>Visitar site</a>
+  </div>
+</aside>
+<div class="overlay" id="overlay"></div>
+
+<!-- ============ ÁREA PRINCIPAL ============ -->
+<div class="main">
+  <header class="topbar">
+    <button class="burger" id="btnMenu" type="button" title="Abrir menu" aria-label="Abrir menu" aria-controls="sidebar"><svg class="i"><use href="#i-menu"/></svg></button>
+    <span class="page-title">Biblioteca Itinerante</span>
+    <div class="top-right">
+      <span class="user-name" id="userName"></span>
+      <a class="btn-sair" href="./admin.html" id="btnSair" title="Sair do sistema" aria-label="Sair do sistema"><svg class="i"><use href="#i-porta"/></svg></a>
+    </div>
+  </header>
+
+  <main class="content">
+    <p class="crumb">Página inicial / Biblioteca Itinerante / Reserva de livros</p>
+    <div class="page-head">
+      <div>
+        <h1>Reserva de Livros</h1>
+        <p class="sub-titulo">Prazo de devolução: <strong>15 dias</strong> a partir da reserva</p>
+      </div>
+      <a class="btn-trocar" href="./devolucao_livros.html"><svg class="i"><use href="#i-devolver"/></svg>Registrar devolução</a>
+    </div>
+
+    <!-- ===== Nova reserva ===== -->
+    <section class="card">
+      <div class="toolbar">
+        <span class="rotulo"><svg class="i"><use href="#i-reservar"/></svg>Nova reserva</span>
+        <span class="espaco"></span>
+        <small id="status" class="status"></small>
+      </div>
+      <p class="ajuda">Escolha o livro e a aluna. O sistema registra quem reservou, o livro e a data da reserva.</p>
+
+      <div class="form-grid">
+        <div class="campo">
+          <label class="campo-pesquisa"><span class="campo-rotulo"><svg class="i"><use href="#i-book"/></svg>Livro <small>(somente disponíveis)</small></span>
+            <span class="busca-campo">
+              <svg class="i"><use href="#i-search"/></svg>
+              <input id="buscaLivro" type="search" placeholder="Digite o código ou o título..." autocomplete="off">
+            </span>
+            <div id="sugLivro" class="lista-sugestoes" hidden></div>
+          </label>
+          <div id="boxLivro" class="selecionado" hidden></div>
+        </div>
+
+        <div class="campo">
+          <label class="campo-pesquisa"><span class="campo-rotulo"><svg class="i"><use href="#i-aluna"/></svg>Aluno(a)</span>
+            <span class="busca-campo">
+              <svg class="i"><use href="#i-search"/></svg>
+              <input id="buscaAluna" type="search" placeholder="Digite o nome do(a) aluno(a)..." autocomplete="off">
+            </span>
+            <div id="sugAluna" class="lista-sugestoes" hidden></div>
+          </label>
+          <div id="boxAluna" class="selecionado" hidden></div>
+        </div>
+      </div>
+
+      <div class="form-acoes">
+        <button class="btn btn-contorno" id="limpar" type="button"><svg class="i"><use href="#i-limpar"/></svg>Limpar</button>
+        <button class="btn btn-primaria" id="reservar" type="button" disabled><svg class="i"><use href="#i-reservar"/></svg>Reservar</button>
+      </div>
+    </section>
+
+    <!-- ===== Livros emprestados ===== -->
+    <section id="reservas" class="card">
+      <div class="toolbar">
+        <span class="rotulo"><svg class="i"><use href="#i-lista"/></svg>Livros emprestados</span>
+        <span class="badge" id="contador">0</span>
+        <span class="badge badge-alerta" id="contAtrasados" hidden></span>
+      </div>
+      <div class="tabela-wrap"><table>
+        <thead><tr>
+          <th class="col-num">Nº</th><th>Título</th><th>Aluna</th><th>Curso</th>
+          <th class="centro">Reservado em</th><th class="centro">Devolver até</th><th class="centro">Situação</th>
+        </tr></thead>
+        <tbody id="lista"><tr><td colspan="7" class="vazio">Carregando…</td></tr></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Reserva de livros · IF Sudeste MG – Campus São João Nepomuceno</span>
+    <span>Produzido por:<a href="https://feliperodrigues.net">Felipe Rodrigues</a></span>
+  </footer>
+</div>
+
+<!-- Pop-up: confirmação da reserva -->
 <div id="modal" class="modal" hidden>
-  <div class="modal-box">
-    <div id="modalIcon" class="modal-icon">📖</div>
-    <h2 id="modalTitulo">Confirmar reserva</h2>
-    <p id="modalTexto">Confira os dados antes de confirmar.</p>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-head">
+      <div id="modalIcon" class="modal-icon">📖</div>
+      <h2 id="modalTitulo">Confirmar reserva</h2>
+      <p id="modalTexto">Confira os dados antes de confirmar.</p>
+    </div>
     <div class="modal-data">
       <div><span>Livro</span><strong id="mLivro"></strong></div>
       <div><span>Aluna</span><strong id="mAluna"></strong></div>
       <div><span>Data da reserva</span><strong id="mData"></strong></div>
       <div><span>Devolver até</span><strong id="mPrazo"></strong></div>
     </div>
-    <div class="modal-actions">
-      <button id="modalVoltar" type="button">Voltar</button>
-      <button id="modalConfirmar" type="button">Confirmar reserva</button>
+    <div class="modal-foot">
+      <button id="modalVoltar" class="btn btn-contorno" type="button">Voltar</button>
+      <button id="modalConfirmar" class="btn btn-primaria" type="button">Confirmar reserva</button>
     </div>
   </div>
 </div>
 
-<script type="module" src="Assets/js/reserva_livros.js"></script>
 <script type="module" src="./Assets/js/notificacoes.js"></script>
-<script src="./Assets/js/script.js"></script>
+<script type="module" src="./Assets/js/painel-layout.js"></script>
+<script type="module" src="./Assets/js/reserva_livros.js"></script>
 </body>
 </html>
