@@ -50,7 +50,6 @@
   <symbol id="i-pdf-baixar" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
   <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3.5 7A1.5 1.5 0 015 5.5h4.5l2 2.5H19a1.5 1.5 0 011.5 1.5v8.5A1.5 1.5 0 0119 19.5H5A1.5 1.5 0 013.5 18z"/></symbol>
   <symbol id="i-banco" viewBox="0 0 24 24"><path d="M3.5 9.5L12 4.5l8.5 5M5 9.5v8M9.5 9.5v8M14.5 9.5v8M19 9.5v8M3.5 20h17"/></symbol>
-  <symbol id="i-aluna" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6.2 7.5-6.2s6.7 2.4 7.5 6.2"/></symbol>
 </svg>
 
 <!-- ============ MENU LATERAL ============ -->
@@ -160,7 +159,7 @@
         <span class="campo-rotulo">Nome ou CPF da aluna</span>
         <span class="busca-campo">
           <svg class="i"><use href="#i-search"/></svg>
-          <input id="busca" type="search" placeholder="Digite o nome ou o CPF..." autocomplete="off">
+          <input id="buscaAluna" type="search" placeholder="Digite o nome ou o CPF..." autocomplete="off">
         </span>
         <div id="sug" class="lista-sugestoes" hidden></div>
       </label>
@@ -275,7 +274,7 @@ onValue(ref(db, "inscricoes"), (snap) => {
 
 /* ---------- busca ---------- */
 function sugerir() {
-  const q = limpar($("busca").value), box = $("sug");
+  const q = limpar($("buscaAluna").value), box = $("sug");
   if (!q || atual) { box.hidden = true; return; }
   const qt = semAcento(q), qn = soNum(q);
   const achadas = alunas.filter((a) => semAcento(a.nome).includes(qt) || (qn && soNum(a.cpf).includes(qn))).slice(0, 20);
@@ -289,7 +288,7 @@ function sugerir() {
   });
   box.hidden = false;
 }
-$("busca").oninput = sugerir;
+$("buscaAluna").oninput = sugerir;
 
 /* ---------- ficha da aluna ---------- */
 function resumo() {
@@ -303,7 +302,7 @@ function resumo() {
 }
 function abrir(a) {
   atual = a;
-  $("busca").value = a.nome;
+  $("buscaAluna").value = a.nome;
   $("sug").hidden = true;
   CAMPOS.forEach((c) => { $(c).value = (a.banc && a.banc[c]) || ""; $(c).classList.remove("invalido"); });
   resumo();
@@ -311,7 +310,7 @@ function abrir(a) {
   aviso(temBanco(a) ? "" : "Esta aluna ainda não tem dados bancários. Preencha e salve.");
 }
 function fechar() {
-  atual = null; $("area").hidden = true; $("busca").value = ""; $("sug").hidden = true; $("busca").focus();
+  atual = null; $("area").hidden = true; $("buscaAluna").value = ""; $("sug").hidden = true; $("buscaAluna").focus();
 }
 $("fechar").onclick = () => { fechar(); aviso(""); };
 CAMPOS.forEach((c) => $(c).addEventListener("input", () => $(c).classList.remove("invalido")));

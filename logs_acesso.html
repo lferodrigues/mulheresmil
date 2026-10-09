@@ -50,9 +50,7 @@
   <symbol id="i-pdf-baixar" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
   <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3.5 7A1.5 1.5 0 015 5.5h4.5l2 2.5H19a1.5 1.5 0 011.5 1.5v8.5A1.5 1.5 0 0119 19.5H5A1.5 1.5 0 013.5 18z"/></symbol>
   <symbol id="i-banco" viewBox="0 0 24 24"><path d="M3.5 9.5L12 4.5l8.5 5M5 9.5v8M9.5 9.5v8M14.5 9.5v8M19 9.5v8M3.5 20h17"/></symbol>
-  <symbol id="i-aluna" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6.2 7.5-6.2s6.7 2.4 7.5 6.2"/></symbol>
   <symbol id="i-curso" viewBox="0 0 24 24"><path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v5c1.5 1.6 3.4 2.4 5.5 2.4s4-.8 5.5-2.4v-5"/></symbol>
-  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4.5 19.5h15"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><path d="M4.5 19.5l1.2-3.6A8 8 0 1112 20a8 8 0 01-3.9-1z"/><path d="M9.2 9.3c.3 2.4 2.1 4.3 4.6 4.9l1.1-1.1 1.6.8c-.3 1-1.1 1.6-2.2 1.5-3.2-.4-5.6-2.8-6-6-.1-1.1.5-1.9 1.5-2.2l.8 1.6z"/></symbol>
   <symbol id="i-mais" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol>
   <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="1.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></symbol>
@@ -178,7 +176,7 @@
         <div class="toolbar">
           <label class="busca-campo" aria-label="Buscar nos logs">
             <svg class="i"><use href="#i-search"/></svg>
-            <input id="busca" type="search" placeholder="Buscar e-mail, IP, página ou ação" autocomplete="off">
+            <input id="buscaLog" type="search" placeholder="Buscar e-mail, IP, página ou ação" autocomplete="off">
           </label>
           <label class="campo-inline">Tipo
             <select id="filtroTipo">
@@ -384,7 +382,7 @@ function carregar() {
 }
 
 function filtrar() {
-  const q = norm($("busca").value), t = $("filtroTipo").value;
+  const q = norm($("buscaLog").value), t = $("filtroTipo").value;
   filtrados = logs.filter((l) =>
     (!t || l.tipo === t) && (!q || norm(l.email).includes(q) || norm(l.pagina).includes(q) || norm(l.nome).includes(q) || norm(l.ip).includes(q) || norm(l.acao).includes(q) || norm(l.detalhe).includes(q)));
   $("contador").textContent = filtrados.length + (filtrados.length === 1 ? " registro" : " registros");
@@ -400,7 +398,7 @@ function filtrar() {
     <td>${esc(navegador(l.navegador))}</td></tr>`).join("");
 }
 
-$("busca").oninput = filtrar;
+$("buscaLog").oninput = filtrar;
 $("filtroTipo").onchange = filtrar;
 $("btnAtualizar").onclick = carregar;
 
