@@ -5,7 +5,7 @@
    A carga horária é digitada; a data é a de hoje. */
 import { auth, db } from "./firebase-config.js";
 import { ref, get } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
-import { carregarCursos } from "./cursos.js";
+import { carregarCursos, CURSOS_PADRAO, gerarId } from "./cursos.js";
 import { ALUNAS_PATH, chaveNome } from "./alunas.js";
 
 const $ = (id) => document.getElementById(id);
@@ -16,8 +16,7 @@ const CIDADE = "São João Nepomuceno";
 const ASSINATURA = "Responsável do Campus São João Nepomuceno";
 
 let cursos = {};          // { id: nome }
-let alunas = {};          // alunas/{curso} -> { nº: aluna }
-let cpfPorNome = {};      // chaveNome -> [{ cpf, curso }]
+let porCurso = {};        // id do curso -> [{ chave, nome, cpf }] (lista do curso + fichas de inscrição)
 
 /* ---------- utilitários ---------- */
 function formatarCpf(v) {
@@ -43,33 +42,86 @@ function aviso(texto, tipo = "") {
 }
 
 /* ---------- dados do banco ---------- */
+// Todos os cursos cadastrados no banco + os dois padrão (só se não houver no banco um com o mesmo nome),
+// igual à página de inscrição.
+async function todosOsCursos() {
+  const c = await carregarCursos(false, db);
+  const nomesNoBanco = new Set(Object.values(c).map(gerarId));
+  Object.entries(CURSOS_PADRAO).forEach(([id, nome]) => {
+    if (!c[id] && !nomesNoBanco.has(gerarId(nome))) c[id] = nome;
+  });
+  return c;
+}
+
 async function carregar() {
   aviso("Carregando cursos e alunas...");
   try {
     const [c, alSnap, insSnap] = await Promise.all([
-      carregarCursos(true),
+      todosOsCursos(),
       get(ref(db, ALUNAS_PATH)),
       get(ref(db, "inscricoes")).catch((e) => { console.warn("[declaração] inscrições:", e); return null; })
     ]);
-    alunas = alSnap.val() || {};
-    // cursos que têm alunas, com o nome do cadastro (ou o próprio id, se o curso não estiver cadastrado)
-    cursos = {};
-    Object.keys(alunas).forEach((id) => { if (Object.keys(alunas[id] || {}).length) cursos[id] = c[id] || id; });
+    const alunas = alSnap.val() || {};
+    const inscricoes = Object.entries((insSnap && insSnap.val()) || {});
+    cursos = { ...c };
+    porCurso = {};
 
-    cpfPorNome = {};
-    Object.entries((insSnap && insSnap.val()) || {}).forEach(([id, ins]) => {
+    // Um mesmo curso pode aparecer com ids diferentes (ex.: alunas antigas em alunas/assistente e o
+    // curso cadastrado como cursos/assistente-escolar). Tudo é juntado pelo NOME do curso,
+    // para cada curso aparecer uma vez só na lista.
+    const idPorNome = {};
+    Object.entries(cursos).forEach(([id, nome]) => { idPorNome[gerarId(nome)] ??= id; });
+    const resolver = (id, nomeSugerido) => {
+      if (cursos[id]) return idPorNome[gerarId(cursos[id])] || id;
+      const nome = CURSOS_PADRAO[id] || nomeSugerido || id;
+      const igual = idPorNome[gerarId(nome)] || idPorNome[gerarId(id)];
+      if (igual) return igual;
+      cursos[id] = nome; idPorNome[gerarId(nome)] = id;          // curso que só existe na lista/inscrição
+      return id;
+    };
+
+    // CPFs das fichas de inscrição, por nome
+    const cpfPorNome = {};
+    inscricoes.forEach(([id, ins]) => {
+      const nome = ins?.identificacao?.nome, cpf = ins?.identificacao?.cpf || id;
+      if (nome && soNum(cpf).length === 11)
+        (cpfPorNome[chaveNome(nome)] ||= []).push({ cpf: formatarCpf(cpf), curso: ins?.inscricao?.curso || "" });
+    });
+    const cpfDe = (nome, curso, proprio) => {
+      if (soNum(proprio).length === 11) return formatarCpf(proprio);
+      const achados = cpfPorNome[chaveNome(nome)] || [];
+      return ((achados.find((x) => x.curso === curso) || achados[0]) || {}).cpf || "";
+    };
+
+    // 1) lista oficial de cada curso: alunas/{curso}/{nº}
+    Object.entries(alunas).forEach(([cursoOrig, lista]) => {
+      Object.entries(lista || {}).forEach(([k, a]) => {
+        if (!a || !a.nome) return;
+        const curso = resolver(cursoOrig, a.cursoNome);
+        const destino = (porCurso[curso] ||= []);
+        if (destino.some((x) => chaveNome(x.nome) === chaveNome(a.nome))) return;   // mesma aluna em dois ids do curso
+        destino.push({ chave: "a:" + cursoOrig + ":" + k, nome: String(a.nome).replace(/\s+/g, " ").trim(), cpf: cpfDe(a.nome, cursoOrig, a.cpf) });
+      });
+    });
+    // 2) inscritas (inscricoes/{cpf}) que ainda não estão na lista do curso
+    inscricoes.forEach(([id, ins]) => {
       const nome = ins?.identificacao?.nome;
-      const cpf = ins?.identificacao?.cpf || id;
-      if (!nome || soNum(cpf).length !== 11) return;
-      (cpfPorNome[chaveNome(nome)] ||= []).push({ cpf: formatarCpf(cpf), curso: ins?.inscricao?.curso || "" });
+      if (!ins?.inscricao?.curso || !nome) return;
+      const curso = resolver(ins.inscricao.curso, ins.inscricao.cursoNome);
+      const lista = (porCurso[curso] ||= []);
+      if (lista.some((x) => chaveNome(x.nome) === chaveNome(nome))) return;
+      lista.push({ chave: "i:" + id, nome: String(nome).replace(/\s+/g, " ").trim(), cpf: cpfDe(nome, curso, ins?.identificacao?.cpf || id) });
     });
 
-    const lista = Object.entries(cursos).sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
-    $("curso").innerHTML = lista.length
-      ? '<option value="">Selecione o curso</option>' + lista.map(([id, n]) => `<option value="${esc(id)}">${esc(n)}</option>`).join("")
-      : '<option value="">Nenhum curso com alunas cadastradas</option>';
-    $("curso").disabled = !lista.length;
-    aviso(lista.length ? "Escolha o curso e a aluna." : "Nenhuma aluna cadastrada ainda. Cadastre em 'Cadastro de alunas'.", lista.length ? "" : "erro");
+    const ids = Object.keys(cursos).sort((a, b) => cursos[a].localeCompare(cursos[b], "pt-BR"));
+    $("curso").innerHTML = ids.length
+      ? '<option value="">Selecione o curso</option>' + ids.map((id) => {
+          const n = (porCurso[id] || []).length;
+          return `<option value="${esc(id)}">${esc(cursos[id])} (${n} aluna${n === 1 ? "" : "s"})</option>`;
+        }).join("")
+      : '<option value="">Nenhum curso cadastrado</option>';
+    $("curso").disabled = !ids.length;
+    aviso(ids.length ? "Escolha o curso e a aluna." : "Nenhum curso cadastrado. Cadastre em 'Cadastro de cursos'.", ids.length ? "" : "erro");
   } catch (e) {
     console.error(e);
     aviso(String(e?.code || e?.message || "").toUpperCase().includes("PERMISSION")
@@ -78,29 +130,27 @@ async function carregar() {
   }
 }
 
+const alunaSelecionada = () => (porCurso[$("curso").value] || []).find((a) => a.chave === $("aluna").value);
+
 function aoTrocarCurso() {
   const id = $("curso").value;
-  const lista = Object.entries(alunas[id] || {})
-    .map(([k, a]) => ({ ...a, chave: k }))
-    .filter((a) => a && a.nome)
-    .sort((a, b) => String(a.nome).localeCompare(String(b.nome), "pt-BR"));
-  $("aluna").innerHTML = id
-    ? '<option value="">Selecione a aluna</option>' + lista.map((a) => `<option value="${esc(a.chave)}">${esc(a.nome)}</option>`).join("")
-    : '<option value="">Escolha o curso primeiro</option>';
-  $("aluna").disabled = !id;
+  const lista = [...(porCurso[id] || [])].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  $("aluna").innerHTML = !id
+    ? '<option value="">Escolha o curso primeiro</option>'
+    : lista.length
+      ? '<option value="">Selecione a aluna</option>' + lista.map((a) => `<option value="${esc(a.chave)}">${esc(a.nome)}</option>`).join("")
+      : '<option value="">Nenhuma aluna neste curso</option>';
+  $("aluna").disabled = !lista.length;
   $("cpf").value = ""; $("cpfOrigem").textContent = "";
   atualizar();
 }
 
 function aoTrocarAluna() {
-  const curso = $("curso").value, a = (alunas[curso] || {})[$("aluna").value];
+  const a = alunaSelecionada();
   $("cpf").value = ""; $("cpfOrigem").className = "origem"; $("cpfOrigem").textContent = "";
   if (a) {
-    const achados = cpfPorNome[chaveNome(a.nome)] || [];
-    const doCurso = achados.find((x) => x.curso === curso);
-    const cpf = a.cpf ? formatarCpf(a.cpf) : (doCurso || achados[0] || {}).cpf;
-    if (cpf) {
-      $("cpf").value = cpf;
+    if (a.cpf) {
+      $("cpf").value = a.cpf;
       $("cpfOrigem").className = "origem ok";
       $("cpfOrigem").textContent = "CPF encontrado no banco (ficha de inscrição).";
     } else {
@@ -113,9 +163,9 @@ function aoTrocarAluna() {
 
 /* ---------- prévia ---------- */
 function dados() {
-  const curso = $("curso").value, a = (alunas[curso] || {})[$("aluna").value];
+  const curso = $("curso").value, a = alunaSelecionada();
   return {
-    nome: a ? String(a.nome).replace(/\s+/g, " ").trim() : "",
+    nome: a ? a.nome : "",
     curso: curso ? cursos[curso] : "",
     cpf: $("cpf").value.trim(),
     horas: Number($("horas").value),
