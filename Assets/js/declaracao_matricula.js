@@ -183,12 +183,12 @@ async function baixarPdf() {
       "CAMPUS SÃO JOÃO NEPOMUCENO"].forEach((l) => { doc.text(l, W / 2, y, { align: "center" }); y += 12; });
 
     // título
-    y += 70;
+    y += 50;
     doc.setFont("helvetica", "normal"); doc.setFontSize(17); doc.setTextColor(0);
     doc.text("D E C L A R A Ç Ã O   D E   M A T R Í C U L A", W / 2, y, { align: "center" });
 
     // texto (justificado, com recuo na primeira linha)
-    y += 90;
+    y += 60;
     doc.setFontSize(12.5);
     const RECUO = 36, entre = 24, texto = textoDeclaracao(d);
     const primeira = doc.splitTextToSize(texto, LARG - RECUO)[0];
@@ -202,11 +202,11 @@ async function baixarPdf() {
     });
 
     // local e data
-    y += 60;
+    y += 40;
     doc.text(`${CIDADE}, ${d.data}.`, W - MR, y, { align: "right" });
 
     // assinatura
-    y += 110;
+    y += 75;
     doc.setLineWidth(.7); doc.setDrawColor(0);
     doc.line(W / 2 - 140, y, W / 2 + 140, y);
     y += 16;
