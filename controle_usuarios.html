@@ -148,7 +148,7 @@
     <div class="page-head">
       <div>
         <h1>Controle de Usuários</h1>
-        <p class="sub-titulo">Edite os dados ou exclua os usuários cadastrados no sistema <span class="selo"><svg class="i"><use href="#i-shield"/></svg>Área restrita</span></p>
+        <p class="sub-titulo">Defina o perfil de acesso, edite os dados ou exclua os usuários cadastrados <span class="selo"><svg class="i"><use href="#i-shield"/></svg>Área restrita</span></p>
       </div>
       <a class="btn-trocar" href="./logs_acesso.html"><svg class="i"><use href="#i-lista"/></svg>Logs de acesso</a>
     </div>
@@ -169,13 +169,13 @@
         <span class="espaco"></span>
         <label class="busca-campo" aria-label="Buscar usuário">
           <svg class="i"><use href="#i-search"/></svg>
-          <input id="buscaUsuario" type="search" placeholder="Buscar por nome, e-mail ou WhatsApp" autocomplete="off">
+          <input id="buscaUsuario" type="search" placeholder="Buscar por nome, e-mail, WhatsApp ou perfil" autocomplete="off">
         </label>
         <button type="button" class="btn cinza" id="btnAtualizar"><svg class="i"><use href="#i-atualizar"/></svg>Atualizar</button>
       </div>
-      <div class="lista-meta"><span id="status">Carregando...</span></div>
+      <div class="lista-meta"><span id="status">Carregando...</span><span class="resumo-perfis" id="resumoPerfis"></span></div>
       <div class="tabela-wrap"><table>
-        <thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Cadastrado em</th><th>Último acesso</th><th class="centro col-acoes">Ações</th></tr></thead>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Cadastrado em</th><th>Último acesso</th><th class="centro col-perfil">Perfil</th><th class="centro col-acoes">Ações</th></tr></thead>
         <tbody id="corpo"></tbody>
       </table></div>
       <div id="vazio" class="vazio" hidden>Nenhum usuário encontrado.</div>
@@ -202,6 +202,48 @@
       </label>
       <div class="msg" id="aMsg" role="alert" hidden></div>
       <div class="acoes"><button type="button" class="btn cinza" id="aCancelar">Cancelar</button><button type="submit" class="btn">Liberar</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Pop-up: perfil do usuário -->
+<div id="modalPerfil" class="modal" hidden>
+  <div class="modal-box modal-perfil" role="dialog" aria-modal="true" aria-labelledby="tPerfil">
+    <div class="perfil-topo">
+      <span class="perfil-avatar" id="pIniciais">?</span>
+      <div class="perfil-quem">
+        <h2 id="tPerfil">Perfil do usuário</h2>
+        <strong id="pNome">—</strong>
+        <span id="pEmail">—</span>
+      </div>
+    </div>
+    <p class="perfil-ajuda">Escolha o que este usuário pode acessar no sistema.</p>
+    <form id="formPerfil" novalidate>
+      <div class="perfil-opcoes" role="radiogroup" aria-label="Perfil de acesso">
+        <label class="perfil-opcao" data-perfil="cadastro">
+          <input type="radio" name="perfil" value="cadastro">
+          <span class="op-icone"><svg class="i"><use href="#i-form"/></svg></span>
+          <span class="op-texto">
+            <strong>Perfil de cadastro</strong>
+            <small>Entra <b>somente</b> pela página de inscrição (<code>login.html</code>) e preenche fichas de alunas. Não acessa o painel.</small>
+            <span class="op-libera"><em class="sim">Inscrição de alunas</em><em class="nao">Painel de controle</em></span>
+          </span>
+          <span class="op-marca" aria-hidden="true"></span>
+        </label>
+        <label class="perfil-opcao" data-perfil="administrador">
+          <input type="radio" name="perfil" value="administrador">
+          <span class="op-icone"><svg class="i"><use href="#i-shield"/></svg></span>
+          <span class="op-texto">
+            <strong>Administrador</strong>
+            <small>Acesso a <b>tudo</b>: painel de controle, frequência, alunas, cursos, biblioteca, inscrições e administração.</small>
+            <span class="op-libera"><em class="sim">Inscrição de alunas</em><em class="sim">Painel de controle</em></span>
+          </span>
+          <span class="op-marca" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="aviso" id="pAviso" hidden></div>
+      <div class="msg" id="pMsg" role="alert" hidden></div>
+      <div class="acoes"><button type="button" class="btn cinza" id="pCancelar">Cancelar</button><button type="submit" class="btn" id="pSalvar"><svg class="i"><use href="#i-salvar"/></svg>Salvar perfil</button></div>
     </form>
   </div>
 </div>
@@ -246,7 +288,8 @@
 <script type="module" src="./Assets/js/painel-layout.js"></script>
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
-import { ref, get, update, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { ref, get, set, update, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+import { PERFIS, normalizarPerfil } from "./Assets/js/perfis.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (m) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
@@ -263,7 +306,7 @@ async function sha256(t) {
   return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-let usuarios = [], editando = null, excluindo = null, tentativas = 0, bloqueadoAte = 0;
+let usuarios = [], editando = null, excluindo = null, perfilDe = null, tentativas = 0, bloqueadoAte = 0;
 
 function erroMsg(e) {
   return String((e && (e.code || e.message)) || "").toUpperCase().includes("PERMISSION")
@@ -299,9 +342,14 @@ async function carregar() {
   $("status").className = ""; $("status").textContent = "Carregando usuários...";
   try {
     const snap = await get(ref(db, "usuarios"));
-    usuarios = Object.entries(snap.val() || {}).map(([uid, u]) => ({ ...u, uid }))
+    // perfis/{uid}: sem registro = administrador (mantém o acesso de quem já usava o painel)
+    let perfis = {}, perfisOk = true;
+    try { perfis = (await get(ref(db, "perfis"))).val() || {}; }
+    catch (e) { console.warn("[perfis] leitura negada:", e); perfisOk = false; }
+    usuarios = Object.entries(snap.val() || {}).map(([uid, u]) => ({ ...u, uid, perfil: normalizarPerfil((perfis[uid] || {}).perfil) }))
       .sort((a, b) => nomeCompleto(a).localeCompare(nomeCompleto(b), "pt-BR") || String(a.email).localeCompare(String(b.email)));
-    $("status").textContent = "Usuários carregados do Firebase.";
+    if (perfisOk) $("status").textContent = "Usuários carregados do Firebase.";
+    else { $("status").className = "erro"; $("status").textContent = "Usuários carregados, mas sem permissão para ler os perfis. Publique as regras de 'perfis' no Realtime Database."; }
   } catch (e) {
     console.error(e); usuarios = [];
     $("status").className = "erro"; $("status").textContent = erroMsg(e);
@@ -311,7 +359,10 @@ async function carregar() {
 
 function filtrar() {
   const q = norm($("buscaUsuario").value);
-  const lista = usuarios.filter((u) => !q || norm(nomeCompleto(u)).includes(q) || norm(u.email).includes(q) || norm(u.whatsapp).includes(q));
+  const lista = usuarios.filter((u) => !q || norm(nomeCompleto(u)).includes(q) || norm(u.email).includes(q) || norm(u.whatsapp).includes(q) || norm(PERFIS[u.perfil].rotulo).includes(q));
+  const nAdm = usuarios.filter((u) => u.perfil === "administrador").length;
+  $("resumoPerfis").innerHTML = usuarios.length
+    ? `<span class="pill administrador">${nAdm} administrador${nAdm === 1 ? "" : "es"}</span><span class="pill cadastro">${usuarios.length - nAdm} de cadastro</span>` : "";
   const meuUid = auth.currentUser && auth.currentUser.uid;
   $("contador").textContent = lista.length + (lista.length === 1 ? " usuário" : " usuários");
   $("vazio").hidden = lista.length > 0;
@@ -321,6 +372,8 @@ function filtrar() {
     <td>${esc(u.whatsapp || "—")}</td>
     <td>${esc(fmt(u.criadoEm))}</td>
     <td>${esc(fmt(u.ultimoAcesso))}</td>
+    <td class="centro"><button type="button" class="b-perfil ${u.perfil}" data-uid="${esc(u.uid)}" title="Alterar perfil de acesso">
+      <svg class="i"><use href="#${u.perfil === "cadastro" ? "i-form" : "i-shield"}"/></svg>${esc(PERFIS[u.perfil].curto)}<svg class="i chev"><use href="#i-down"/></svg></button></td>
     <td><div class="acoes-linha">
       <button type="button" class="b-editar" data-uid="${esc(u.uid)}">Editar</button>
       <button type="button" class="b-excluir" data-uid="${esc(u.uid)}">Excluir</button>
@@ -334,7 +387,68 @@ $("corpo").addEventListener("click", (e) => {
   if (!b) return;
   const u = usuarios.find((x) => x.uid === b.dataset.uid);
   if (!u) return;
-  if (b.classList.contains("b-editar")) abrirEditar(u); else abrirExcluir(u);
+  if (b.classList.contains("b-perfil")) abrirPerfil(u);
+  else if (b.classList.contains("b-editar")) abrirEditar(u);
+  else abrirExcluir(u);
+});
+
+/* ---------- perfil ---------- */
+const perfilEscolhido = () => (document.querySelector('#formPerfil input[name="perfil"]:checked') || {}).value;
+function iniciais(u) {
+  const t = nomeCompleto(u) || String(u.email || "?");
+  return t.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+}
+function atualizarAvisoPerfil() {
+  const p = perfilEscolhido(), souEu = auth.currentUser && perfilDe && perfilDe.uid === auth.currentUser.uid;
+  document.querySelectorAll(".perfil-opcao").forEach((op) => op.classList.toggle("marcada", op.dataset.perfil === p));
+  $("pMsg").hidden = true;
+  if (souEu && p === "cadastro") {
+    $("pAviso").innerHTML = "Este é o <b>seu</b> usuário. Você não pode trocar o próprio perfil para cadastro, senão perderia o acesso ao painel.";
+    $("pAviso").hidden = false; $("pSalvar").disabled = true;
+  } else if (p === "cadastro" && perfilDe && perfilDe.perfil !== "cadastro") {
+    $("pAviso").innerHTML = "Ao salvar, este usuário será <b>desconectado do painel</b> na próxima página que abrir e só conseguirá entrar pelo <b>login.html</b>.";
+    $("pAviso").hidden = false; $("pSalvar").disabled = false;
+  } else {
+    $("pAviso").hidden = true; $("pSalvar").disabled = !p || (perfilDe && p === perfilDe.perfil);
+  }
+}
+function abrirPerfil(u) {
+  perfilDe = u;
+  $("pIniciais").textContent = iniciais(u);
+  $("pNome").textContent = nomeCompleto(u) || "Sem nome";
+  $("pEmail").textContent = u.email || "—";
+  document.querySelectorAll('#formPerfil input[name="perfil"]').forEach((r) => { r.checked = r.value === u.perfil; });
+  atualizarAvisoPerfil();
+  $("modalPerfil").hidden = false;
+  const marcado = document.querySelector('#formPerfil input[name="perfil"]:checked');
+  if (marcado) marcado.focus();
+}
+document.querySelectorAll('#formPerfil input[name="perfil"]').forEach((r) => r.addEventListener("change", atualizarAvisoPerfil));
+$("pCancelar").onclick = () => { perfilDe = null; $("modalPerfil").hidden = true; };
+$("formPerfil").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const u = perfilDe, perfil = perfilEscolhido();
+  if (!u || !perfil || perfil === u.perfil) return;
+  if (auth.currentUser && u.uid === auth.currentUser.uid && perfil === "cadastro") return;
+  $("pSalvar").disabled = true;
+  try {
+    await set(ref(db, "perfis/" + u.uid), {
+      perfil,
+      email: u.email || "",
+      atualizadoEm: serverTimestamp(),
+      atualizadoPor: (auth.currentUser && auth.currentUser.email) || ""
+    });
+    u.perfil = perfil;
+    $("modalPerfil").hidden = true; perfilDe = null; filtrar();
+    $("status").className = "ok";
+    $("status").textContent = "✓ " + (nomeCompleto(u) || u.email || "Usuário") + " agora é " + PERFIS[perfil].rotulo.toLowerCase() + ".";
+  } catch (err) {
+    console.error(err);
+    mostrar($("pMsg"), String((err && (err.code || err.message)) || "").toUpperCase().includes("PERMISSION")
+      ? "Sem permissão para gravar em 'perfis'. Publique as regras de 'perfis' no Realtime Database e entre com uma conta de administrador."
+      : erroMsg(err));
+    $("pSalvar").disabled = false;
+  }
 });
 
 /* ---------- editar ---------- */
@@ -388,7 +502,8 @@ $("xConfirmar").onclick = async () => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
-  ["modalAdmin", "modalEditar", "modalExcluir"].forEach((id) => { $(id).hidden = true; });
+  ["modalAdmin", "modalPerfil", "modalEditar", "modalExcluir"].forEach((id) => { $(id).hidden = true; });
+  perfilDe = null;
 });
 </script>
 </body>
