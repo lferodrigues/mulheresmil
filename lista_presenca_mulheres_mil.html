@@ -287,6 +287,7 @@ import { auth, db } from "./Assets/js/firebase-config.js";
 import { ref, onValue, get, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 import { carregarCursos } from "./Assets/js/cursos.js";
 import { sincronizarInscricoes } from "./Assets/js/alunas.js";
+import { confirmar, avisar } from "./Assets/js/dialogo.js";
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -301,9 +302,16 @@ let cancelarAlunas = null;
 const storageKey = () => "mulheresMil_presenca_" + CURSO_ID + "_v1";
 const pathPresenca = () => "presenca/" + CURSO_ID;
 
-let LOGO_B64 = null;
-fetch("Logo-Mulheres-Mil.jpg").then((r) => r.blob())
+// logo do cabeçalho dos PDFs (IF Sudeste MG – Campus São João Nepomuceno)
+let LOGO_B64 = null, LOGO_PROP = 3; // proporção largura/altura, medida ao carregar
+fetch("if-sjn.png").then((r) => r.blob())
   .then((b) => new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); }))
+  .then((d) => new Promise((res) => {
+    const img = new Image();
+    img.onload = () => { if (img.naturalHeight) LOGO_PROP = img.naturalWidth / img.naturalHeight; res(d); };
+    img.onerror = () => res(d);
+    img.src = d;
+  }))
   .then((d) => { LOGO_B64 = d; }).catch(() => {});
 
 function novaListaObj(est) { const id = est.proximoId++; return { id, titulo: "Lista " + id, data: "", obs: "", presencas: {} }; }
@@ -394,10 +402,20 @@ function aba(nome) {
 
 /* ---------- PDF ---------- */
 function cabecalho(doc, sub) {
-  if (LOGO_B64) { try { doc.addImage(LOGO_B64, "JPEG", 40, 25, 130, 35); } catch (_) {} }
-  doc.setFontSize(14); doc.setTextColor(60, 40, 10); doc.text("Lista de Presença — Mulheres Mil", 185, 38);
-  doc.setFontSize(10); doc.setTextColor(90, 90, 90); doc.text("Curso: " + CURSO, 185, 54);
-  if (sub) doc.text(sub, 185, 68);
+  // logo com no máximo 150 x 50 pt, sem distorcer
+  let w = 150, h = w / LOGO_PROP;
+  if (h > 50) { h = 50; w = h * LOGO_PROP; }
+  if (LOGO_B64) { try { doc.addImage(LOGO_B64, "PNG", 40, 22 + (50 - h) / 2, w, h); } catch (_) {} }
+  const x = 40 + w + 16;
+  doc.setFontSize(14); doc.setTextColor(60, 40, 10); doc.text("Lista de Presença", x, 38);
+  doc.setFontSize(10); doc.setTextColor(90, 90, 90);
+  // nome do curso pode ser longo: quebra em linhas para não sair da página
+  const largura = doc.internal.pageSize.getWidth() - x - 40;
+  const linhasCurso = doc.splitTextToSize("Curso: " + CURSO, largura);
+  doc.text(linhasCurso, x, 54);
+  let y = 54 + linhasCurso.length * 12;
+  if (sub) { const l = doc.splitTextToSize(sub, largura); doc.text(l, x, y + 2); y += 2 + l.length * 12; }
+  return Math.max(90, y + 8); // onde a tabela deve começar
 }
 const corCelula = (d) => {
   if (d.section === "body" && [2, 3, 4].includes(d.column.index)) {
@@ -406,12 +424,12 @@ const corCelula = (d) => {
   }
 };
 function pdfListas() {
-  if (!ALUNAS.length) return alert("As alunas ainda não foram carregadas.");
+  if (!ALUNAS.length) return avisar({ titulo: "Alunas ainda não carregadas", texto: "Aguarde a lista de alunas do curso aparecer na tela e tente de novo.", tipo: "alerta" });
   const doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
   dados.listas.forEach((l, i) => {
     if (i) doc.addPage();
-    cabecalho(doc, l.titulo + (l.data ? " — Data: " + dataBR(l.data) : "") + (l.obs ? " — " + l.obs : ""));
-    doc.autoTable({ startY: 90, head: [["Nº", "Nome da Aluna", "1ª aula", "2ª aula", "3ª aula"]],
+    const inicio = cabecalho(doc, l.titulo + (l.data ? " — Data: " + dataBR(l.data) : "") + (l.obs ? " — " + l.obs : ""));
+    doc.autoTable({ startY: inicio, head: [["Nº", "Nome da Aluna", "1ª aula", "2ª aula", "3ª aula"]],
       body: ALUNAS.map((al) => { const p = getPres(l, al.chamada); return [al.chamada, al.nome, p[0] || "-", p[1] || "-", p[2] || "-"]; }),
       styles: { fontSize: 9, cellPadding: 4 }, headStyles: { fillColor: [245, 166, 35], textColor: 255 },
       columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 55, halign: "center" }, 3: { cellWidth: 55, halign: "center" }, 4: { cellWidth: 55, halign: "center" } },
@@ -420,10 +438,10 @@ function pdfListas() {
   doc.save("listas_presenca_" + CURSO_ID + ".pdf");
 }
 function pdfResumo() {
-  if (!ALUNAS.length) return alert("As alunas ainda não foram carregadas.");
+  if (!ALUNAS.length) return avisar({ titulo: "Alunas ainda não carregadas", texto: "Aguarde a lista de alunas do curso aparecer na tela e tente de novo.", tipo: "alerta" });
   const doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
-  cabecalho(doc, "Resumo de Faltas — " + dados.listas.length + " lista(s) registradas");
-  doc.autoTable({ startY: 90, head: [["Nº", "Nome da Aluna", "Aulas Registradas", "Faltas (A)", "Presenças (P)"]],
+  const inicio = cabecalho(doc, "Resumo de Faltas — " + dados.listas.length + " lista(s) registradas");
+  doc.autoTable({ startY: inicio, head: [["Nº", "Nome da Aluna", "Aulas Registradas", "Faltas (A)", "Presenças (P)"]],
     body: resumo().map((r) => [r.chamada, r.nome, r.registradas, r.faltas, r.presencas]),
     styles: { fontSize: 9, cellPadding: 4 }, headStyles: { fillColor: [245, 166, 35], textColor: 255 },
     columnStyles: { 0: { cellWidth: 30, halign: "center" }, 2: { cellWidth: 90, halign: "center" }, 3: { cellWidth: 70, halign: "center" }, 4: { cellWidth: 90, halign: "center" } },
@@ -435,7 +453,13 @@ function pdfResumo() {
 function ocupado(s) { $("btnSalvarBanco").disabled = s; $("btnCarregarBanco").disabled = s; }
 async function salvarBanco() {
   if (!auth.currentUser) return aviso("Faça login para salvar.", "erro");
-  if (!confirm("Salvar " + dados.listas.length + " lista(s) no banco de dados?\nIsso substitui o que já estava salvo para este curso.")) return;
+  const okSalvar = await confirmar({
+    titulo: "Salvar chamada no banco de dados?",
+    texto: "Isso substitui o que já estava salvo para este curso.",
+    detalhes: [["Curso", CURSO || "—"], ["Listas a salvar", String(dados.listas.length)]],
+    botaoOk: "Sim, salvar", tipo: "sucesso"
+  });
+  if (!okSalvar) return;
   ocupado(true); aviso("Salvando...");
   try {
     const listas = {};
@@ -455,7 +479,14 @@ async function carregarBanco() {
       return { id: Number(l.id), titulo: l.titulo || ("Lista " + l.id), data: l.data || "", obs: l.obs || "", presencas };
     }).sort((a, b) => a.id - b.id);
     if (!listas.length) return aviso("Ainda não há listas salvas no banco para este curso.");
-    if (!confirm("Carregar " + listas.length + " lista(s) do banco?\nIsso substitui as listas que estão neste navegador.")) return aviso("");
+    const okCarregar = await confirmar({
+      titulo: "Carregar listas do banco?",
+      texto: "Isso substitui as listas que estão neste navegador.",
+      detalhes: [["Curso", CURSO || "—"], ["Listas no banco", String(listas.length)]]
+        .concat(v.atualizadoEm ? [["Salvas em", new Date(v.atualizadoEm).toLocaleString("pt-BR")]] : []),
+      botaoOk: "Sim, carregar", tipo: "info", icone: "nuvem"
+    });
+    if (!okCarregar) return aviso("");
     dados = { listas, proximoId: Number(v.proximoId) || (Math.max(...listas.map((l) => l.id)) + 1) };
     listaAtualId = dados.listas[0].id; salvarLocal(); renderLista();
     if ($("tab-resumo").style.display !== "none") renderResumo();
@@ -526,9 +557,16 @@ function escolherCurso(id, nome) {
 document.querySelectorAll(".tab-btn").forEach((b) => b.onclick = () => aba(b.dataset.tab));
 $("seletorLista").onchange = (e) => { listaAtualId = parseInt(e.target.value); renderLista(); };
 $("btnNova").onclick = () => { const n = novaListaObj(dados); dados.listas.push(n); listaAtualId = n.id; salvarLocal(); renderLista(); };
-$("btnExcluir").onclick = () => {
-  if (dados.listas.length <= 1) return alert("É necessário manter ao menos uma lista.");
-  if (!confirm("Tem certeza que deseja excluir esta lista? Essa ação não pode ser desfeita.")) return;
+$("btnExcluir").onclick = async () => {
+  if (dados.listas.length <= 1) return avisar({ titulo: "Não é possível excluir", texto: "É necessário manter ao menos uma lista.", tipo: "alerta" });
+  const l = listaAtual();
+  const okExcluir = await confirmar({
+    titulo: "Excluir esta lista?",
+    texto: "Essa ação não pode ser desfeita.",
+    detalhes: [["Lista", (l && l.titulo) || "—"]].concat(l && l.data ? [["Data", dataBR(l.data)]] : []),
+    botaoOk: "Sim, excluir", tipo: "perigo"
+  });
+  if (!okExcluir) return;
   dados.listas = dados.listas.filter((l) => l.id !== listaAtualId); listaAtualId = dados.listas[0].id; salvarLocal(); renderLista();
 };
 const meta = () => { const l = listaAtual(); if (!l) return; l.data = $("dataLista").value; l.obs = $("obsLista").value; salvarLocal(); popularSeletor(); };
