@@ -37,7 +37,26 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:var(--texto);
 .voltar:hover{text-decoration:underline}
 footer{margin-top:20px;font-size:.72rem;color:#b7a689}
 [hidden]{display:none!important}
-@media(max-width:480px){.linha2{grid-template-columns:1fr;gap:0}}
+
+/* Perfil de acesso (caixas de marcar; só uma fica marcada) */
+.perfil-campo{border:0;margin:0 0 14px;padding:0;min-width:0;text-align:left}
+.perfil-campo legend{font-size:.82rem;font-weight:600;margin-bottom:5px;padding:0;color:#5a4a30}
+.perfil-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.perfil-opcao{position:relative;display:flex;gap:9px;align-items:flex-start;padding:10px 11px;border:1.5px solid var(--borda);border-radius:8px;background:#fff;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.perfil-opcao:hover{border-color:#d9c6a6;background:#fffcf7}
+.perfil-opcao input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.perfil-opcao:has(input:focus-visible){box-shadow:0 0 0 3px rgba(245,166,35,.3)}
+.op-check{flex:none;width:19px;height:19px;margin-top:1px;border:2px solid #d4c4a8;border-radius:4px;display:grid;place-items:center;background:#fff;transition:background .15s,border-color .15s}
+.op-check svg{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.perfil-opcao:has(input:checked) .op-check svg{opacity:1}
+.perfil-opcao[data-perfil="cadastro"]:has(input:checked){border-color:var(--laranja-escuro);background:#fffaf3}
+.perfil-opcao[data-perfil="cadastro"]:has(input:checked) .op-check{background:var(--laranja-escuro);border-color:var(--laranja-escuro)}
+.perfil-opcao[data-perfil="administrador"]:has(input:checked){border-color:#2e7d32;background:#f4faf4}
+.perfil-opcao[data-perfil="administrador"]:has(input:checked) .op-check{background:#2e7d32;border-color:#2e7d32}
+.op-texto{display:flex;flex-direction:column;gap:2px;min-width:0}
+.op-texto strong{font-size:.86rem;color:var(--texto)}
+.op-texto small{font-size:.74rem;line-height:1.35;color:#8a7a63}
+@media(max-width:480px){.linha2{grid-template-columns:1fr;gap:0}.perfil-opcoes{grid-template-columns:1fr}}
 
 /* Pop-up de sucesso */
 .modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(47,16,39,.4);backdrop-filter:blur(4px)}
@@ -99,6 +118,22 @@ footer{margin-top:20px;font-size:.72rem;color:#b7a689}
       </div>
     </div>
 
+    <fieldset class="perfil-campo">
+      <legend>Perfil de acesso</legend>
+      <div class="perfil-opcoes" role="radiogroup" aria-label="Perfil de acesso">
+        <label class="perfil-opcao" data-perfil="cadastro">
+          <input type="radio" name="perfil" value="cadastro" checked>
+          <span class="op-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          <span class="op-texto"><strong>Cadastro</strong><small>Só acessa o login e a inscrição de alunas.</small></span>
+        </label>
+        <label class="perfil-opcao" data-perfil="administrador">
+          <input type="radio" name="perfil" value="administrador">
+          <span class="op-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+          <span class="op-texto"><strong>Administrador</strong><small>Acessa tudo: painel, inscrição e administração.</small></span>
+        </label>
+      </div>
+    </fieldset>
+
     <button type="submit" class="btn-salvar" id="btnSalvar">Salvar</button>
     <div class="erro" id="msgErro" role="alert"></div>
   </form>
@@ -112,14 +147,14 @@ footer{margin-top:20px;font-size:.72rem;color:#b7a689}
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
     <div class="modal-icon">✓</div>
     <h2 id="modalTitulo">Cadastro realizado!</h2>
-    <p>Seu usuário foi criado com sucesso. Você será redirecionada em instantes.</p>
+    <p id="modalTexto">Seu usuário foi criado com sucesso. Você será redirecionada em instantes.</p>
     <button type="button" id="modalContinuar">Continuar</button>
   </div>
 </div>
 
 <script type="module">
 import { auth, db } from "./Assets/js/firebase-config.js";
-import { createUserWithEmailAndPassword, updateProfile }
+import { createUserWithEmailAndPassword, updateProfile, signOut }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { ref, set, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
@@ -128,8 +163,11 @@ import { registrarLog } from "./Assets/js/logs-acesso.js";
 const $ = (id) => document.getElementById(id);
 const CAMPOS = ["nome", "sobrenome", "whatsapp", "email", "senha", "senha2"];
 
-// carregando.html faz o redirecionamento final para admin.html
-const DESTINO = "carregando.html?returnTo=" + encodeURIComponent("admin.html");
+// Administrador: carregando.html -> admin.html (painel).
+// Perfil de cadastro: direto para login.html (inscrição); ele não passa pelo painel.
+const DESTINO_ADMIN = "carregando.html?returnTo=" + encodeURIComponent("admin.html");
+const DESTINO_CADASTRO = "login.html";
+let DESTINO = DESTINO_ADMIN;
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const MENSAGENS = {
@@ -198,6 +236,7 @@ $("formCadastro").addEventListener("submit", async (e) => {
   const email = $("email").value.trim().toLowerCase();
   const senha = $("senha").value;
   const senha2 = $("senha2").value;
+  const perfil = (document.querySelector('input[name="perfil"]:checked') || {}).value;
 
   if (nome.length < 2) return mostrarErro("Informe o nome.", "nome");
   if (sobrenome.length < 2) return mostrarErro("Informe o sobrenome.", "sobrenome");
@@ -205,6 +244,7 @@ $("formCadastro").addEventListener("submit", async (e) => {
   if (!REGEX_EMAIL.test(email)) return mostrarErro("Digite um e-mail válido.", "email");
   if (senha.length < 6) return mostrarErro("A senha deve ter pelo menos 6 caracteres.", "senha");
   if (senha !== senha2) return mostrarErro("As senhas não conferem.", "senha2");
+  if (perfil !== "cadastro" && perfil !== "administrador") return mostrarErro("Marque o perfil de acesso: Cadastro ou Administrador.");
 
   $("btnSalvar").disabled = true;
   try {
@@ -212,6 +252,22 @@ $("formCadastro").addEventListener("submit", async (e) => {
     const user = cred.user;
 
     try { await updateProfile(user, { displayName: nome + " " + sobrenome }); } catch (_) {}
+
+    // Grava o perfil de acesso ANTES de tudo: perfis/{uid}
+    // (a conta acabou de nascer sem perfil, então as regras permitem esta primeira gravação)
+    try {
+      await set(ref(db, "perfis/" + user.uid), {
+        perfil,
+        email,
+        atualizadoEm: serverTimestamp(),
+        atualizadoPor: "cadastro.html"
+      });
+    } catch (errPerfil) {
+      console.error(errPerfil);
+      mostrarErro("A conta foi criada, mas não foi possível gravar o perfil de acesso (" +
+        (errPerfil.code || errPerfil.message) + "). Ajuste o perfil deste usuário no Controle de Usuários.");
+      return; // mantém o botão desativado: a conta já existe
+    }
 
     // Grava o perfil no Realtime Database: usuarios/{uid}
     try {
@@ -231,9 +287,16 @@ $("formCadastro").addEventListener("submit", async (e) => {
       return; // mantém o botão desativado: a conta já existe
     }
 
-    await registrarLog("cadastro", { nome: nome + " " + sobrenome });
+    await registrarLog("cadastro", { nome: nome + " " + sobrenome, perfil });
 
-    // Sucesso: pop-up e, em seguida, carregando.html -> admin.html
+    // Perfil de cadastro: encerra a sessão do painel e manda para o login da inscrição
+    if (perfil === "cadastro") {
+      try { await signOut(auth); } catch (_) {}
+      DESTINO = DESTINO_CADASTRO;
+      $("modalTexto").textContent = "Usuário criado com o perfil de cadastro. Ele entra pela página de inscrição (login.html), que será aberta em instantes.";
+    }
+
+    // Sucesso: pop-up e, em seguida, o destino conforme o perfil
     $("modal").hidden = false;
     $("modalContinuar").focus();
     setTimeout(irParaCarregando, 2000);
