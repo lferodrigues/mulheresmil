@@ -168,7 +168,7 @@ function dados() {
     nome: a ? a.nome : "",
     curso: curso ? cursos[curso] : "",
     cpf: $("cpf").value.trim(),
-    horas: Number($("horas").value),
+    horas: Number(soNum($("horas").value)),   // "1.500" -> 1500 (o ponto é só separador de milhar)
     tratamento: $("tratamento").value,
     data: dataExtenso()
   };
@@ -176,7 +176,7 @@ function dados() {
 function problemas(d) {
   if (!d.nome) return "Selecione o curso e a aluna.";
   if (!cpfValido(d.cpf)) return "Informe um CPF válido.";
-  if (!(d.horas > 0) || !Number.isInteger(d.horas)) return "Informe a carga horária em horas (número inteiro).";
+  if (!(d.horas > 0)) return "Informe a carga horária em horas.";
   return "";
 }
 function textoDeclaracao(d) {
@@ -278,7 +278,11 @@ async function baixarPdf() {
 $("curso").addEventListener("change", aoTrocarCurso);
 $("aluna").addEventListener("change", aoTrocarAluna);
 $("cpf").addEventListener("input", () => { $("cpf").value = formatarCpf($("cpf").value); atualizar(); });
-$("horas").addEventListener("input", atualizar);
+$("horas").addEventListener("input", () => {
+  const d = soNum($("horas").value).replace(/^0+/, "").slice(0, 5);   // até 99.999 horas
+  $("horas").value = d ? Number(d).toLocaleString("pt-BR") : "";
+  atualizar();
+});
 $("tratamento").addEventListener("change", atualizar);
 $("btnPdf").addEventListener("click", baixarPdf);
 $("btnAtualizar").addEventListener("click", async () => {
