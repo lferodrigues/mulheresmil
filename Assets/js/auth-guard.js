@@ -1,10 +1,12 @@
-/* Proteção de página via Firebase Auth (v3 - registra logout nos logs de acesso). */
+/* Proteção de página via Firebase Auth (v4 - perfis de acesso + registra logout nos logs).
+   Usuário com perfil "cadastro" é desconectado do painel: ele só pode usar a Inscrição (login.html). */
 import { auth } from "./firebase-config.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { registrarLog } from "./logs-acesso.js";
+import { obterPerfil } from "./perfis.js";
 import "./rastreamento.js";
 
-console.log("[auth-guard v3] carregado em", location.pathname);
+console.log("[auth-guard v4] carregado em", location.pathname);
 document.documentElement.style.visibility = "hidden";
 
 (async () => {
@@ -17,9 +19,15 @@ document.documentElement.style.visibility = "hidden";
   console.log("[auth-guard] usuário:", user ? user.email : "NENHUM");
   if (!user) {
     location.replace("admin.html");
-  } else {
-    document.documentElement.style.visibility = "";
+    return;
   }
+  if (await obterPerfil(user.uid) === "cadastro") {
+    console.warn("[auth-guard] perfil de cadastro: acesso ao painel bloqueado.");
+    try { await signOut(auth); } catch (_) {}
+    location.replace("admin.html?perfil=cadastro");
+    return;
+  }
+  document.documentElement.style.visibility = "";
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
