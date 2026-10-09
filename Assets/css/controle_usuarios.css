@@ -402,3 +402,147 @@ tbody td small { display: block; font-size: 11.5px; color: #8a8079; }
   .linha2 { grid-template-columns: 1fr; }
   .acoes .btn { flex: 1; }
 }
+
+/* =========================================================
+   Perfil de acesso (botão na lista + pop-up)
+   administrador = verde · cadastro = laranja (cor do logo)
+   ========================================================= */
+.col-perfil { width: 150px; }
+
+.lista-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lista-meta #status { margin-top: 0; flex: 1; }
+.resumo-perfis { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pill.administrador { background: #eef7f0; color: var(--verde-escuro); }
+.pill.cadastro { background: #fff3e2; color: #9a4f08; }
+
+/* botão de perfil em cada linha */
+.b-perfil {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px 0 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.b-perfil svg.i { width: 14px; height: 14px; }
+.b-perfil .chev { width: 13px; height: 13px; opacity: .6; }
+.b-perfil.administrador { background: #eef7f0; color: var(--verde-escuro); border-color: #b9d8c1; }
+.b-perfil.administrador:hover { background: #dff0e4; border-color: var(--verde); }
+.b-perfil.cadastro { background: #fff3e2; color: #9a4f08; border-color: #f2cf9f; }
+.b-perfil.cadastro:hover { background: #ffe8c8; border-color: #e07b1a; }
+.b-perfil:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(4, 138, 40, .2); }
+
+/* pop-up de perfil */
+.modal-perfil { width: min(520px, 100%); }
+
+.perfil-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.perfil-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #f5a623, #e04b3a);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+.perfil-quem { min-width: 0; display: flex; flex-direction: column; }
+.modal-box .perfil-quem h2 { text-align: left; font-size: 11.5px; font-weight: 600; color: #8a8079; text-transform: uppercase; letter-spacing: .6px; }
+.perfil-quem strong { font-size: 15.5px; color: var(--text); overflow-wrap: anywhere; }
+.perfil-quem span { font-size: 12.5px; color: var(--text-2); overflow-wrap: anywhere; }
+
+.perfil-ajuda { margin: 14px 0 10px; font-size: 13px; color: var(--text-2); }
+
+.perfil-opcoes { display: grid; gap: 10px; }
+
+.modal-box form label.perfil-opcao {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1.5px solid #dfe5e1;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 400;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.perfil-opcao:hover { border-color: #b9c7bd; background: #fafcfa; }
+.modal-box form .perfil-opcao input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; padding: 0; border: 0; }
+.perfil-opcao:has(input:focus-visible) { box-shadow: 0 0 0 3px rgba(4, 138, 40, .2); }
+
+.op-icone {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+.op-icone svg.i { width: 20px; height: 20px; }
+.perfil-opcao[data-perfil="cadastro"] .op-icone { background: #fff3e2; color: #c2650e; }
+.perfil-opcao[data-perfil="administrador"] .op-icone { background: #eef7f0; color: var(--verde); }
+
+.op-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.op-texto strong { font-size: 14px; font-weight: 600; color: var(--text); }
+.op-texto small { font-size: 12.5px; line-height: 1.45; color: var(--text-2); }
+.op-texto small b { color: var(--text); }
+.op-texto code { font-size: 11.5px; background: #f3f6f4; padding: 0 4px; border-radius: 3px; }
+
+.op-libera { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.op-libera em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px 2px 7px;
+  border-radius: 3px;
+}
+.op-libera em.sim { background: #eef7f0; color: var(--verde-escuro); }
+.op-libera em.sim::before { content: "✓ "; }
+.op-libera em.nao { background: #fdeeee; color: var(--vermelho); text-decoration: line-through; text-decoration-thickness: 1px; }
+.op-libera em.nao::before { content: "✕ "; text-decoration: none; display: inline-block; margin-right: 3px; }
+
+/* marcador redondo à direita */
+.op-marca {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 2px solid #c9d2cc;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.perfil-opcao.marcada .op-marca { border-color: currentColor; box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 10px currentColor; }
+
+.perfil-opcao.marcada[data-perfil="cadastro"] { border-color: #e07b1a; background: #fffaf3; color: #e07b1a; }
+.perfil-opcao.marcada[data-perfil="administrador"] { border-color: var(--verde); background: #f6fbf7; color: var(--verde); }
+
+@media (max-width: 600px) {
+  .modal-box form label.perfil-opcao { grid-template-columns: auto 1fr; }
+  .op-marca { position: absolute; top: 12px; right: 12px; }
+  .op-texto { padding-right: 22px; }
+}
